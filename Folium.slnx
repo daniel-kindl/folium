@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Folium.Android/Folium.Android.csproj" />
+    <Project Path="src/Folium/Folium.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Folium.Tests/Folium.Tests.csproj" />
+  </Folder>
+</Solution>

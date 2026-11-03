@@ -1,0 +1,24 @@
+# Build output
+**/bin/
+**/obj/
+[Bb]uild/
+[Tt]est[Rr]esults/
+*.trx
+
+# IDE and user-specific files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Android signing and local configuration
+*.keystore
+*.jks
+local.properties
+
+# OS files
+.DS_Store
+Thumbs.db
