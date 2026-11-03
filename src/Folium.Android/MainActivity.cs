@@ -4,7 +4,7 @@ using Avalonia.Android;
 
 namespace Folium.Android;
 
-[Activity(Label = "Folium", Theme = "@android:style/Theme.Material.NoActionBar", MainLauncher = true,
+[Activity(Label = "Folium", Theme = "@style/Theme.AppCompat.NoActionBar", MainLauncher = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
