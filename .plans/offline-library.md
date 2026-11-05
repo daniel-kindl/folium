@@ -62,10 +62,10 @@ Verification: `dotnet test tests/Folium.Tests` for the new tests. The placeholde
 Evidence: `dotnet test tests/Folium.Tests` passed on 2026-11-05. 12 tests passed and 0 failed. Format and the Release build are not run for this commit.
 
 ### C02: Edit and remove a book
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: C01
 Proposed commit: feat(library): edit and remove books
-Actual commit: none
+Actual commit: 3cdb640
 Objective: A person can change the title and author, and can remove one book permanently.
 Work: Tests first for edit, a missing book, and removal. Removal of a missing book fails. A failed write keeps the previous books.
 Verification: `dotnet test tests/Folium.Tests`
