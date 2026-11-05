@@ -72,17 +72,17 @@ Verification: `dotnet test tests/Folium.Tests`
 Evidence: `dotnet test tests/Folium.Tests` passed on 2026-11-05. 19 tests passed and 0 failed. Format and the Release build are not run for this commit.
 
 ### C03: Show the library on screen
-Status: PENDING
+Status: COMPLETED
 Depends on: C02
 Proposed commit: feat(library): show books on screen
-Actual commit: none
+Actual commit: 9d9a9ef
 Objective: The app shows the library, editor, details, confirmation, empty state, and errors. Android Back moves through those screens.
 Work: View model tests first. Then the view model, views, and activity back handling.
-Verification: `dotnet test`. Format and Release build when the code is complete.
-Evidence: not yet run
+Verification: `dotnet test tests/Folium.Tests`. Format and Release build when the code is complete.
+Evidence: `dotnet test tests/Folium.Tests` passed on 2026-11-05. 35 tests passed and 0 failed. `dotnet format` completed with exit code 0. The Release build and the Android build are not run yet.
 
 ### C04: Document the personal library
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C03
 Proposed commit: docs: describe the personal library
 Actual commit: none
@@ -98,6 +98,6 @@ Evidence: not yet run
 - Device check if a device is connected. If not, record NOT RUN.
 
 ## Handoff
-Next action: Write the failing tests for edit and removal.
+Next action: Commit the README and changelog, then run the required checks.
 Blockers: none
 Risks: Android Back and the app data path need a device to prove. Automated tests do not start the Android UI.
