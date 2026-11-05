@@ -52,24 +52,24 @@ The owner set these rules in this session on 2026-11-05:
 ## Commit plan
 
 ### C01: Save a book on the device
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: none
 Proposed commit: feat(library): save a book on device
-Actual commit: none
+Actual commit: 275b034
 Objective: A person can add a book with a title and an author, and a new library instance reads it back.
 Work: Failing tests first for trim, blank fields, duplicates, restart, and an unreadable file. Then the book rules, the file store, and the glossary terms.
 Verification: `dotnet test tests/Folium.Tests` for the new tests. The placeholder test still passes.
 Evidence: `dotnet test tests/Folium.Tests` passed on 2026-11-05. 12 tests passed and 0 failed. Format and the Release build are not run for this commit.
 
 ### C02: Edit and remove a book
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C01
 Proposed commit: feat(library): edit and remove books
 Actual commit: none
 Objective: A person can change the title and author, and can remove one book permanently.
 Work: Tests first for edit, a missing book, and removal. Removal of a missing book fails. A failed write keeps the previous books.
-Verification: `dotnet test`
-Evidence: not yet run
+Verification: `dotnet test tests/Folium.Tests`
+Evidence: `dotnet test tests/Folium.Tests` passed on 2026-11-05. 19 tests passed and 0 failed. Format and the Release build are not run for this commit.
 
 ### C03: Show the library on screen
 Status: PENDING
@@ -98,6 +98,6 @@ Evidence: not yet run
 - Device check if a device is connected. If not, record NOT RUN.
 
 ## Handoff
-Next action: Write the failing test for saving a book.
+Next action: Write the failing tests for edit and removal.
 Blockers: none
 Risks: Android Back and the app data path need a device to prove. Automated tests do not start the Android UI.

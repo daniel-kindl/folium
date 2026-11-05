@@ -134,4 +134,115 @@ public class PersonalLibraryTests : IDisposable
 
         Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
     }
+
+    [Fact]
+    public void EditChangesTitleAndAuthorAndKeepsId()
+    {
+        var library = Open();
+        var book = library.Add("Dune", "Frank Herbert");
+        var other = library.Add("Neuromancer", "William Gibson");
+
+        var edited = library.Edit(book.Id, "  Dune Messiah  ", " Frank Herbert ");
+
+        Assert.Equal(book.Id, edited.Id);
+        Assert.Equal("Dune Messiah", edited.Title);
+        Assert.Equal("Frank Herbert", edited.Author);
+        Assert.Equal([edited, other], Open().Books);
+    }
+
+    [Fact]
+    public void EditRejectsBlankTextAndKeepsStoredBook()
+    {
+        var library = Open();
+        var book = library.Add("Dune", "Frank Herbert");
+
+        var error = Assert.Throws<BookInputException>(() => library.Edit(book.Id, " ", "Frank Herbert"));
+
+        Assert.Equal([BookInputProblem.MissingTitle], error.Problems);
+        Assert.Equal([book], Open().Books);
+    }
+
+    [Fact]
+    public void EditMissingBookDoesNotCreateIt()
+    {
+        var library = Open();
+        library.Add("Dune", "Frank Herbert");
+        var missing = Guid.NewGuid();
+
+        var error = Assert.Throws<MissingBookException>(() => library.Edit(missing, "Neuromancer", "William Gibson"));
+
+        Assert.Equal(missing, error.BookId);
+        Assert.DoesNotContain(Open().Books, book => book.Id == missing);
+    }
+
+    [Fact]
+    public void RemoveDeletesOnlyTheSelectedBook()
+    {
+        var library = Open();
+        var keep = library.Add("Dune", "Frank Herbert");
+        var remove = library.Add("Dune", "Frank Herbert");
+
+        library.Remove(remove.Id);
+
+        Assert.Equal([keep], Open().Books);
+    }
+
+    [Fact]
+    public void RemoveMissingBookFailsAndKeepsLibrary()
+    {
+        var library = Open();
+        var book = library.Add("Dune", "Frank Herbert");
+        var missing = Guid.NewGuid();
+
+        var error = Assert.Throws<MissingBookException>(() => library.Remove(missing));
+
+        Assert.Equal(missing, error.BookId);
+        Assert.Equal([book], Open().Books);
+    }
+
+    [Fact]
+    public void SecondRemoveOfTheSameBookFails()
+    {
+        var library = Open();
+        var book = library.Add("Dune", "Frank Herbert");
+        library.Remove(book.Id);
+
+        Assert.Throws<MissingBookException>(() => library.Remove(book.Id));
+
+        Assert.Empty(Open().Books);
+    }
+
+    [Fact]
+    public void FailedWriteKeepsPreviousBooks()
+    {
+        var store = new FailOnSecondWriteStore(new FileBookStore(LibraryPath));
+        var library = new PersonalLibrary(store);
+        var book = library.Add("Dune", "Frank Herbert");
+
+        Assert.Throws<LibraryStoreException>(() => library.Add("Neuromancer", "William Gibson"));
+
+        Assert.Equal([book], library.Books);
+        Assert.Equal([book], new PersonalLibrary(new FileBookStore(LibraryPath)).Books);
+    }
+
+    private sealed class FailOnSecondWriteStore : IBookStore
+    {
+        private readonly IBookStore _store;
+        private int _writes;
+
+        public FailOnSecondWriteStore(IBookStore store) => _store = store;
+
+        public IReadOnlyList<Book> Read() => _store.Read();
+
+        public void Replace(IReadOnlyList<Book> books)
+        {
+            _writes++;
+            if (_writes > 1)
+            {
+                throw new LibraryStoreException("Folium could not write the library file.");
+            }
+
+            _store.Replace(books);
+        }
+    }
 }
