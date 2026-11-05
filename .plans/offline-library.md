@@ -82,22 +82,22 @@ Verification: `dotnet test tests/Folium.Tests`. Format and Release build when th
 Evidence: `dotnet test tests/Folium.Tests` passed on 2026-11-05. 35 tests passed and 0 failed. `dotnet format` completed with exit code 0. The Release build and the Android build are not run yet.
 
 ### C04: Document the personal library
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: C03
 Proposed commit: docs: describe the personal library
-Actual commit: none
+Actual commit: a719609
 Objective: The README and changelog match the behavior.
 Work: Update the README and CHANGELOG. Do not document an unbuilt design system.
 Verification: The text matches the code. No new behavior.
-Evidence: not yet run
+Evidence: README and CHANGELOG are committed in a719609. They describe add, edit, remove, and the private library file.
 
 ## Final verification
-- `dotnet format --verify-no-changes`
-- `dotnet test`
-- `dotnet build` in Release
-- Device check if a device is connected. If not, record NOT RUN.
+- `dotnet format Folium.slnx --verify-no-changes` passed on 2026-11-05. The formatter warned that it could not load references for Folium.Android because the Android SDK is not installed in this environment.
+- `dotnet test tests/Folium.Tests --configuration Release` passed on 2026-11-05. 35 tests passed and 0 failed.
+- `dotnet build Folium.slnx --configuration Release` failed on 2026-11-05 with XA5300. The Android SDK directory was not found. This is not a compile result for the Android project. The shared Folium project built in Release.
+- Device check: NOT RUN. No Android SDK and no device were available.
 
 ## Handoff
-Next action: Commit the README and changelog, then run the required checks.
+Next action: Open the pull request. CI must build the Android project.
 Blockers: none
-Risks: Android Back and the app data path need a device to prove. Automated tests do not start the Android UI.
+Risks: Android Back, soft-input resize, and the app files path are not proven on a device. The Android project did not compile in this environment.
