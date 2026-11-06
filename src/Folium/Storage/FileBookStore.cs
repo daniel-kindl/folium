@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.Text.Json;
 using Folium.Books;
 
 namespace Folium.Storage;
 
+/// <summary>Stores the book list in one JSON file.</summary>
 public sealed class FileBookStore : IBookStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -14,6 +16,8 @@ public sealed class FileBookStore : IBookStore
 
     private readonly string _path;
 
+    /// <summary>Opens the library file at the given path. The path must contain text.</summary>
+    /// <param name="path">The library file location. The text must not be blank.</param>
     public FileBookStore(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -24,60 +28,27 @@ public sealed class FileBookStore : IBookStore
         _path = path;
     }
 
+    /// <summary>Returns the saved books. Returns an empty list when the file is absent.</summary>
+    /// <exception cref="LibraryStoreException">The file cannot be read. The file stays unchanged.</exception>
     public IReadOnlyList<Book> Read()
     {
-        if (!File.Exists(_path))
-        {
-            return [];
-        }
-
-        LibraryDocument? document;
-        try
-        {
-            document = JsonSerializer.Deserialize<LibraryDocument>(File.ReadAllText(_path), JsonOptions);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
-        {
-            throw Unreadable(exception);
-        }
-
-        if (document is null || document.Books is null)
-        {
-            throw Unreadable();
-        }
-
-        if (document.Version != 1)
-        {
-            throw new LibraryStoreException(
-                $"The library file at {_path} uses version {document.Version}. Folium reads version 1.");
-        }
-
-        List<Book> books = new List<Book>(document.Books.Count);
-        HashSet<Guid> ids = new HashSet<Guid>();
-        foreach (StoredBook? stored in document.Books)
-        {
-            if (stored is null)
-            {
-                throw new LibraryStoreException($"The library file at {_path} contains an empty book.");
-            }
-
-            books.Add(ToBook(stored, ids));
-        }
-
-        return books;
+        return File.Exists(_path) ? ToBooks(ReadDocument()) : [];
     }
 
+    /// <summary>Replaces the saved books. A failed write leaves the previous file unchanged.</summary>
+    /// <param name="books">The books that replace the saved list.</param>
+    /// <exception cref="LibraryStoreException">The file cannot be written. The previous file stays unchanged.</exception>
     public void Replace(IReadOnlyList<Book> books)
     {
         ArgumentNullException.ThrowIfNull(books);
         List<StoredBook?> stored = new(books.Count);
-        HashSet<Guid> ids = new HashSet<Guid>();
+        HashSet<Guid> ids = [];
         foreach (Book book in books)
         {
             stored.Add(ToStored(book, ids));
         }
 
-        LibraryDocument document = new LibraryDocument { Version = 1, Books = stored };
+        LibraryDocument document = new() { Version = 1, Books = stored };
         string json = JsonSerializer.Serialize(document, JsonOptions);
         string? directory = Path.GetDirectoryName(Path.GetFullPath(_path));
         if (string.IsNullOrEmpty(directory))
@@ -88,7 +59,7 @@ public sealed class FileBookStore : IBookStore
         string temporary = _path + ".tmp";
         try
         {
-            Directory.CreateDirectory(directory);
+            _ = Directory.CreateDirectory(directory);
             File.WriteAllText(temporary, json);
             File.Move(temporary, _path, overwrite: true);
         }
@@ -105,38 +76,83 @@ public sealed class FileBookStore : IBookStore
         }
     }
 
+    private LibraryDocument ReadDocument()
+    {
+        LibraryDocument document = RequireDocument(Deserialize());
+        return RequireVersion(document);
+    }
+
+    private LibraryDocument RequireDocument(LibraryDocument? document)
+    {
+        return document?.Books is not null
+            ? document
+            : throw Unreadable();
+    }
+
+    private LibraryDocument RequireVersion(LibraryDocument document)
+    {
+        return document.Version == 1
+            ? document
+            : throw new LibraryStoreException(
+                string.Create(CultureInfo.InvariantCulture, $"The library file at {_path} uses version {document.Version}. Folium reads version 1."));
+    }
+
+    private LibraryDocument? Deserialize()
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<LibraryDocument>(File.ReadAllText(_path), JsonOptions);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            throw Unreadable(exception);
+        }
+    }
+
+    private List<Book> ToBooks(LibraryDocument document)
+    {
+        List<Book> books = new(document.Books!.Count);
+        HashSet<Guid> ids = [];
+        foreach (StoredBook? stored in document.Books)
+        {
+            if (stored is null)
+            {
+                throw new LibraryStoreException($"The library file at {_path} contains an empty book.");
+            }
+
+            books.Add(ToBook(stored, ids));
+        }
+
+        return books;
+    }
+
     private Book ToBook(StoredBook stored, HashSet<Guid> ids)
     {
-        if (stored.Id == Guid.Empty || !ids.Add(stored.Id))
+        bool invalidId = stored.Id == Guid.Empty || !ids.Add(stored.Id);
+        bool invalidInput = BookText.Problems(stored.Title, stored.Author).Count > 0;
+        return (invalidId, invalidInput) switch
         {
-            throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use.");
-        }
-
-        if (BookText.Problems(stored.Title, stored.Author).Count > 0)
-        {
-            throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author.");
-        }
-
-        return new Book(stored.Id, stored.Title!, stored.Author!);
+            (true, _) => throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use."),
+            (_, true) => throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author."),
+            _ => new Book(stored.Id, stored.Title!, stored.Author!),
+        };
     }
 
     private StoredBook ToStored(Book book, HashSet<Guid> ids)
     {
-        if (book is null)
+        return book switch
         {
-            throw new ArgumentException("The library cannot store an empty book.", nameof(book));
-        }
-
-        if (book.Id == Guid.Empty || !ids.Add(book.Id) || BookText.Problems(book.Title, book.Author).Count > 0)
-        {
-            throw new LibraryStoreException($"Folium could not write the library file at {_path}.");
-        }
-
-        return new StoredBook { Id = book.Id, Title = book.Title, Author = book.Author };
+            null => throw new ArgumentException("The library cannot store an empty book.", nameof(book)),
+            _ when book.Id == Guid.Empty || !ids.Add(book.Id) || BookText.Problems(book.Title, book.Author).Count > 0
+                => throw new LibraryStoreException($"Folium could not write the library file at {_path}."),
+            _ => new StoredBook { Id = book.Id, Title = book.Title, Author = book.Author },
+        };
     }
 
-    private LibraryStoreException Unreadable(Exception? inner = null) =>
-        new($"Folium could not read the library file at {_path}.", inner);
+    private LibraryStoreException Unreadable(Exception? inner = null)
+    {
+        return new($"Folium could not read the library file at {_path}.", inner);
+    }
 
     private sealed class LibraryDocument
     {

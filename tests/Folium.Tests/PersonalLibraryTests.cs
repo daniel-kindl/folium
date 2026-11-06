@@ -3,17 +3,27 @@ using Folium.Storage;
 
 namespace Folium.Tests;
 
-public class PersonalLibraryTests : IDisposable
+public sealed class PersonalLibraryTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), "folium-" + Guid.NewGuid().ToString("N"));
 
-    public PersonalLibraryTests() => Directory.CreateDirectory(_directory);
+    public PersonalLibraryTests()
+    {
+        _ = Directory.CreateDirectory(_directory);
+    }
 
-    public void Dispose() => Directory.Delete(_directory, recursive: true);
+    public void Dispose()
+    {
+        Directory.Delete(_directory, recursive: true);
+        GC.SuppressFinalize(this);
+    }
 
     private string LibraryPath => Path.Combine(_directory, "library.json");
 
-    private PersonalLibrary Open() => new(new FileBookStore(LibraryPath));
+    private PersonalLibrary Open()
+    {
+        return new(new FileBookStore(LibraryPath));
+    }
 
     [Fact]
     public void AddStoresTrimmedTitleAndAuthorAcrossRestart()
@@ -48,7 +58,7 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void AddRejectsMissingTitleAndAuthor()
     {
-        BookInputException error = Assert.Throws<BookInputException>(() => Open().Add(null, null));
+        BookInputException error = Assert.Throws<BookInputException>(() => Open().Add(title: null, author: null));
 
         Assert.Equal([BookInputProblem.MissingTitle, BookInputProblem.MissingAuthor], error.Problems);
         Assert.False(File.Exists(LibraryPath));
@@ -81,7 +91,7 @@ public class PersonalLibraryTests : IDisposable
         File.WriteAllText(LibraryPath, "{");
         byte[] bytes = File.ReadAllBytes(LibraryPath);
 
-        Assert.Throws<LibraryStoreException>(() => Open());
+        _ = Assert.Throws<LibraryStoreException>(Open);
 
         Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
     }
@@ -89,10 +99,10 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void UnsupportedVersionStaysUnchanged()
     {
-        File.WriteAllText(LibraryPath, """{"version":2,"books":[]}""");
+        File.WriteAllText(LibraryPath, /*lang=json,strict*/ """{"version":2,"books":[]}""");
         byte[] bytes = File.ReadAllBytes(LibraryPath);
 
-        Assert.Throws<LibraryStoreException>(() => Open());
+        _ = Assert.Throws<LibraryStoreException>(Open);
 
         Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
     }
@@ -104,7 +114,7 @@ public class PersonalLibraryTests : IDisposable
         File.WriteAllText(LibraryPath, $$"""{"version":1,"books":[{"id":"{{id}}","title":" ","author":"Frank Herbert"}]}""");
         byte[] bytes = File.ReadAllBytes(LibraryPath);
 
-        Assert.Throws<LibraryStoreException>(() => Open());
+        _ = Assert.Throws<LibraryStoreException>(Open);
 
         Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
     }
@@ -113,10 +123,10 @@ public class PersonalLibraryTests : IDisposable
     public void ReplaceRejectsDuplicateIdsAndDoesNotCreateFile()
     {
         Guid id = Guid.NewGuid();
-        FileBookStore store = new FileBookStore(LibraryPath);
-        Book book = new Book(id, "Dune", "Frank Herbert");
+        FileBookStore store = new(LibraryPath);
+        Book book = new(id, "Dune", "Frank Herbert");
 
-        Assert.Throws<LibraryStoreException>(() => store.Replace([book, book]));
+        _ = Assert.Throws<LibraryStoreException>(() => store.Replace([book, book]));
 
         Assert.False(File.Exists(LibraryPath));
     }
@@ -130,7 +140,7 @@ public class PersonalLibraryTests : IDisposable
             $$"""{"version":1,"books":[{"id":"{{id}}","title":"Dune","author":"Frank Herbert"},{"id":"{{id}}","title":"Dune","author":"Frank Herbert"}]}""");
         byte[] bytes = File.ReadAllBytes(LibraryPath);
 
-        Assert.Throws<LibraryStoreException>(() => Open());
+        _ = Assert.Throws<LibraryStoreException>(Open);
 
         Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
     }
@@ -166,7 +176,7 @@ public class PersonalLibraryTests : IDisposable
     public void EditMissingBookDoesNotCreateIt()
     {
         PersonalLibrary library = Open();
-        library.Add("Dune", "Frank Herbert");
+        _ = library.Add("Dune", "Frank Herbert");
         Guid missing = Guid.NewGuid();
 
         MissingBookException error = Assert.Throws<MissingBookException>(() => library.Edit(missing, "Neuromancer", "William Gibson"));
@@ -207,7 +217,7 @@ public class PersonalLibraryTests : IDisposable
         Book book = library.Add("Dune", "Frank Herbert");
         library.Remove(book.Id);
 
-        Assert.Throws<MissingBookException>(() => library.Remove(book.Id));
+        _ = Assert.Throws<MissingBookException>(() => library.Remove(book.Id));
 
         Assert.Empty(Open().Books);
     }
@@ -215,24 +225,25 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void FailedWriteKeepsPreviousBooks()
     {
-        FailOnSecondWriteStore store = new FailOnSecondWriteStore(new FileBookStore(LibraryPath));
-        PersonalLibrary library = new PersonalLibrary(store);
+        FailOnSecondWriteStore store = new(new FileBookStore(LibraryPath));
+        PersonalLibrary library = new(store);
         Book book = library.Add("Dune", "Frank Herbert");
 
-        Assert.Throws<LibraryStoreException>(() => library.Add("Neuromancer", "William Gibson"));
+        _ = Assert.Throws<LibraryStoreException>(() => library.Add("Neuromancer", "William Gibson"));
 
         Assert.Equal([book], library.Books);
         Assert.Equal([book], new PersonalLibrary(new FileBookStore(LibraryPath)).Books);
     }
 
-    private sealed class FailOnSecondWriteStore : IBookStore
+    private sealed class FailOnSecondWriteStore(IBookStore store) : IBookStore
     {
-        private readonly IBookStore _store;
+        private readonly IBookStore _store = store;
         private int _writes;
 
-        public FailOnSecondWriteStore(IBookStore store) => _store = store;
-
-        public IReadOnlyList<Book> Read() => _store.Read();
+        public IReadOnlyList<Book> Read()
+        {
+            return _store.Read();
+        }
 
         public void Replace(IReadOnlyList<Book> books)
         {

@@ -1,0 +1,8 @@
+# Code metrics analyzer thresholds (Roslyn AdditionalFiles)
+# Keep thresholds reviewable. Diagnostics are errors in .editorconfig.
+# Avalonia/Android framework base classes already create 11-12 inherited levels.
+# Gate deeper chains without penalizing inheritance outside Folium's control.
+CA1501: 12
+CA1502: 15
+CA1505: 10
+CA1506: 60

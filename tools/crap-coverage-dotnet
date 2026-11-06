@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# crap4csharp runs this command:
+#   dotnet test <project> --collect:XPlat Code Coverage --filter <filter> --results-directory coverage
+# Folium tests use the Microsoft Testing Platform. That VSTest command exits 5.
+# This command runs Coverlet and copies the report to coverage.cobertura.xml.
+# The tool accepts only that file name. Folium has no integration-test trait, so the VSTest filter is not applied.
+
+set -euo pipefail
+
+real="${DOTNET_CRAP_REAL:-}"
+if [[ -z "$real" ]]; then
+    echo "DOTNET_CRAP_REAL is not set." >&2
+    exit 1
+fi
+
+if [[ "${1:-}" == "test" && " $* " == *" --collect:XPlat Code Coverage "* ]]; then
+    project=""
+    results="coverage"
+    args=("$@")
+    i=1
+    while [[ "$i" -lt "${#args[@]}" ]]; do
+        arg="${args[$i]}"
+        case "$arg" in
+            --results-directory)
+                i=$((i + 1))
+                results="${args[$i]}"
+                ;;
+            --filter)
+                i=$((i + 1))
+                ;;
+            --collect:*)
+                ;;
+            -*)
+                ;;
+            *)
+                if [[ -z "$project" ]]; then
+                    project="$arg"
+                fi
+                ;;
+        esac
+        i=$((i + 1))
+    done
+
+    if [[ -z "$project" ]]; then
+        echo "The CRAP coverage command has no test project." >&2
+        exit 1
+    fi
+
+    status=0
+    "$real" test --project "$project" --results-directory "$results" -- --coverlet --coverlet-output-format cobertura || status=$?
+    if [[ "$status" -ne 0 ]]; then
+        exit "$status"
+    fi
+
+    found=()
+    while IFS= read -r file; do
+        found+=("$file")
+    done < <(find "$results" -type f -name 'coverage.cobertura*.xml' ! -name 'coverage.cobertura.xml' | sort)
+    if [[ "${#found[@]}" -ne 1 ]]; then
+        echo "Expected one Coverlet report under ${results}, found ${#found[@]}." >&2
+        exit 1
+    fi
+
+    cp "${found[0]}" "$(dirname "${found[0]}")/coverage.cobertura.xml"
+    exit 0
+fi
+
+exec "$real" "$@"
