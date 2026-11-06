@@ -16,10 +16,12 @@ public class MainActivity : AvaloniaMainActivity
         OnBackPressedDispatcher.AddCallback(this, new LibraryBackCallback(this));
     }
 
-    private static bool LeaveScreen() =>
-        Avalonia.Application.Current is App { Library: { } library } && library.GoBack();
+    private static bool LeaveScreen()
+    {
+        return Avalonia.Application.Current is App { Library: { } library } && library.GoBack();
+    }
 
-    private sealed class LibraryBackCallback(MainActivity activity) : OnBackPressedCallback(true)
+    private sealed class LibraryBackCallback(MainActivity activity) : OnBackPressedCallback(enabled: true)
     {
         public override void HandleOnBackPressed()
         {
