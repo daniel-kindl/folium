@@ -27,45 +27,7 @@ public sealed class FileBookStore : IBookStore
 
     public IReadOnlyList<Book> Read()
     {
-        if (!File.Exists(_path))
-        {
-            return [];
-        }
-
-        LibraryDocument? document;
-        try
-        {
-            document = JsonSerializer.Deserialize<LibraryDocument>(File.ReadAllText(_path), JsonOptions);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
-        {
-            throw Unreadable(exception);
-        }
-
-        if (document is null || document.Books is null)
-        {
-            throw Unreadable();
-        }
-
-        if (document.Version != 1)
-        {
-            throw new LibraryStoreException(
-                string.Create(CultureInfo.InvariantCulture, $"The library file at {_path} uses version {document.Version}. Folium reads version 1."));
-        }
-
-        List<Book> books = new(document.Books.Count);
-        HashSet<Guid> ids = [];
-        foreach (StoredBook? stored in document.Books)
-        {
-            if (stored is null)
-            {
-                throw new LibraryStoreException($"The library file at {_path} contains an empty book.");
-            }
-
-            books.Add(ToBook(stored, ids));
-        }
-
-        return books;
+        return File.Exists(_path) ? ToBooks(ReadDocument()) : [];
     }
 
     public void Replace(IReadOnlyList<Book> books)
@@ -104,6 +66,56 @@ public sealed class FileBookStore : IBookStore
                 File.Delete(temporary);
             }
         }
+    }
+
+    private LibraryDocument ReadDocument()
+    {
+        LibraryDocument document = RequireDocument(Deserialize());
+        return RequireVersion(document);
+    }
+
+    private LibraryDocument RequireDocument(LibraryDocument? document)
+    {
+        return document?.Books is not null
+            ? document
+            : throw Unreadable();
+    }
+
+    private LibraryDocument RequireVersion(LibraryDocument document)
+    {
+        return document.Version == 1
+            ? document
+            : throw new LibraryStoreException(
+                string.Create(CultureInfo.InvariantCulture, $"The library file at {_path} uses version {document.Version}. Folium reads version 1."));
+    }
+
+    private LibraryDocument? Deserialize()
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<LibraryDocument>(File.ReadAllText(_path), JsonOptions);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            throw Unreadable(exception);
+        }
+    }
+
+    private List<Book> ToBooks(LibraryDocument document)
+    {
+        List<Book> books = new(document.Books!.Count);
+        HashSet<Guid> ids = [];
+        foreach (StoredBook? stored in document.Books)
+        {
+            if (stored is null)
+            {
+                throw new LibraryStoreException($"The library file at {_path} contains an empty book.");
+            }
+
+            books.Add(ToBook(stored, ids));
+        }
+
+        return books;
     }
 
     private Book ToBook(StoredBook stored, HashSet<Guid> ids)

@@ -181,60 +181,89 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void Save()
     {
-        if (_library is null || !ShowEditor)
+        if (_library is not PersonalLibrary library)
+        {
+            return;
+        }
+
+        SaveFromEditor(library);
+    }
+
+    private void SaveFromEditor(PersonalLibrary library)
+    {
+        if (!ShowEditor)
         {
             return;
         }
 
         try
         {
-            if (_editing && _selected is null)
-            {
-                return;
-            }
-
-            Book saved = _editing
-                ? _library.Edit(_selected!.Id, _titleInput, _authorInput)
-                : _library.Add(_titleInput, _authorInput);
-            Books = _library.Books;
-            Raise(nameof(Books));
-            ClearErrors();
-            if (_editing)
-            {
-                _selected = saved;
-                ShowDetailsScreen();
-            }
-            else
-            {
-                ShowLibraryScreen();
-            }
+            StoreEditorBook(library);
         }
         catch (BookInputException exception)
         {
-            SaveError = null;
-            InputError = Describe(exception);
-            Raise(nameof(SaveError));
-            Raise(nameof(InputError));
+            ShowInputError(exception);
         }
         catch (MissingBookException exception)
         {
-            Trace.TraceError(exception.ToString());
-            Books = _library.Books;
-            Raise(nameof(Books));
-            SaveError = "Folium could not find that book.";
-            InputError = null;
-            Raise(nameof(SaveError));
-            Raise(nameof(InputError));
-            ShowLibraryScreen();
+            ShowMissingBook(library, exception);
         }
         catch (LibraryStoreException exception)
         {
-            Trace.TraceError(exception.ToString());
-            InputError = null;
-            SaveError = "Folium could not save this book. The text is still in the form.";
-            Raise(nameof(InputError));
-            Raise(nameof(SaveError));
+            ShowStoreSaveError(exception);
         }
+    }
+
+    private void StoreEditorBook(PersonalLibrary library)
+    {
+        if (_editing && _selected is null)
+        {
+            return;
+        }
+
+        Book saved = _editing
+            ? library.Edit(_selected!.Id, _titleInput, _authorInput)
+            : library.Add(_titleInput, _authorInput);
+        Books = library.Books;
+        Raise(nameof(Books));
+        ClearErrors();
+        if (_editing)
+        {
+            _selected = saved;
+            ShowDetailsScreen();
+            return;
+        }
+
+        ShowLibraryScreen();
+    }
+
+    private void ShowInputError(BookInputException exception)
+    {
+        SaveError = null;
+        InputError = Describe(exception);
+        Raise(nameof(SaveError));
+        Raise(nameof(InputError));
+    }
+
+    private void ShowMissingBook(PersonalLibrary library, MissingBookException exception)
+    {
+        Trace.TraceError(exception.ToString());
+        Books = library.Books;
+        Raise(nameof(Books));
+        SaveError = "Folium could not find that book.";
+        InputError = null;
+        Raise(nameof(SaveError));
+        Raise(nameof(InputError));
+        ShowLibraryScreen();
+    }
+
+    private void ShowStoreSaveError(LibraryStoreException exception)
+    {
+        Trace.TraceError(exception.ToString());
+        InputError = null;
+        SaveError = "Folium could not save this book. The text is still in the form.";
+        Raise(nameof(InputError));
+        Raise(nameof(SaveError));
     }
 
     private void AskRemove()
