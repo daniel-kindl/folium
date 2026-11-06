@@ -9,6 +9,11 @@ public class Application : AvaloniaAndroidApplication<App>
     public Application(nint javaReference, JniHandleOwnership transfer)
         : base(javaReference, transfer)
     {
+    }
+
+    public override void OnCreate()
+    {
+        base.OnCreate();
         string? files = FilesDir?.AbsolutePath;
         if (string.IsNullOrWhiteSpace(files))
         {
