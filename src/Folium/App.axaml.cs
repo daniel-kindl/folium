@@ -7,13 +7,16 @@ using Folium.Views;
 
 namespace Folium;
 
-public partial class App : Application
+public class App : Application
 {
     public static string? LibraryFilePath { get; set; }
 
     public LibraryViewModel? Library { get; private set; }
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {
