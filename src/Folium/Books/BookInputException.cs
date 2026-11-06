@@ -1,14 +1,8 @@
 namespace Folium.Books;
 
-public sealed class BookInputException : Exception
+public sealed class BookInputException(IReadOnlyList<BookInputProblem> problems) : Exception(Describe(problems))
 {
-    public BookInputException(IReadOnlyList<BookInputProblem> problems)
-        : base(Describe(problems))
-    {
-        Problems = problems;
-    }
-
-    public IReadOnlyList<BookInputProblem> Problems { get; }
+    public IReadOnlyList<BookInputProblem> Problems { get; } = problems;
 
     private static string Describe(IReadOnlyList<BookInputProblem> problems)
     {
@@ -24,16 +18,14 @@ public sealed class BookInputException : Exception
             return "The book needs a title and an author.";
         }
 
-        if (missingTitle)
-        {
-            return "The book needs a title.";
-        }
+        return missingTitle
+            ? "The book needs a title."
+            : missingAuthor
+            ? "The book needs an author."
+            : throw new ArgumentException("A book input failure needs a known problem.", nameof(problems));
+    }
 
-        if (missingAuthor)
-        {
-            return "The book needs an author.";
-        }
-
-        throw new ArgumentException("A book input failure needs a known problem.", nameof(problems));
+    public BookInputException()
+    {
     }
 }
