@@ -3,7 +3,7 @@ using Folium.Storage;
 
 namespace Folium.Tests;
 
-public class PersonalLibraryTests : IDisposable
+public sealed class PersonalLibraryTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), "folium-" + Guid.NewGuid().ToString("N"));
 
@@ -15,6 +15,7 @@ public class PersonalLibraryTests : IDisposable
     public void Dispose()
     {
         Directory.Delete(_directory, recursive: true);
+        GC.SuppressFinalize(this);
     }
 
     private string LibraryPath => Path.Combine(_directory, "library.json");
