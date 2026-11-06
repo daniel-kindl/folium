@@ -75,3 +75,28 @@ jobs:
           git -C "$RUNNER_TEMP/crap4csharp" checkout --detach 9e155ec73008af7314b78b8e7f51e5edc2fd2a41
       - name: Enforce method-level CRAP threshold
         run: dotnet run --project "$RUNNER_TEMP/crap4csharp/src/Crap4CSharp" --configuration Release -- src/Folium
+
+  regenerate-lock-snapshot:
+    if: github.event_name == 'pull_request' && github.head_ref == 'chore/strict-editorconfig'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: microsoft
+          java-version: '21'
+      - run: dotnet workload restore
+      - name: Generate updated locks for review
+        run: |
+          dotnet restore --force-evaluate -p:NuGetAuditLevel=high -p:NuGetAuditMode=all -warnaserror:NU1903,NU1904
+          for file in src/Folium/packages.lock.json src/Folium.Android/packages.lock.json tests/Folium.Tests/packages.lock.json; do
+            echo "LOCKFILE_BEGIN:$file"
+            base64 "$file"
+            echo "LOCKFILE_END:$file"
+          done
