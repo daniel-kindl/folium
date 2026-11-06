@@ -18,9 +18,9 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void AddStoresTrimmedTitleAndAuthorAcrossRestart()
     {
-        var book = Open().Add("  Dune  ", "  Frank Herbert  ");
+        Book book = Open().Add("  Dune  ", "  Frank Herbert  ");
 
-        var stored = Assert.Single(Open().Books);
+        Book stored = Assert.Single(Open().Books);
 
         Assert.Equal(book.Id, stored.Id);
         Assert.Equal("Dune", stored.Title);
@@ -30,7 +30,7 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void AddRejectsBlankTitleAndDoesNotCreateFile()
     {
-        var error = Assert.Throws<BookInputException>(() => Open().Add("   ", "Frank Herbert"));
+        BookInputException error = Assert.Throws<BookInputException>(() => Open().Add("   ", "Frank Herbert"));
 
         Assert.Equal([BookInputProblem.MissingTitle], error.Problems);
         Assert.False(File.Exists(LibraryPath));
@@ -39,7 +39,7 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void AddRejectsBlankAuthorAndDoesNotCreateFile()
     {
-        var error = Assert.Throws<BookInputException>(() => Open().Add("Dune", " "));
+        BookInputException error = Assert.Throws<BookInputException>(() => Open().Add("Dune", " "));
 
         Assert.Equal([BookInputProblem.MissingAuthor], error.Problems);
         Assert.False(File.Exists(LibraryPath));
@@ -48,7 +48,7 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void AddRejectsMissingTitleAndAuthor()
     {
-        var error = Assert.Throws<BookInputException>(() => Open().Add(null, null));
+        BookInputException error = Assert.Throws<BookInputException>(() => Open().Add(null, null));
 
         Assert.Equal([BookInputProblem.MissingTitle, BookInputProblem.MissingAuthor], error.Problems);
         Assert.False(File.Exists(LibraryPath));
@@ -57,10 +57,10 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void AddAllowsTwoBooksWithTheSameTitleAndAuthor()
     {
-        var library = Open();
+        PersonalLibrary library = Open();
 
-        var first = library.Add("Dune", "Frank Herbert");
-        var second = library.Add("Dune", "Frank Herbert");
+        Book first = library.Add("Dune", "Frank Herbert");
+        Book second = library.Add("Dune", "Frank Herbert");
 
         Assert.NotEqual(first.Id, second.Id);
         Assert.Equal([first, second], Open().Books);
@@ -69,7 +69,7 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void MissingFileIsAnEmptyLibraryAndDoesNotCreateFile()
     {
-        var books = Open().Books;
+        IReadOnlyList<Book> books = Open().Books;
 
         Assert.Empty(books);
         Assert.False(File.Exists(LibraryPath));
@@ -79,7 +79,7 @@ public class PersonalLibraryTests : IDisposable
     public void UnreadableFileStaysUnchanged()
     {
         File.WriteAllText(LibraryPath, "{");
-        var bytes = File.ReadAllBytes(LibraryPath);
+        byte[] bytes = File.ReadAllBytes(LibraryPath);
 
         Assert.Throws<LibraryStoreException>(() => Open());
 
@@ -90,7 +90,7 @@ public class PersonalLibraryTests : IDisposable
     public void UnsupportedVersionStaysUnchanged()
     {
         File.WriteAllText(LibraryPath, """{"version":2,"books":[]}""");
-        var bytes = File.ReadAllBytes(LibraryPath);
+        byte[] bytes = File.ReadAllBytes(LibraryPath);
 
         Assert.Throws<LibraryStoreException>(() => Open());
 
@@ -100,9 +100,9 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void StoredBookWithoutTitleStaysUnchanged()
     {
-        var id = Guid.NewGuid();
+        Guid id = Guid.NewGuid();
         File.WriteAllText(LibraryPath, $$"""{"version":1,"books":[{"id":"{{id}}","title":" ","author":"Frank Herbert"}]}""");
-        var bytes = File.ReadAllBytes(LibraryPath);
+        byte[] bytes = File.ReadAllBytes(LibraryPath);
 
         Assert.Throws<LibraryStoreException>(() => Open());
 
@@ -112,9 +112,9 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void ReplaceRejectsDuplicateIdsAndDoesNotCreateFile()
     {
-        var id = Guid.NewGuid();
-        var store = new FileBookStore(LibraryPath);
-        var book = new Book(id, "Dune", "Frank Herbert");
+        Guid id = Guid.NewGuid();
+        FileBookStore store = new FileBookStore(LibraryPath);
+        Book book = new Book(id, "Dune", "Frank Herbert");
 
         Assert.Throws<LibraryStoreException>(() => store.Replace([book, book]));
 
@@ -124,11 +124,11 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void DuplicateStoredIdsStayUnchanged()
     {
-        var id = Guid.NewGuid();
+        Guid id = Guid.NewGuid();
         File.WriteAllText(
             LibraryPath,
             $$"""{"version":1,"books":[{"id":"{{id}}","title":"Dune","author":"Frank Herbert"},{"id":"{{id}}","title":"Dune","author":"Frank Herbert"}]}""");
-        var bytes = File.ReadAllBytes(LibraryPath);
+        byte[] bytes = File.ReadAllBytes(LibraryPath);
 
         Assert.Throws<LibraryStoreException>(() => Open());
 
@@ -138,11 +138,11 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void EditChangesTitleAndAuthorAndKeepsId()
     {
-        var library = Open();
-        var book = library.Add("Dune", "Frank Herbert");
-        var other = library.Add("Neuromancer", "William Gibson");
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
+        Book other = library.Add("Neuromancer", "William Gibson");
 
-        var edited = library.Edit(book.Id, "  Dune Messiah  ", " Frank Herbert ");
+        Book edited = library.Edit(book.Id, "  Dune Messiah  ", " Frank Herbert ");
 
         Assert.Equal(book.Id, edited.Id);
         Assert.Equal("Dune Messiah", edited.Title);
@@ -153,10 +153,10 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void EditRejectsBlankTextAndKeepsStoredBook()
     {
-        var library = Open();
-        var book = library.Add("Dune", "Frank Herbert");
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
 
-        var error = Assert.Throws<BookInputException>(() => library.Edit(book.Id, " ", "Frank Herbert"));
+        BookInputException error = Assert.Throws<BookInputException>(() => library.Edit(book.Id, " ", "Frank Herbert"));
 
         Assert.Equal([BookInputProblem.MissingTitle], error.Problems);
         Assert.Equal([book], Open().Books);
@@ -165,11 +165,11 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void EditMissingBookDoesNotCreateIt()
     {
-        var library = Open();
+        PersonalLibrary library = Open();
         library.Add("Dune", "Frank Herbert");
-        var missing = Guid.NewGuid();
+        Guid missing = Guid.NewGuid();
 
-        var error = Assert.Throws<MissingBookException>(() => library.Edit(missing, "Neuromancer", "William Gibson"));
+        MissingBookException error = Assert.Throws<MissingBookException>(() => library.Edit(missing, "Neuromancer", "William Gibson"));
 
         Assert.Equal(missing, error.BookId);
         Assert.DoesNotContain(Open().Books, book => book.Id == missing);
@@ -178,9 +178,9 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void RemoveDeletesOnlyTheSelectedBook()
     {
-        var library = Open();
-        var keep = library.Add("Dune", "Frank Herbert");
-        var remove = library.Add("Dune", "Frank Herbert");
+        PersonalLibrary library = Open();
+        Book keep = library.Add("Dune", "Frank Herbert");
+        Book remove = library.Add("Dune", "Frank Herbert");
 
         library.Remove(remove.Id);
 
@@ -190,11 +190,11 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void RemoveMissingBookFailsAndKeepsLibrary()
     {
-        var library = Open();
-        var book = library.Add("Dune", "Frank Herbert");
-        var missing = Guid.NewGuid();
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
+        Guid missing = Guid.NewGuid();
 
-        var error = Assert.Throws<MissingBookException>(() => library.Remove(missing));
+        MissingBookException error = Assert.Throws<MissingBookException>(() => library.Remove(missing));
 
         Assert.Equal(missing, error.BookId);
         Assert.Equal([book], Open().Books);
@@ -203,8 +203,8 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void SecondRemoveOfTheSameBookFails()
     {
-        var library = Open();
-        var book = library.Add("Dune", "Frank Herbert");
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
         library.Remove(book.Id);
 
         Assert.Throws<MissingBookException>(() => library.Remove(book.Id));
@@ -215,9 +215,9 @@ public class PersonalLibraryTests : IDisposable
     [Fact]
     public void FailedWriteKeepsPreviousBooks()
     {
-        var store = new FailOnSecondWriteStore(new FileBookStore(LibraryPath));
-        var library = new PersonalLibrary(store);
-        var book = library.Add("Dune", "Frank Herbert");
+        FailOnSecondWriteStore store = new FailOnSecondWriteStore(new FileBookStore(LibraryPath));
+        PersonalLibrary library = new PersonalLibrary(store);
+        Book book = library.Add("Dune", "Frank Herbert");
 
         Assert.Throws<LibraryStoreException>(() => library.Add("Neuromancer", "William Gibson"));
 
