@@ -89,7 +89,7 @@ public sealed class FileBookStore : IBookStore
         string temporary = _path + ".tmp";
         try
         {
-            Directory.CreateDirectory(directory);
+            _ = Directory.CreateDirectory(directory);
             File.WriteAllText(temporary, json);
             File.Move(temporary, _path, overwrite: true);
         }

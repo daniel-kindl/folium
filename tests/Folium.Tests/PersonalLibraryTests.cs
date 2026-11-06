@@ -9,7 +9,7 @@ public sealed class PersonalLibraryTests : IDisposable
 
     public PersonalLibraryTests()
     {
-        Directory.CreateDirectory(_directory);
+        _ = Directory.CreateDirectory(_directory);
     }
 
     public void Dispose()

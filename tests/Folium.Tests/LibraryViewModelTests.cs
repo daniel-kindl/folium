@@ -300,7 +300,7 @@ public sealed class LibraryViewModelTests : IDisposable
     private string NewPath()
     {
         string directory = Path.Combine(Path.GetTempPath(), "folium-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(directory);
+        _ = Directory.CreateDirectory(directory);
         _directories.Add(directory);
         return Path.Combine(directory, "library.json");
     }
