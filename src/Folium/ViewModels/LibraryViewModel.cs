@@ -14,16 +14,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private Book? _selected;
     private string _titleInput = "";
     private string _authorInput = "";
-    private string? _inputError;
-    private string? _saveError;
-    private IReadOnlyList<Book> _books = [];
 
     private LibraryViewModel(PersonalLibrary? library)
     {
         _library = library;
         if (library is not null)
         {
-            _books = library.Books;
+            Books = library.Books;
         }
 
         ShowAddCommand = new Command(_ => ShowAdd(), _ => ShowLibrary);
@@ -60,14 +57,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Screen.Edit => "Edit book",
         Screen.Details => "Book",
         Screen.ConfirmRemove => "Remove this book?",
+        Screen.Library => throw new NotImplementedException(),
         _ => "Library",
     };
 
-    public IReadOnlyList<Book> Books => _books;
+    public IReadOnlyList<Book> Books { get; private set; } = [];
 
-    public bool IsEmpty => ShowLibrary && _books.Count == 0;
+    public bool IsEmpty => ShowLibrary && Books.Count == 0;
 
-    public bool ShowBooks => ShowLibrary && _books.Count > 0;
+    public bool ShowBooks => ShowLibrary && Books.Count > 0;
 
     public string? EmptyMessage => IsEmpty ? "No books yet." : null;
 
@@ -89,11 +87,11 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     public string SelectedAuthor => _selected?.Author ?? "";
 
-    public string ConfirmMessage => "Folium deletes this book from your library.";
+    public static string ConfirmMessage => "Folium deletes this book from your library.";
 
-    public string? InputError => _inputError;
+    public string? InputError { get; private set; }
 
-    public string? SaveError => _saveError;
+    public string? SaveError { get; private set; }
 
     public string TitleInput
     {
@@ -169,7 +167,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return;
         }
 
-        _selected = _books.FirstOrDefault(book => book.Id == id);
+        _selected = Books.FirstOrDefault(book => book.Id == id);
         if (_selected is null)
         {
             return;
@@ -197,7 +195,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             Book saved = _editing
                 ? _library.Edit(_selected!.Id, _titleInput, _authorInput)
                 : _library.Add(_titleInput, _authorInput);
-            _books = _library.Books;
+            Books = _library.Books;
             Raise(nameof(Books));
             ClearErrors();
             if (_editing)
@@ -212,18 +210,18 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
         catch (BookInputException exception)
         {
-            _saveError = null;
-            _inputError = Describe(exception);
+            SaveError = null;
+            InputError = Describe(exception);
             Raise(nameof(SaveError));
             Raise(nameof(InputError));
         }
         catch (MissingBookException exception)
         {
             Trace.TraceError(exception.ToString());
-            _books = _library.Books;
+            Books = _library.Books;
             Raise(nameof(Books));
-            _saveError = "Folium could not find that book.";
-            _inputError = null;
+            SaveError = "Folium could not find that book.";
+            InputError = null;
             Raise(nameof(SaveError));
             Raise(nameof(InputError));
             ShowLibraryScreen();
@@ -231,8 +229,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         catch (LibraryStoreException exception)
         {
             Trace.TraceError(exception.ToString());
-            _inputError = null;
-            _saveError = "Folium could not save this book. The text is still in the form.";
+            InputError = null;
+            SaveError = "Folium could not save this book. The text is still in the form.";
             Raise(nameof(InputError));
             Raise(nameof(SaveError));
         }
@@ -258,23 +256,23 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         try
         {
             _library.Remove(_selected.Id);
-            _books = _library.Books;
+            Books = _library.Books;
             Raise(nameof(Books));
             ShowLibraryScreen();
         }
         catch (MissingBookException exception)
         {
             Trace.TraceError(exception.ToString());
-            _books = _library.Books;
+            Books = _library.Books;
             Raise(nameof(Books));
-            _saveError = "Folium could not find that book.";
+            SaveError = "Folium could not find that book.";
             Raise(nameof(SaveError));
             ShowLibraryScreen();
         }
         catch (LibraryStoreException exception)
         {
             Trace.TraceError(exception.ToString());
-            _saveError = "Folium could not remove this book.";
+            SaveError = "Folium could not remove this book.";
             Raise(nameof(SaveError));
         }
     }
@@ -296,13 +294,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void ClearErrors()
     {
-        if (_inputError is null && _saveError is null)
+        if (InputError is null && SaveError is null)
         {
             return;
         }
 
-        _inputError = null;
-        _saveError = null;
+        InputError = null;
+        SaveError = null;
         Raise(nameof(InputError));
         Raise(nameof(SaveError));
     }
@@ -326,17 +324,17 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void SetInput(ref string field, string value, string propertyName)
     {
-        if (field == value)
+        if (string.Equals(field, value, StringComparison.Ordinal))
         {
             return;
         }
 
         field = value;
         Raise(propertyName);
-        if (_inputError is not null || _saveError is not null)
+        if (InputError is not null || SaveError is not null)
         {
-            _inputError = null;
-            _saveError = null;
+            InputError = null;
+            SaveError = null;
             Raise(nameof(InputError));
             Raise(nameof(SaveError));
         }
@@ -344,7 +342,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void SetText(ref string field, string value, string propertyName)
     {
-        if (field == value)
+        if (string.Equals(field, value, StringComparison.Ordinal))
         {
             return;
         }
@@ -368,8 +366,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
     }
 
-    private void Raise(string propertyName) =>
+    private void Raise(string propertyName)
+    {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 
     private static string Describe(BookInputException exception)
     {
@@ -380,42 +380,29 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return "Enter a title and an author.";
         }
 
-        if (missingTitle)
-        {
-            return "Enter a title.";
-        }
-
-        if (missingAuthor)
-        {
-            return "Enter an author.";
-        }
-
-        return "Folium could not save this book.";
+        return missingTitle ? "Enter a title." : missingAuthor ? "Enter an author." : "Folium could not save this book.";
     }
 
     private enum Screen
     {
-        Library,
-        Add,
-        Edit,
-        Details,
-        ConfirmRemove,
+        Library = 0,
+        Add = 1,
+        Edit = 2,
+        Details = 3,
+        ConfirmRemove = 4,
     }
 
-    private sealed class Command : ICommand
+    private sealed class Command(Action<object?> execute, Func<object?, bool> canExecute) : ICommand
     {
-        private readonly Action<object?> _execute;
-        private readonly Func<object?, bool> _canExecute;
-
-        public Command(Action<object?> execute, Func<object?, bool> canExecute)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
-        }
+        private readonly Action<object?> _execute = execute;
+        private readonly Func<object?, bool> _canExecute = canExecute;
 
         public event EventHandler? CanExecuteChanged;
 
-        public bool CanExecute(object? parameter) => _canExecute(parameter);
+        public bool CanExecute(object? parameter)
+        {
+            return _canExecute(parameter);
+        }
 
         public void Execute(object? parameter)
         {
@@ -425,6 +412,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             }
         }
 
-        public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        public void RaiseCanExecuteChanged()
+        {
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 }
