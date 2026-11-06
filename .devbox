@@ -1,0 +1,6 @@
+# Development environment for this repository, read by the devbox router.
+#
+# The repository holds a .NET solution and an Android application. The general
+# markers match dotnet-dev. This declaration selects the environment that has
+# the .NET SDK, JDK 21, the Android SDK and the Android workload.
+dotnet-android-dev
