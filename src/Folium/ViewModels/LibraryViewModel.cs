@@ -87,7 +87,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     public string SelectedAuthor => _selected?.Author ?? "";
 
-    public static string ConfirmMessage => "Folium deletes this book from your library.";
+    /// <summary>The confirm view binds to this member on the view-model instance.</summary>
+    public string ConfirmMessage { get; } = "Folium deletes this book from your library.";
 
     public string? InputError { get; private set; }
 
