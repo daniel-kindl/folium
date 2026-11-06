@@ -1,6 +1,7 @@
 {
   "stryker-config": {
     "project": "Folium.csproj",
+    "test-runner": "mtp",
     "mutate": [
       "Books/**/*.cs",
       "Storage/**/*.cs"

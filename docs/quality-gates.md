@@ -16,7 +16,8 @@ Folium follows [dkstack's coding standards](https://github.com/daniel-kindl/dkst
 
 ## Coverage
 
-The `build` CI job generates Coverlet Cobertura coverage for `tests/Folium.Tests`.
+The `build` CI job runs tests with the Microsoft Testing Platform.
+Coverlet writes a Cobertura report for `tests/Folium.Tests`.
 `tools/check-coverage.py` gates C# in the production `Folium` assembly:
 
 - Line coverage at least 80%.
@@ -29,7 +30,9 @@ These are minimum floors, not substitutes for meaningful assertions.
 ## Mutation testing
 
 The `mutation` CI job installs pinned Stryker.NET 5.0.0 and runs from
-`tests/Folium.Tests`. `MainView` loads its XAML with `AvaloniaXamlLoader`.
+`tests/Folium.Tests`. It uses the Microsoft Testing Platform runner.
+VSTest does not activate mutants in this xUnit project.
+`MainView` loads its XAML with `AvaloniaXamlLoader`.
 The mutation compile does not run the Avalonia source generator.
 Its config mutates only `Books` and `Storage` source files.
 The mutation score must be at least 70%. An 85% score is the preferred target.
