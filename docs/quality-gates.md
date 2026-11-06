@@ -17,11 +17,12 @@ Folium follows [dkstack's coding standards](https://github.com/daniel-kindl/dkst
 ## Coverage
 
 The `build` CI job generates Coverlet Cobertura coverage for `tests/Folium.Tests`.
-`tools/check-coverage.py` gates the production `Folium` assembly:
+`tools/check-coverage.py` gates C# in the production `Folium` assembly:
 
 - Line coverage at least 80%.
 - Branch coverage at least 70%.
 - Missing, ambiguous or malformed coverage reports fail.
+- `.axaml` files are not in the rate. The unit tests do not load the view.
 
 These are minimum floors, not substitutes for meaningful assertions.
 
