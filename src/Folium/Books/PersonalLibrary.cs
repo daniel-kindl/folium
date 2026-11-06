@@ -46,6 +46,27 @@ public sealed class PersonalLibrary
         return updated;
     }
 
+    /// <summary>Changes the reading status and keeps the title and the author. Fails when the library does not contain the book.</summary>
+    /// <param name="id">The identifier of the saved book.</param>
+    /// <param name="status">The reading status. The value must be a defined status.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The status is not a defined value. The saved book stays unchanged.</exception>
+    /// <exception cref="MissingBookException">The library does not contain the book.</exception>
+    public Book SetStatus(Guid id, ReadingStatus status)
+    {
+        if (!Enum.IsDefined(status))
+        {
+            throw new ArgumentOutOfRangeException(nameof(status), "The reading status is not a defined value.");
+        }
+
+        int index = IndexOf(id);
+        Book updated = _books[index] with { Status = status };
+        Book[] next = [.. _books];
+        next[index] = updated;
+        _store.Replace(next);
+        _books[index] = updated;
+        return updated;
+    }
+
     /// <summary>Deletes the book. A second removal of the same identifier fails.</summary>
     /// <param name="id">The identifier of the saved book.</param>
     public void Remove(Guid id)

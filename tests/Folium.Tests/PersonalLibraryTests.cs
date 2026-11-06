@@ -223,6 +223,121 @@ public sealed class PersonalLibraryTests : IDisposable
     }
 
     [Fact]
+    public void MissingStatusLoadsAsToRead()
+    {
+        Guid id = Guid.NewGuid();
+        File.WriteAllText(
+            LibraryPath,
+            $$"""{"version":1,"books":[{"id":"{{id}}","title":"Dune","author":"Frank Herbert"}]}""");
+
+        Book book = Assert.Single(Open().Books);
+
+        Assert.Equal(id, book.Id);
+        Assert.Equal(ReadingStatus.ToRead, book.Status);
+    }
+
+    [Theory]
+    [InlineData(ReadingStatus.ToRead, "to-read")]
+    [InlineData(ReadingStatus.Reading, "reading")]
+    [InlineData(ReadingStatus.Finished, "finished")]
+    public void SetStatusStoresTheStatusAcrossRestart(ReadingStatus status, string token)
+    {
+        PersonalLibrary library = Open();
+        Book added = library.Add("Dune", "Frank Herbert");
+
+        Book updated = library.SetStatus(added.Id, status);
+
+        Assert.Equal(added.Id, updated.Id);
+        Assert.Equal("Dune", updated.Title);
+        Assert.Equal("Frank Herbert", updated.Author);
+        Assert.Equal(status, updated.Status);
+        Assert.Contains($"\"readingStatus\": \"{token}\"", File.ReadAllText(LibraryPath), StringComparison.Ordinal);
+        Assert.Equal(status, Assert.Single(Open().Books).Status);
+    }
+
+    [Fact]
+    public void SetStatusRejectsAnUndefinedValueAndKeepsTheBook()
+    {
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
+
+        _ = Assert.Throws<ArgumentOutOfRangeException>(() => library.SetStatus(book.Id, (ReadingStatus)9));
+
+        Assert.Equal([book], library.Books);
+        Assert.Equal([book], Open().Books);
+    }
+
+    [Fact]
+    public void SetStatusMissingBookDoesNotCreateIt()
+    {
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
+        Guid missing = Guid.NewGuid();
+
+        MissingBookException error = Assert.Throws<MissingBookException>(() => library.SetStatus(missing, ReadingStatus.Finished));
+
+        Assert.Equal(missing, error.BookId);
+        Assert.Equal([book], Open().Books);
+    }
+
+    [Fact]
+    public void SetStatusFailedWriteKeepsPreviousStatus()
+    {
+        FailOnSecondWriteStore store = new(new FileBookStore(LibraryPath));
+        PersonalLibrary library = new(store);
+        Book book = library.Add("Dune", "Frank Herbert");
+
+        _ = Assert.Throws<LibraryStoreException>(() => library.SetStatus(book.Id, ReadingStatus.Finished));
+
+        Assert.Equal([book], library.Books);
+        Assert.Equal([book], new PersonalLibrary(new FileBookStore(LibraryPath)).Books);
+    }
+
+    [Fact]
+    public void EditKeepsReadingStatus()
+    {
+        PersonalLibrary library = Open();
+        Book book = library.Add("Dune", "Frank Herbert");
+        _ = library.SetStatus(book.Id, ReadingStatus.Finished);
+
+        Book edited = library.Edit(book.Id, "Dune Messiah", "Frank Herbert");
+
+        Assert.Equal(ReadingStatus.Finished, edited.Status);
+        Assert.Equal(ReadingStatus.Finished, Assert.Single(Open().Books).Status);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("Reading")]
+    [InlineData("to read")]
+    public void RejectedStatusTextStaysUnchanged(string token)
+    {
+        Guid id = Guid.NewGuid();
+        File.WriteAllText(
+            LibraryPath,
+            $$"""{"version":1,"books":[{"id":"{{id}}","title":"Dune","author":"Frank Herbert","readingStatus":"{{token}}"}]}""");
+        byte[] bytes = File.ReadAllBytes(LibraryPath);
+
+        _ = Assert.Throws<LibraryStoreException>(Open);
+
+        Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
+    }
+
+    [Fact]
+    public void UnknownStatusStaysUnchanged()
+    {
+        Guid id = Guid.NewGuid();
+        File.WriteAllText(
+            LibraryPath,
+            $$"""{"version":1,"books":[{"id":"{{id}}","title":"Dune","author":"Frank Herbert","readingStatus":"started"}]}""");
+        byte[] bytes = File.ReadAllBytes(LibraryPath);
+
+        _ = Assert.Throws<LibraryStoreException>(Open);
+
+        Assert.Equal(bytes, File.ReadAllBytes(LibraryPath));
+    }
+
+    [Fact]
     public void FailedWriteKeepsPreviousBooks()
     {
         FailOnSecondWriteStore store = new(new FileBookStore(LibraryPath));

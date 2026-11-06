@@ -134,7 +134,19 @@ public sealed class FileBookStore : IBookStore
         {
             (true, _) => throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use."),
             (_, true) => throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author."),
-            _ => new Book(stored.Id, stored.Title!, stored.Author!),
+            _ => new Book(stored.Id, stored.Title!, stored.Author!, RequireStatus(stored.ReadingStatus)),
+        };
+    }
+
+    private ReadingStatus RequireStatus(string? token)
+    {
+        return token switch
+        {
+            null => ReadingStatus.ToRead,
+            "to-read" => ReadingStatus.ToRead,
+            "reading" => ReadingStatus.Reading,
+            "finished" => ReadingStatus.Finished,
+            _ => throw new LibraryStoreException($"The library file at {_path} contains a reading status that Folium cannot use."),
         };
     }
 
@@ -145,7 +157,24 @@ public sealed class FileBookStore : IBookStore
             null => throw new ArgumentException("The library cannot store an empty book.", nameof(book)),
             _ when book.Id == Guid.Empty || !ids.Add(book.Id) || BookText.Problems(book.Title, book.Author).Count > 0
                 => throw new LibraryStoreException($"Folium could not write the library file at {_path}."),
-            _ => new StoredBook { Id = book.Id, Title = book.Title, Author = book.Author },
+            _ => new StoredBook
+            {
+                Id = book.Id,
+                Title = book.Title,
+                Author = book.Author,
+                ReadingStatus = Token(book.Status),
+            },
+        };
+    }
+
+    private string Token(ReadingStatus status)
+    {
+        return status switch
+        {
+            ReadingStatus.ToRead => "to-read",
+            ReadingStatus.Reading => "reading",
+            ReadingStatus.Finished => "finished",
+            _ => throw new LibraryStoreException($"Folium could not write the library file at {_path}."),
         };
     }
 
@@ -168,5 +197,7 @@ public sealed class FileBookStore : IBookStore
         public string? Title { get; set; }
 
         public string? Author { get; set; }
+
+        public string? ReadingStatus { get; set; }
     }
 }
