@@ -65,6 +65,6 @@ Investigate those gaps; a missing measurement is not evidence of safety.
 ## Merge requirements
 
 All required CI jobs must pass. The jobs are build, mutation, and CRAP.
-Check the Android UI on an emulator or on a device.
+A person checks that the Android screens are usable on an emulator or on a physical device. CI does not run this check.
 
-Fix the cause when a gate fails. Do not lower a threshold.
+When a CI job fails, fix the cause. Do not lower a minimum threshold.
