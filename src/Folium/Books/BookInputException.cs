@@ -17,8 +17,8 @@ public sealed class BookInputException : Exception
             throw new ArgumentException("A book input failure needs at least one problem.", nameof(problems));
         }
 
-        var missingTitle = problems.Contains(BookInputProblem.MissingTitle);
-        var missingAuthor = problems.Contains(BookInputProblem.MissingAuthor);
+        bool missingTitle = problems.Contains(BookInputProblem.MissingTitle);
+        bool missingAuthor = problems.Contains(BookInputProblem.MissingAuthor);
         if (missingTitle && missingAuthor)
         {
             return "The book needs a title and an author.";
