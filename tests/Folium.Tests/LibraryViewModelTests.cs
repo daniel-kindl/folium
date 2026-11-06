@@ -10,7 +10,7 @@ public sealed class LibraryViewModelTests : IDisposable
 
     public void Dispose()
     {
-        foreach (var directory in _directories)
+        foreach (string directory in _directories)
         {
             Directory.Delete(directory, recursive: true);
         }
@@ -19,7 +19,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void EmptyLibraryExplainsThatNoBooksAreSaved()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
 
         Assert.Equal("Library", viewModel.Heading);
         Assert.True(viewModel.ShowLibrary);
@@ -35,7 +35,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void AddRejectsBlankTitleAndKeepsTheEnteredText()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         viewModel.ShowAddCommand.Execute(null);
         viewModel.TitleInput = "   ";
         viewModel.AuthorInput = "Frank Herbert";
@@ -53,7 +53,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void AddRejectsBlankAuthorAndKeepsTheEnteredText()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         viewModel.ShowAddCommand.Execute(null);
         viewModel.TitleInput = "Dune";
         viewModel.AuthorInput = " ";
@@ -68,7 +68,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void AddRejectsBlankTitleAndAuthor()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         viewModel.ShowAddCommand.Execute(null);
         viewModel.TitleInput = "";
         viewModel.AuthorInput = "";
@@ -82,7 +82,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void AddShowsTheSavedBookAfterRestart()
     {
-        var (viewModel, path) = OpenAtPath();
+        (LibraryViewModel viewModel, string path) = OpenAtPath();
         viewModel.ShowAddCommand.Execute(null);
         viewModel.TitleInput = "  Dune  ";
         viewModel.AuthorInput = "  Frank Herbert  ";
@@ -92,18 +92,18 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.True(viewModel.ShowLibrary);
         Assert.False(viewModel.IsEmpty);
         Assert.True(viewModel.ShowBooks);
-        var saved = Assert.Single(viewModel.Books);
+        Book saved = Assert.Single(viewModel.Books);
         Assert.Equal("Dune", saved.Title);
         Assert.Equal("Frank Herbert", saved.Author);
 
-        var reopened = Assert.Single(LibraryViewModel.Open(new FileBookStore(path)).Books);
+        Book reopened = Assert.Single(LibraryViewModel.Open(new FileBookStore(path)).Books);
         Assert.Equal(saved, reopened);
     }
 
     [Fact]
     public void AddAllowsTwoBooksWithTheSameTitleAndAuthor()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         Add(viewModel, "Dune", "Frank Herbert");
 
@@ -114,7 +114,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void OpenShowsTheSelectedBook()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
 
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
@@ -128,7 +128,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void OpenUnknownBookStaysOnTheLibrary()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
 
         viewModel.OpenCommand.Execute(Guid.NewGuid());
 
@@ -138,7 +138,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void EditSavesTheNewTitleAndAuthor()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
         viewModel.EditCommand.Execute(null);
@@ -155,7 +155,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void CancelEditKeepsTheSavedBook()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
         viewModel.EditCommand.Execute(null);
@@ -171,7 +171,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void KeepBookDoesNotRemoveIt()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
 
@@ -191,10 +191,10 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void ConfirmRemoveDeletesTheBookPermanently()
     {
-        var (viewModel, path) = OpenAtPath();
+        (LibraryViewModel viewModel, string path) = OpenAtPath();
         Add(viewModel, "Dune", "Frank Herbert");
         Add(viewModel, "Neuromancer", "William Gibson");
-        var removeId = viewModel.Books[0].Id;
+        Guid removeId = viewModel.Books[0].Id;
         viewModel.OpenCommand.Execute(removeId);
         viewModel.AskRemoveCommand.Execute(null);
 
@@ -209,7 +209,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void BackMovesFromConfirmDetailsAndEditorToThePreviousScreen()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
         viewModel.AskRemoveCommand.Execute(null);
@@ -238,11 +238,11 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void UnreadableLibraryDoesNotOfferChanges()
     {
-        var path = NewPath();
+        string path = NewPath();
         File.WriteAllText(path, "{");
-        var bytes = File.ReadAllBytes(path);
+        byte[] bytes = File.ReadAllBytes(path);
 
-        var viewModel = LibraryViewModel.Open(new FileBookStore(path));
+        LibraryViewModel viewModel = LibraryViewModel.Open(new FileBookStore(path));
 
         Assert.True(viewModel.ShowLoadError);
         Assert.False(viewModel.ShowLibrary);
@@ -257,8 +257,8 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void FailedSaveKeepsTheEnteredTextAndTheSavedBooks()
     {
-        var path = NewPath();
-        var viewModel = LibraryViewModel.Open(new FailOnSecondWriteStore(new FileBookStore(path)));
+        string path = NewPath();
+        LibraryViewModel viewModel = LibraryViewModel.Open(new FailOnSecondWriteStore(new FileBookStore(path)));
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.ShowAddCommand.Execute(null);
         viewModel.TitleInput = "Neuromancer";
@@ -277,7 +277,7 @@ public sealed class LibraryViewModelTests : IDisposable
     [Fact]
     public void TitleInputNotifiesTheView()
     {
-        var viewModel = Open();
+        LibraryViewModel viewModel = Open();
         string? propertyName = null;
         viewModel.PropertyChanged += (_, args) => propertyName = args.PropertyName;
 
@@ -290,13 +290,13 @@ public sealed class LibraryViewModelTests : IDisposable
 
     private (LibraryViewModel ViewModel, string Path) OpenAtPath()
     {
-        var path = NewPath();
+        string path = NewPath();
         return (LibraryViewModel.Open(new FileBookStore(path)), path);
     }
 
     private string NewPath()
     {
-        var directory = Path.Combine(Path.GetTempPath(), "folium-" + Guid.NewGuid().ToString("N"));
+        string directory = Path.Combine(Path.GetTempPath(), "folium-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         _directories.Add(directory);
         return Path.Combine(directory, "library.json");
