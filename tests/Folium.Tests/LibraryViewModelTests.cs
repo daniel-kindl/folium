@@ -275,6 +275,128 @@ public sealed class LibraryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void EditScreenIsNamedEditBook()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+
+        viewModel.EditCommand.Execute(parameter: null);
+
+        Assert.Equal("Edit book", viewModel.Heading);
+        Assert.True(viewModel.ShowEditor);
+    }
+
+    [Fact]
+    public void EditWithoutABookStaysOnTheLibrary()
+    {
+        LibraryViewModel viewModel = Open();
+
+        viewModel.EditCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void OpenIgnoresAValueThatIsNotABookId()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.OpenCommand.Execute(parameter: "Dune");
+
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void SaveFromTheLibraryDoesNotAddABook()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.SaveCommand.Execute(parameter: null);
+
+        Assert.Equal("Dune", Assert.Single(viewModel.Books).Title);
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void AskRemoveWithoutABookStaysOnTheLibrary()
+    {
+        LibraryViewModel viewModel = Open();
+
+        viewModel.AskRemoveCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void ConfirmRemoveWithoutABookStaysOnTheLibrary()
+    {
+        LibraryViewModel viewModel = Open();
+
+        viewModel.ConfirmRemoveCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void FailedRemoveKeepsTheBookOnTheConfirmScreen()
+    {
+        string path = NewPath();
+        LibraryViewModel viewModel = LibraryViewModel.Open(new FailOnSecondWriteStore(new FileBookStore(path)));
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        viewModel.AskRemoveCommand.Execute(parameter: null);
+
+        viewModel.ConfirmRemoveCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowConfirm);
+        Assert.Equal("Folium could not remove this book.", viewModel.SaveError);
+        Assert.Equal("Dune", Assert.Single(viewModel.Books).Title);
+        Assert.Equal("Dune", Assert.Single(LibraryViewModel.Open(new FileBookStore(path)).Books).Title);
+    }
+
+    [Fact]
+    public void TypingClearsAnInputError()
+    {
+        LibraryViewModel viewModel = Open();
+        viewModel.ShowAddCommand.Execute(parameter: null);
+        viewModel.SaveCommand.Execute(parameter: null);
+
+        viewModel.TitleInput = "Dune";
+
+        Assert.Null(viewModel.InputError);
+        Assert.Equal("Dune", viewModel.TitleInput);
+    }
+
+    [Fact]
+    public void BackClearsAnInputError()
+    {
+        LibraryViewModel viewModel = Open();
+        viewModel.ShowAddCommand.Execute(parameter: null);
+        viewModel.SaveCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.GoBack());
+
+        Assert.Null(viewModel.InputError);
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void ScreenChangeNotifiesTheCommands()
+    {
+        LibraryViewModel viewModel = Open();
+        int changes = 0;
+        viewModel.ShowAddCommand.CanExecuteChanged += (_, _) => changes++;
+
+        viewModel.ShowAddCommand.Execute(parameter: null);
+
+        Assert.True(changes > 0);
+        Assert.True(viewModel.ShowEditor);
+    }
+
+    [Fact]
     public void TitleInputNotifiesTheView()
     {
         LibraryViewModel viewModel = Open();
