@@ -4,6 +4,7 @@ using Folium.Books;
 
 namespace Folium.Storage;
 
+/// <summary>Stores the book list in one JSON file.</summary>
 public sealed class FileBookStore : IBookStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -15,6 +16,8 @@ public sealed class FileBookStore : IBookStore
 
     private readonly string _path;
 
+    /// <summary>Opens the library file at the given path. The path must contain text.</summary>
+    /// <param name="path">The library file location. The text must not be blank.</param>
     public FileBookStore(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -25,11 +28,16 @@ public sealed class FileBookStore : IBookStore
         _path = path;
     }
 
+    /// <summary>Returns the saved books. Returns an empty list when the file is absent.</summary>
+    /// <exception cref="LibraryStoreException">The file cannot be read. The file stays unchanged.</exception>
     public IReadOnlyList<Book> Read()
     {
         return File.Exists(_path) ? ToBooks(ReadDocument()) : [];
     }
 
+    /// <summary>Replaces the saved books. A failed write leaves the previous file unchanged.</summary>
+    /// <param name="books">The books that replace the saved list.</param>
+    /// <exception cref="LibraryStoreException">The file cannot be written. The previous file stays unchanged.</exception>
     public void Replace(IReadOnlyList<Book> books)
     {
         ArgumentNullException.ThrowIfNull(books);

@@ -7,10 +7,8 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <!-- IDE0005 runs on build only when the compiler parses documentation comments.
          https://github.com/dotnet/roslyn/issues/41640
-         That switch also reports CS1591. XML documentation is not a Folium gate.
-         dotnet format fails when the compiler reports CS1591, so this warning stays off. -->
+         CS1591 is an error. Each public member needs an XML summary. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>

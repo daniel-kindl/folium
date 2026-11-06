@@ -8,7 +8,13 @@ Folium follows [dkstack's coding standards](https://github.com/daniel-kindl/dkst
 - `dotnet build --configuration Release --no-restore`
 - `AnalysisMode=All` enables the broad built-in analyzer set.
 - `GenerateDocumentationFile` is on so IDE0005 can run on build. See [dotnet/roslyn 41640](https://github.com/dotnet/roslyn/issues/41640).
-- Folium does not require XML documentation comments. `NoWarn` includes CS1591 only. `dotnet format` fails when the compiler reports that warning.
+- `CS1591` is an error. Each publicly visible method needs an XML `<summary>`.
+- The same warning also requires a summary on each publicly visible type, property, event, and constructor.
+- A protected member of a public type is publicly visible.
+- Write each summary in one or two short sentences. State the contract or the reason. Do not repeat the member name.
+- Add a `param` element for each parameter.
+- Add an `exception` element for each exception that the member throws directly.
+- The test project sets `NoWarn` to `CS1591` only. xUnit requires a public test method. The method name is the specification.
 - Meziantou.Analyzer and Roslynator.Analyzers are applied across projects.
 - xUnit v3 already includes xunit.analyzers as a dependency.
 - `CodeMetricsConfig.txt` defines thresholds for CA1501/1502/1505/1506; all are errors.

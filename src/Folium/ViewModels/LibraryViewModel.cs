@@ -6,6 +6,7 @@ using Folium.Storage;
 
 namespace Folium.ViewModels;
 
+/// <summary>The screen state for the personal library.</summary>
 public sealed class LibraryViewModel : INotifyPropertyChanged
 {
     private readonly PersonalLibrary? _library;
@@ -33,24 +34,34 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         KeepBookCommand = new Command(_ => ShowDetailsScreen(), _ => ShowConfirm);
     }
 
+    /// <summary>Tells the view that a bound value changed.</summary>
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>Opens the add-book screen.</summary>
     public ICommand ShowAddCommand { get; }
 
+    /// <summary>Saves the book from the editor.</summary>
     public ICommand SaveCommand { get; }
 
+    /// <summary>Leaves the editor without a save.</summary>
     public ICommand CancelCommand { get; }
 
+    /// <summary>Opens the book whose identifier is the command parameter.</summary>
     public ICommand OpenCommand { get; }
 
+    /// <summary>Opens the editor for the selected book.</summary>
     public ICommand EditCommand { get; }
 
+    /// <summary>Opens the remove confirmation for the selected book.</summary>
     public ICommand AskRemoveCommand { get; }
 
+    /// <summary>Removes the selected book after confirmation.</summary>
     public ICommand ConfirmRemoveCommand { get; }
 
+    /// <summary>Leaves the remove confirmation and keeps the book.</summary>
     public ICommand KeepBookCommand { get; }
 
+    /// <summary>The name of the current screen.</summary>
     public string Heading => _screen switch
     {
         Screen.Add => "Add a book",
@@ -61,51 +72,69 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         _ => "Library",
     };
 
+    /// <summary>The books on the library screen.</summary>
     public IReadOnlyList<Book> Books { get; private set; } = [];
 
+    /// <summary>True when the library screen is open and has no books.</summary>
     public bool IsEmpty => ShowLibrary && Books.Count == 0;
 
+    /// <summary>True when the library screen is open and has at least one book.</summary>
     public bool ShowBooks => ShowLibrary && Books.Count > 0;
 
+    /// <summary>The empty-library message. Null when the library has a book or another screen is open.</summary>
     public string? EmptyMessage => IsEmpty ? "No books yet." : null;
 
+    /// <summary>True when the library is open and the library screen is current.</summary>
     public bool ShowLibrary => _library is not null && _screen == Screen.Library;
 
+    /// <summary>True when the library is open and the add screen or the edit screen is current.</summary>
     public bool ShowEditor => _library is not null && _screen is Screen.Add or Screen.Edit;
 
+    /// <summary>True when the library is open and the book details screen is current.</summary>
     public bool ShowDetails => _library is not null && _screen == Screen.Details;
 
+    /// <summary>True when the library is open and the remove confirmation is current.</summary>
     public bool ShowConfirm => _library is not null && _screen == Screen.ConfirmRemove;
 
+    /// <summary>True when the library file did not open.</summary>
     public bool ShowLoadError => _library is null;
 
+    /// <summary>The message when the library file did not open. Null when the library is open.</summary>
     public string? LoadError => ShowLoadError
         ? "Folium could not open your library. The saved file is unchanged."
         : null;
 
+    /// <summary>The title of the selected book. Empty when no book is selected.</summary>
     public string SelectedTitle => _selected?.Title ?? "";
 
+    /// <summary>The author of the selected book. Empty when no book is selected.</summary>
     public string SelectedAuthor => _selected?.Author ?? "";
 
     /// <summary>The confirm view binds to this member on the view-model instance.</summary>
     public string ConfirmMessage { get; } = "Folium deletes this book from your library.";
 
+    /// <summary>The message for invalid title or author text. Null when the text is valid.</summary>
     public string? InputError { get; private set; }
 
+    /// <summary>The message when a save or a removal fails. Null after a successful change.</summary>
     public string? SaveError { get; private set; }
 
+    /// <summary>The title text in the editor. A change clears the input error and the save error.</summary>
     public string TitleInput
     {
         get => _titleInput;
         set => SetInput(ref _titleInput, value, nameof(TitleInput));
     }
 
+    /// <summary>The author text in the editor. A change clears the input error and the save error.</summary>
     public string AuthorInput
     {
         get => _authorInput;
         set => SetInput(ref _authorInput, value, nameof(AuthorInput));
     }
 
+    /// <summary>Opens the library from the store. A store failure leaves the library closed and the file unchanged.</summary>
+    /// <param name="store">The store that holds the saved books. Must not be null.</param>
     public static LibraryViewModel Open(IBookStore store)
     {
         ArgumentNullException.ThrowIfNull(store);
@@ -120,6 +149,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Moves to the previous screen. Returns false on the library screen so the host can leave the app.</summary>
     public bool GoBack()
     {
         if (ShowConfirm || (_editing && ShowEditor))
