@@ -4,7 +4,7 @@ public static class LibraryPaths
 {
     public static string DefaultPath()
     {
-        var root = Environment.GetFolderPath(
+        string root = Environment.GetFolderPath(
             Environment.SpecialFolder.LocalApplicationData,
             Environment.SpecialFolderOption.DoNotVerify);
         if (string.IsNullOrWhiteSpace(root))
