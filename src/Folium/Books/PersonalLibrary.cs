@@ -16,8 +16,8 @@ public sealed class PersonalLibrary
 
     public Book Add(string? title, string? author)
     {
-        var (validTitle, validAuthor) = BookText.Require(title, author);
-        var book = new Book(Guid.NewGuid(), validTitle, validAuthor);
+        (string validTitle, string validAuthor) = BookText.Require(title, author);
+        Book book = new Book(Guid.NewGuid(), validTitle, validAuthor);
         _store.Replace([.. _books, book]);
         _books.Add(book);
         return book;
@@ -25,10 +25,10 @@ public sealed class PersonalLibrary
 
     public Book Edit(Guid id, string? title, string? author)
     {
-        var index = IndexOf(id);
-        var (validTitle, validAuthor) = BookText.Require(title, author);
-        var updated = _books[index] with { Title = validTitle, Author = validAuthor };
-        var next = _books.ToArray();
+        int index = IndexOf(id);
+        (string validTitle, string validAuthor) = BookText.Require(title, author);
+        Book updated = _books[index] with { Title = validTitle, Author = validAuthor };
+        Book[] next = _books.ToArray();
         next[index] = updated;
         _store.Replace(next);
         _books[index] = updated;
@@ -37,8 +37,8 @@ public sealed class PersonalLibrary
 
     public void Remove(Guid id)
     {
-        var index = IndexOf(id);
-        var next = _books.ToList();
+        int index = IndexOf(id);
+        List<Book> next = _books.ToList();
         next.RemoveAt(index);
         _store.Replace(next);
         _books.RemoveAt(index);
@@ -46,7 +46,7 @@ public sealed class PersonalLibrary
 
     private int IndexOf(Guid id)
     {
-        var index = _books.FindIndex(book => book.Id == id);
+        int index = _books.FindIndex(book => book.Id == id);
         if (index < 0)
         {
             throw new MissingBookException(id);
