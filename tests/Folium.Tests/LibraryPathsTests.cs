@@ -7,11 +7,11 @@ public class LibraryPathsTests
     [Fact]
     public void DefaultPathIsThePrivateLibraryFile()
     {
-        var root = Environment.GetFolderPath(
+        string root = Environment.GetFolderPath(
             Environment.SpecialFolder.LocalApplicationData,
             Environment.SpecialFolderOption.DoNotVerify);
 
-        var path = LibraryPaths.DefaultPath();
+        string path = LibraryPaths.DefaultPath();
 
         Assert.Equal(Path.Combine(root, "folium", "library.json"), path);
     }
