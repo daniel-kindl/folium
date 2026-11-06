@@ -38,9 +38,10 @@ explain why the mutation is equivalent. Do not bypass the gate.
 
 The `crap` CI job checks out a pinned commit of
 [microsoft/crap4csharp](https://github.com/microsoft/crap4csharp).
-It executes the tool against `src/Folium`. The tool's built-in method CRAP
-threshold is 8; exit code 2 means a method exceeds the threshold. It creates
-and analyzes its own Cobertura coverage report.
+The job passes each `.cs` file under `src/Folium` to the tool.
+A directory argument reads `<directory>/src`. Folium has no such folder. An empty file list exits 0.
+The tool's method CRAP threshold is 8. Exit code 2 means a method exceeds that threshold.
+The tool creates and analyzes its own Cobertura coverage report.
 
 The CRAP tool excludes constructors and reports unmeasured members separately.
 Investigate those gaps; a missing measurement is not evidence of safety.

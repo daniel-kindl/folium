@@ -74,6 +74,15 @@ jobs:
           git clone https://github.com/microsoft/crap4csharp.git "$RUNNER_TEMP/crap4csharp"
           git -C "$RUNNER_TEMP/crap4csharp" checkout --detach 9e155ec73008af7314b78b8e7f51e5edc2fd2a41
       - name: Enforce method-level CRAP threshold
-        run: dotnet run --project "$RUNNER_TEMP/crap4csharp/src/Crap4CSharp" --configuration Release -- src/Folium
+        run: |
+          files=()
+          while IFS= read -r file; do
+            files+=("$file")
+          done < <(find src/Folium -type f -name '*.cs' -not -path '*/bin/*' -not -path '*/obj/*' | sort)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No C# files found under src/Folium." >&2
+            exit 1
+          fi
+          dotnet run --project "$RUNNER_TEMP/crap4csharp/src/Crap4CSharp" --configuration Release -- "${files[@]}"
 
 
