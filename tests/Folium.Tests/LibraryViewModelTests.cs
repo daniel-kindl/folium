@@ -36,11 +36,11 @@ public sealed class LibraryViewModelTests : IDisposable
     public void AddRejectsBlankTitleAndKeepsTheEnteredText()
     {
         LibraryViewModel viewModel = Open();
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = "   ";
         viewModel.AuthorInput = "Frank Herbert";
 
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
 
         Assert.Equal("Add a book", viewModel.Heading);
         Assert.True(viewModel.ShowEditor);
@@ -54,11 +54,11 @@ public sealed class LibraryViewModelTests : IDisposable
     public void AddRejectsBlankAuthorAndKeepsTheEnteredText()
     {
         LibraryViewModel viewModel = Open();
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = "Dune";
         viewModel.AuthorInput = " ";
 
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
 
         Assert.Equal("Enter an author.", viewModel.InputError);
         Assert.Equal("Dune", viewModel.TitleInput);
@@ -69,11 +69,11 @@ public sealed class LibraryViewModelTests : IDisposable
     public void AddRejectsBlankTitleAndAuthor()
     {
         LibraryViewModel viewModel = Open();
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = "";
         viewModel.AuthorInput = "";
 
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
 
         Assert.Equal("Enter a title and an author.", viewModel.InputError);
         Assert.Empty(viewModel.Books);
@@ -83,11 +83,11 @@ public sealed class LibraryViewModelTests : IDisposable
     public void AddShowsTheSavedBookAfterRestart()
     {
         (LibraryViewModel viewModel, string path) = OpenAtPath();
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = "  Dune  ";
         viewModel.AuthorInput = "  Frank Herbert  ";
 
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowLibrary);
         Assert.False(viewModel.IsEmpty);
@@ -141,10 +141,10 @@ public sealed class LibraryViewModelTests : IDisposable
         LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
-        viewModel.EditCommand.Execute(null);
+        viewModel.EditCommand.Execute(parameter: null);
         viewModel.TitleInput = " Dune Messiah ";
 
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowDetails);
         Assert.Equal("Dune Messiah", viewModel.SelectedTitle);
@@ -158,10 +158,10 @@ public sealed class LibraryViewModelTests : IDisposable
         LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
-        viewModel.EditCommand.Execute(null);
+        viewModel.EditCommand.Execute(parameter: null);
         viewModel.TitleInput = "Changed";
 
-        viewModel.CancelCommand.Execute(null);
+        viewModel.CancelCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowDetails);
         Assert.Equal("Dune", viewModel.SelectedTitle);
@@ -175,17 +175,17 @@ public sealed class LibraryViewModelTests : IDisposable
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
 
-        viewModel.AskRemoveCommand.Execute(null);
+        viewModel.AskRemoveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowConfirm);
         Assert.Equal("Remove this book?", viewModel.Heading);
         Assert.Equal("Folium deletes this book from your library.", viewModel.ConfirmMessage);
         Assert.Equal("Dune", viewModel.SelectedTitle);
 
-        viewModel.KeepBookCommand.Execute(null);
+        viewModel.KeepBookCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowDetails);
-        Assert.Single(viewModel.Books);
+        _ = Assert.Single(viewModel.Books);
     }
 
     [Fact]
@@ -196,9 +196,9 @@ public sealed class LibraryViewModelTests : IDisposable
         Add(viewModel, "Neuromancer", "William Gibson");
         Guid removeId = viewModel.Books[0].Id;
         viewModel.OpenCommand.Execute(removeId);
-        viewModel.AskRemoveCommand.Execute(null);
+        viewModel.AskRemoveCommand.Execute(parameter: null);
 
-        viewModel.ConfirmRemoveCommand.Execute(null);
+        viewModel.ConfirmRemoveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowLibrary);
         Assert.Equal("Neuromancer", Assert.Single(viewModel.Books).Title);
@@ -212,13 +212,13 @@ public sealed class LibraryViewModelTests : IDisposable
         LibraryViewModel viewModel = Open();
         Add(viewModel, "Dune", "Frank Herbert");
         viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
-        viewModel.AskRemoveCommand.Execute(null);
+        viewModel.AskRemoveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.GoBack());
         Assert.True(viewModel.ShowDetails);
-        Assert.Single(viewModel.Books);
+        _ = Assert.Single(viewModel.Books);
 
-        viewModel.EditCommand.Execute(null);
+        viewModel.EditCommand.Execute(parameter: null);
         viewModel.TitleInput = "Changed";
         Assert.True(viewModel.GoBack());
         Assert.True(viewModel.ShowDetails);
@@ -227,11 +227,11 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.True(viewModel.GoBack());
         Assert.True(viewModel.ShowLibrary);
 
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = "Neuromancer";
         Assert.True(viewModel.GoBack());
         Assert.True(viewModel.ShowLibrary);
-        Assert.Single(viewModel.Books);
+        _ = Assert.Single(viewModel.Books);
         Assert.False(viewModel.GoBack());
     }
 
@@ -248,7 +248,7 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.False(viewModel.ShowLibrary);
         Assert.False(viewModel.IsEmpty);
         Assert.Equal("Folium could not open your library. The saved file is unchanged.", viewModel.LoadError);
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         Assert.False(viewModel.ShowEditor);
         Assert.False(viewModel.GoBack());
         Assert.Equal(bytes, File.ReadAllBytes(path));
@@ -260,11 +260,11 @@ public sealed class LibraryViewModelTests : IDisposable
         string path = NewPath();
         LibraryViewModel viewModel = LibraryViewModel.Open(new FailOnSecondWriteStore(new FileBookStore(path)));
         Add(viewModel, "Dune", "Frank Herbert");
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = "Neuromancer";
         viewModel.AuthorInput = "William Gibson";
 
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowEditor);
         Assert.Equal("Neuromancer", viewModel.TitleInput);
@@ -286,7 +286,10 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.Equal(nameof(LibraryViewModel.TitleInput), propertyName);
     }
 
-    private LibraryViewModel Open() => OpenAtPath().ViewModel;
+    private LibraryViewModel Open()
+    {
+        return OpenAtPath().ViewModel;
+    }
 
     private (LibraryViewModel ViewModel, string Path) OpenAtPath()
     {
@@ -304,17 +307,20 @@ public sealed class LibraryViewModelTests : IDisposable
 
     private static void Add(LibraryViewModel viewModel, string title, string author)
     {
-        viewModel.ShowAddCommand.Execute(null);
+        viewModel.ShowAddCommand.Execute(parameter: null);
         viewModel.TitleInput = title;
         viewModel.AuthorInput = author;
-        viewModel.SaveCommand.Execute(null);
+        viewModel.SaveCommand.Execute(parameter: null);
     }
 
     private sealed class FailOnSecondWriteStore(IBookStore store) : IBookStore
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read() => store.Read();
+        public IReadOnlyList<Book> Read()
+        {
+            return store.Read();
+        }
 
         public void Replace(IReadOnlyList<Book> books)
         {
