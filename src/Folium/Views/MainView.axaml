@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:Avalonia.Data.Converters"
              xmlns:vm="using:Folium.ViewModels"
              x:Class="Folium.Views.MainView"
              x:DataType="vm:LibraryViewModel">
@@ -49,6 +50,12 @@
                                FontSize="16"
                                TextWrapping="Wrap"
                                IsVisible="{Binding ShowFilterLabel}" />
+                    <TextBlock Text="{Binding SaveError}"
+                               FontSize="16"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                               AutomationProperties.Name="{Binding SaveError}"
+                               AutomationProperties.LiveSetting="Assertive" />
                 </StackPanel>
                 <TextBlock Grid.Row="1"
                            Text="{Binding EmptyMessage}"
@@ -116,7 +123,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Grid IsVisible="{Binding ShowDetails}" RowDefinitions="*,Auto">
+            <Grid IsVisible="{Binding ShowDetails}" RowDefinitions="*,Auto,Auto">
                 <ScrollViewer Grid.Row="0">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Title" FontSize="16" />
@@ -145,7 +152,15 @@
                                 HorizontalContentAlignment="Center" />
                     </StackPanel>
                 </ScrollViewer>
-                <StackPanel Grid.Row="1" Spacing="8" Margin="0,16,0,0">
+                <TextBlock Grid.Row="1"
+                           Text="{Binding SaveError}"
+                           FontSize="16"
+                           TextWrapping="Wrap"
+                           Margin="0,16,0,0"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0">
                     <Button Content="Edit"
                             Command="{Binding EditCommand}"
                             MinHeight="48"

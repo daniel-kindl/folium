@@ -507,6 +507,21 @@ public sealed class LibraryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void StatusCommandWithoutTextKeepsTheSavedStatus()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+
+        viewModel.SetStatusCommand.Execute(parameter: null);
+
+        Assert.Equal("To read", viewModel.SelectedStatus);
+        Assert.Equal(ReadingStatus.ToRead, Assert.Single(viewModel.Books).Status);
+        Assert.True(viewModel.ShowDetails);
+        Assert.Null(viewModel.SaveError);
+    }
+
+    [Fact]
     public void UnknownStatusCommandKeepsTheSavedStatus()
     {
         LibraryViewModel viewModel = Open();

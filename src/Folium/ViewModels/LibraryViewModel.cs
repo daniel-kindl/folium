@@ -405,23 +405,14 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void SetStatus(object? parameter)
     {
-        if (_library is not PersonalLibrary library || _selected is null || parameter is not string token)
-        {
-            return;
-        }
-
-        if (!TryStatus(token, out ReadingStatus status))
+        if (_library is not PersonalLibrary library || !TrySelectedStatus(parameter, out ReadingStatus status))
         {
             return;
         }
 
         try
         {
-            Book saved = library.SetStatus(_selected.Id, status);
-            UseBooks(library.Books);
-            _selected = saved;
-            ClearErrors();
-            Raise(nameof(SelectedStatus));
+            StoreSelectedStatus(library, status);
         }
         catch (MissingBookException exception)
         {
@@ -429,10 +420,30 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
         catch (LibraryStoreException exception)
         {
-            Trace.TraceError(exception.ToString());
-            SaveError = "Folium could not save this status.";
-            Raise(nameof(SaveError));
+            ShowStatusSaveError(exception);
         }
+    }
+
+    private bool TrySelectedStatus(object? parameter, out ReadingStatus status)
+    {
+        status = default;
+        return _selected is not null && parameter is string token && TryStatus(token, out status);
+    }
+
+    private void StoreSelectedStatus(PersonalLibrary library, ReadingStatus status)
+    {
+        Book saved = library.SetStatus(_selected!.Id, status);
+        UseBooks(library.Books);
+        _selected = saved;
+        ClearErrors();
+        Raise(nameof(SelectedStatus));
+    }
+
+    private void ShowStatusSaveError(LibraryStoreException exception)
+    {
+        Trace.TraceError(exception.ToString());
+        SaveError = "Folium could not save this status.";
+        Raise(nameof(SaveError));
     }
 
     private void ApplyFilter(object? parameter)
