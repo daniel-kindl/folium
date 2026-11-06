@@ -10,4 +10,12 @@ public sealed class LibraryStoreException : Exception
             throw new ArgumentException("A library store failure needs a message.", nameof(message));
         }
     }
+
+    public LibraryStoreException() : base()
+    {
+    }
+
+    public LibraryStoreException(string? message) : base(message)
+    {
+    }
 }
