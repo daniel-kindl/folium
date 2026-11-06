@@ -1,0 +1,19 @@
+{
+  "stryker-config": {
+    "project": "Folium.csproj",
+    "mutate": [
+      "Books/**/*.cs",
+      "Storage/**/*.cs"
+    ],
+    "thresholds": {
+      "high": 85,
+      "low": 70,
+      "break": 70
+    },
+    "reporters": [
+      "progress",
+      "html",
+      "json"
+    ]
+  }
+}
