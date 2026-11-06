@@ -21,11 +21,6 @@ internal static class BookText
     public static (string Title, string Author) Require(string? title, string? author)
     {
         IReadOnlyList<BookInputProblem> problems = Problems(title, author);
-        if (problems.Count > 0)
-        {
-            throw new BookInputException(problems);
-        }
-
-        return (title!.Trim(), author!.Trim());
+        return problems.Count > 0 ? throw new BookInputException(problems) : ((string Title, string Author))(title!.Trim(), author!.Trim());
     }
 }
