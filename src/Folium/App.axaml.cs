@@ -27,8 +27,8 @@ public partial class App : Application
 
     private MainView CreateMainView()
     {
-        var path = string.IsNullOrWhiteSpace(LibraryFilePath) ? LibraryPaths.DefaultPath() : LibraryFilePath;
-        var library = LibraryViewModel.Open(new FileBookStore(path));
+        string path = string.IsNullOrWhiteSpace(LibraryFilePath) ? LibraryPaths.DefaultPath() : LibraryFilePath;
+        LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path));
         Library = library;
         return new MainView { DataContext = library };
     }
