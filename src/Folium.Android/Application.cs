@@ -10,7 +10,7 @@ public class Application : AvaloniaAndroidApplication<App>
     public Application(nint javaReference, JniHandleOwnership transfer)
         : base(javaReference, transfer)
     {
-        var files = FilesDir?.AbsolutePath;
+        string files = FilesDir?.AbsolutePath;
         if (string.IsNullOrWhiteSpace(files))
         {
             throw new InvalidOperationException("The app data directory is not available.");
