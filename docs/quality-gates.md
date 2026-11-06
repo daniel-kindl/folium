@@ -64,8 +64,7 @@ Investigate those gaps; a missing measurement is not evidence of safety.
 
 ## Merge requirements
 
-All required CI jobs (build/coverage, mutation, CRAP) must pass. PR #14 is
-stacked on #13 and must be retargeted to `main` after #13 merges.
-Android UI usability also needs an emulator/device smoke test.
+All required CI jobs must pass. The jobs are build, mutation, and CRAP.
+Check the Android UI on an emulator or on a device.
 
-The first run after enabling the gates may be red. Fix root causes, not thresholds.
+Fix the cause when a gate fails. Do not lower a threshold.
