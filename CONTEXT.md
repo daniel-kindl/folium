@@ -19,3 +19,7 @@ _Avoid_: Name
 **Author**:
 The writer named on a book. A book requires one author.
 _Avoid_: Writer, creator
+
+**Reading status**:
+The place of a saved book in the person's reading. The values are to read, reading, and finished.
+_Avoid_: Progress, state, shelf
