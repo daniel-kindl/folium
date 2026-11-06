@@ -16,7 +16,7 @@ public sealed class PersonalLibrary
 
     public Book Add(string? title, string? author)
     {
-        (string validTitle, string validAuthor) = BookText.Require(title, author);
+        (string validTitle, string validAuthor) = BookText.Require(title ?? string.Empty, author ?? string.Empty);
         Book book = new(Guid.NewGuid(), validTitle, validAuthor);
         _store.Replace([.. _books, book]);
         _books.Add(book);
@@ -26,7 +26,7 @@ public sealed class PersonalLibrary
     public Book Edit(Guid id, string? title, string? author)
     {
         int index = IndexOf(id);
-        (string validTitle, string validAuthor) = BookText.Require(title, author);
+        (string validTitle, string validAuthor) = BookText.Require(title ?? string.Empty, author ?? string.Empty);
         Book updated = _books[index] with { Title = validTitle, Author = validAuthor };
         Book[] next = [.. _books];
         next[index] = updated;
