@@ -4,13 +4,9 @@ using Avalonia.Android;
 namespace Folium.Android;
 
 [Application]
-public class Application : AvaloniaAndroidApplication<App>
+public class Application(nint javaReference, JniHandleOwnership transfer)
+    : AvaloniaAndroidApplication<App>(javaReference, transfer)
 {
-    public Application(nint javaReference, JniHandleOwnership transfer)
-        : base(javaReference, transfer)
-    {
-    }
-
     public override void OnCreate()
     {
         base.OnCreate();
