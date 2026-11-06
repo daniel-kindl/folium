@@ -1,9 +1,6 @@
-using Android.App;
 using Android.Content.PM;
-using Android.OS;
 using Android.Views;
 using AndroidX.Activity;
-using Avalonia;
 using Avalonia.Android;
 
 namespace Folium.Android;
