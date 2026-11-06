@@ -2,6 +2,6 @@ namespace Folium.Books;
 
 public enum BookInputProblem
 {
-    MissingTitle,
-    MissingAuthor,
+    MissingTitle = 0,
+    MissingAuthor = 1,
 }
