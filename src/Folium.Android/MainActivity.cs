@@ -26,6 +26,17 @@ public class MainActivity : AvaloniaMainActivity
         base.OnDestroy();
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _libraryBackCallback?.Dispose();
+            _libraryBackCallback = null;
+        }
+
+        base.Dispose(disposing);
+    }
+
     private static bool LeaveScreen()
     {
         return Avalonia.Application.Current is App { Library: { } library } && library.GoBack();
