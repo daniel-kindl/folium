@@ -194,7 +194,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
                 return;
             }
 
-            var saved = _editing
+            Book saved = _editing
                 ? _library.Edit(_selected!.Id, _titleInput, _authorInput)
                 : _library.Add(_titleInput, _authorInput);
             _books = _library.Books;
@@ -355,7 +355,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void RaiseCommands()
     {
-        foreach (var command in new[]
+        foreach (ICommand command in new[]
         {
             ShowAddCommand, SaveCommand, CancelCommand, OpenCommand, EditCommand,
             AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand,
@@ -373,8 +373,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private static string Describe(BookInputException exception)
     {
-        var missingTitle = exception.Problems.Contains(BookInputProblem.MissingTitle);
-        var missingAuthor = exception.Problems.Contains(BookInputProblem.MissingAuthor);
+        bool missingTitle = exception.Problems.Contains(BookInputProblem.MissingTitle);
+        bool missingAuthor = exception.Problems.Contains(BookInputProblem.MissingAuthor);
         if (missingTitle && missingAuthor)
         {
             return "Enter a title and an author.";
