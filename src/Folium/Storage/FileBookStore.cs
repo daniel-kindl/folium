@@ -52,9 +52,9 @@ public sealed class FileBookStore : IBookStore
                 $"The library file at {_path} uses version {document.Version}. Folium reads version 1.");
         }
 
-        var books = new List<Book>(document.Books.Count);
-        var ids = new HashSet<Guid>();
-        foreach (var stored in document.Books)
+        List<Book> books = new List<Book>(document.Books.Count);
+        HashSet<Guid> ids = new HashSet<Guid>();
+        foreach (StoredBook? stored in document.Books)
         {
             if (stored is null)
             {
@@ -70,22 +70,22 @@ public sealed class FileBookStore : IBookStore
     public void Replace(IReadOnlyList<Book> books)
     {
         ArgumentNullException.ThrowIfNull(books);
-        var stored = new List<StoredBook?>(books.Count);
-        var ids = new HashSet<Guid>();
-        foreach (var book in books)
+        List<StoredBook?> stored = new(books.Count);
+        HashSet<Guid> ids = new HashSet<Guid>();
+        foreach (Book book in books)
         {
             stored.Add(ToStored(book, ids));
         }
 
-        var document = new LibraryDocument { Version = 1, Books = stored };
-        var json = JsonSerializer.Serialize(document, JsonOptions);
-        var directory = Path.GetDirectoryName(Path.GetFullPath(_path));
+        LibraryDocument document = new LibraryDocument { Version = 1, Books = stored };
+        string json = JsonSerializer.Serialize(document, JsonOptions);
+        string? directory = Path.GetDirectoryName(Path.GetFullPath(_path));
         if (string.IsNullOrEmpty(directory))
         {
             throw new LibraryStoreException($"Folium could not write the library file at {_path}.");
         }
 
-        var temporary = _path + ".tmp";
+        string temporary = _path + ".tmp";
         try
         {
             Directory.CreateDirectory(directory);
