@@ -108,20 +108,25 @@ public sealed class FileBookStore : IBookStore
 
     private Book ToBook(StoredBook stored, HashSet<Guid> ids)
     {
-        return stored.Id == Guid.Empty || !ids.Add(stored.Id)
-            ? throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use.")
-            : BookText.Problems(stored.Title, stored.Author).Count > 0
-            ? throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author.")
-            : new Book(stored.Id, stored.Title!, stored.Author!);
+        bool invalidId = stored.Id == Guid.Empty || !ids.Add(stored.Id);
+        bool invalidInput = BookText.Problems(stored.Title, stored.Author).Count > 0;
+        return (invalidId, invalidInput) switch
+        {
+            (true, _) => throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use."),
+            (_, true) => throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author."),
+            _ => new Book(stored.Id, stored.Title!, stored.Author!),
+        };
     }
 
     private StoredBook ToStored(Book book, HashSet<Guid> ids)
     {
-        return book is null
-            ? throw new ArgumentException("The library cannot store an empty book.", nameof(book))
-            : book.Id == Guid.Empty || !ids.Add(book.Id) || BookText.Problems(book.Title, book.Author).Count > 0
-            ? throw new LibraryStoreException($"Folium could not write the library file at {_path}.")
-            : new StoredBook { Id = book.Id, Title = book.Title, Author = book.Author };
+        return book switch
+        {
+            null => throw new ArgumentException("The library cannot store an empty book.", nameof(book)),
+            _ when book.Id == Guid.Empty || !ids.Add(book.Id) || BookText.Problems(book.Title, book.Author).Count > 0
+                => throw new LibraryStoreException($"Folium could not write the library file at {_path}."),
+            _ => new StoredBook { Id = book.Id, Title = book.Title, Author = book.Author },
+        };
     }
 
     private LibraryStoreException Unreadable(Exception? inner = null)
