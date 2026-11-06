@@ -1,22 +1,76 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:books="using:Folium.Books"
+             xmlns:conv="using:Avalonia.Data.Converters"
              xmlns:vm="using:Folium.ViewModels"
              x:Class="Folium.Views.MainView"
              x:DataType="vm:LibraryViewModel">
     <Grid Margin="16" RowDefinitions="Auto,*">
         <TextBlock Text="{Binding Heading}" FontSize="28" TextWrapping="Wrap" />
         <Grid Grid.Row="1" Margin="0,16,0,0">
-            <Grid IsVisible="{Binding ShowLibrary}" RowDefinitions="*,Auto">
-                <TextBlock Grid.Row="0"
+            <Grid IsVisible="{Binding ShowLibrary}" RowDefinitions="Auto,*,Auto">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                        <Button Grid.Row="0"
+                                Grid.Column="0"
+                                Content="All"
+                                Command="{Binding FilterCommand}"
+                                CommandParameter="all"
+                                MinHeight="48"
+                                Margin="0,0,8,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Grid.Row="0"
+                                Grid.Column="1"
+                                Content="To read"
+                                Command="{Binding FilterCommand}"
+                                CommandParameter="to-read"
+                                MinHeight="48"
+                                Margin="0,0,0,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Grid.Row="1"
+                                Grid.Column="0"
+                                Content="Reading"
+                                Command="{Binding FilterCommand}"
+                                CommandParameter="reading"
+                                MinHeight="48"
+                                Margin="0,0,8,0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Grid.Row="1"
+                                Grid.Column="1"
+                                Content="Finished"
+                                Command="{Binding FilterCommand}"
+                                CommandParameter="finished"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                    </Grid>
+                    <TextBlock Text="{Binding FilterLabel}"
+                               FontSize="16"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding ShowFilterLabel}" />
+                    <TextBlock Text="{Binding SaveError}"
+                               FontSize="16"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                               AutomationProperties.Name="{Binding SaveError}"
+                               AutomationProperties.LiveSetting="Assertive" />
+                </StackPanel>
+                <TextBlock Grid.Row="1"
                            Text="{Binding EmptyMessage}"
                            FontSize="16"
                            TextWrapping="Wrap"
                            IsVisible="{Binding IsEmpty}" />
-                <ScrollViewer Grid.Row="0" IsVisible="{Binding ShowBooks}">
-                    <ItemsControl ItemsSource="{Binding Books}">
+                <TextBlock Grid.Row="1"
+                           Text="{Binding NoMatchMessage}"
+                           FontSize="16"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding ShowNoMatches}" />
+                <ScrollViewer Grid.Row="1" IsVisible="{Binding ShowBooks}">
+                    <ItemsControl ItemsSource="{Binding ShownBooks}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="books:Book">
+                            <DataTemplate x:DataType="vm:BookRow">
                                 <Button MinHeight="48"
                                         Margin="0,0,0,8"
                                         Padding="12,8"
@@ -28,13 +82,14 @@
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="{Binding Title}" FontSize="16" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding Author}" FontSize="16" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Status}" FontSize="16" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <Button Grid.Row="1"
+                <Button Grid.Row="2"
                         Content="Add a book"
                         Command="{Binding ShowAddCommand}"
                         MinHeight="48"
@@ -68,14 +123,44 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Grid IsVisible="{Binding ShowDetails}" RowDefinitions="*,Auto">
-                <StackPanel Grid.Row="0" Spacing="12">
-                    <TextBlock Text="Title" FontSize="16" />
-                    <TextBlock Text="{Binding SelectedTitle}" FontSize="16" TextWrapping="Wrap" />
-                    <TextBlock Text="Author" FontSize="16" />
-                    <TextBlock Text="{Binding SelectedAuthor}" FontSize="16" TextWrapping="Wrap" />
-                </StackPanel>
-                <StackPanel Grid.Row="1" Spacing="8" Margin="0,16,0,0">
+            <Grid IsVisible="{Binding ShowDetails}" RowDefinitions="*,Auto,Auto">
+                <ScrollViewer Grid.Row="0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Title" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedTitle}" FontSize="16" TextWrapping="Wrap" />
+                        <TextBlock Text="Author" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedAuthor}" FontSize="16" TextWrapping="Wrap" />
+                        <TextBlock Text="Status" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedStatus}" FontSize="16" TextWrapping="Wrap" />
+                        <Button Content="To read"
+                                Command="{Binding SetStatusCommand}"
+                                CommandParameter="to-read"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Content="Reading"
+                                Command="{Binding SetStatusCommand}"
+                                CommandParameter="reading"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Content="Finished"
+                                Command="{Binding SetStatusCommand}"
+                                CommandParameter="finished"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                    </StackPanel>
+                </ScrollViewer>
+                <TextBlock Grid.Row="1"
+                           Text="{Binding SaveError}"
+                           FontSize="16"
+                           TextWrapping="Wrap"
+                           Margin="0,16,0,0"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <StackPanel Grid.Row="2" Spacing="8" Margin="0,16,0,0">
                     <Button Content="Edit"
                             Command="{Binding EditCommand}"
                             MinHeight="48"

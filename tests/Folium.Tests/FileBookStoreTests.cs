@@ -53,6 +53,17 @@ public sealed class FileBookStoreTests : IDisposable
     }
 
     [Fact]
+    public void ReplaceRejectsAnUndefinedStatusAndDoesNotCreateFile()
+    {
+        FileBookStore store = new(LibraryPath);
+        Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert", (ReadingStatus)9);
+
+        _ = Assert.Throws<LibraryStoreException>(() => store.Replace([book]));
+
+        Assert.False(File.Exists(LibraryPath));
+    }
+
+    [Fact]
     public void ReplaceRejectsAnEmptyBookAndDoesNotCreateFile()
     {
         FileBookStore store = new(LibraryPath);

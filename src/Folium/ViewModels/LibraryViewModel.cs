@@ -13,6 +13,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private Screen _screen = Screen.Library;
     private bool _editing;
     private Book? _selected;
+    private ReadingStatus? _filter;
     private string _titleInput = "";
     private string _authorInput = "";
 
@@ -22,6 +23,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         if (library is not null)
         {
             Books = library.Books;
+            ShownBooks = Rows(library.Books);
         }
 
         ShowAddCommand = new Command(_ => ShowAdd(), _ => ShowLibrary);
@@ -32,6 +34,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         AskRemoveCommand = new Command(_ => AskRemove(), _ => ShowDetails);
         ConfirmRemoveCommand = new Command(_ => ConfirmRemove(), _ => ShowConfirm);
         KeepBookCommand = new Command(_ => ShowDetailsScreen(), _ => ShowConfirm);
+        SetStatusCommand = new Command(SetStatus, _ => ShowDetails);
+        FilterCommand = new Command(ApplyFilter, _ => ShowLibrary);
     }
 
     /// <summary>Tells the view that a bound value changed.</summary>
@@ -61,6 +65,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Leaves the remove confirmation and keeps the book.</summary>
     public ICommand KeepBookCommand { get; }
 
+    /// <summary>Sets the reading status of the selected book. The parameter is to-read, reading, or finished.</summary>
+    public ICommand SetStatusCommand { get; }
+
+    /// <summary>Shows all books or one reading status. The parameter is all, to-read, reading, or finished.</summary>
+    public ICommand FilterCommand { get; }
+
     /// <summary>The name of the current screen.</summary>
     public string Heading => _screen switch
     {
@@ -75,11 +85,26 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>The books on the library screen.</summary>
     public IReadOnlyList<Book> Books { get; private set; } = [];
 
+    /// <summary>The books that match the current filter.</summary>
+    public IReadOnlyList<BookRow> ShownBooks { get; private set; } = [];
+
     /// <summary>True when the library screen is open and has no books.</summary>
     public bool IsEmpty => ShowLibrary && Books.Count == 0;
 
-    /// <summary>True when the library screen is open and has at least one book.</summary>
-    public bool ShowBooks => ShowLibrary && Books.Count > 0;
+    /// <summary>True when the library screen shows at least one book.</summary>
+    public bool ShowBooks => ShowLibrary && ShownBooks.Count > 0;
+
+    /// <summary>True when the library has books and the filter matches none.</summary>
+    public bool ShowNoMatches => ShowLibrary && Books.Count > 0 && ShownBooks.Count == 0;
+
+    /// <summary>The message when the filter matches no books. Null when a book is visible or the library is empty.</summary>
+    public string? NoMatchMessage => ShowNoMatches ? "No books with this status." : null;
+
+    /// <summary>The active filter in the words shown on the list. Null when the list shows every book.</summary>
+    public string? FilterLabel => _filter is null ? null : StatusText(_filter.Value);
+
+    /// <summary>True when the library screen shows one reading status.</summary>
+    public bool ShowFilterLabel => ShowLibrary && _filter is not null;
 
     /// <summary>The empty-library message. Null when the library has a book or another screen is open.</summary>
     public string? EmptyMessage => IsEmpty ? "No books yet." : null;
@@ -109,6 +134,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>The author of the selected book. Empty when no book is selected.</summary>
     public string SelectedAuthor => _selected?.Author ?? "";
+
+    /// <summary>The reading status of the selected book. Empty when no book is selected.</summary>
+    public string SelectedStatus => _selected is null ? "" : StatusText(_selected.Status);
 
     /// <summary>The confirm view binds to this member on the view-model instance.</summary>
     public string ConfirmMessage { get; } = "Folium deletes this book from your library.";
@@ -254,8 +282,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Book saved = _editing
             ? library.Edit(_selected!.Id, _titleInput, _authorInput)
             : library.Add(_titleInput, _authorInput);
-        Books = library.Books;
-        Raise(nameof(Books));
+        UseBooks(library.Books);
         ClearErrors();
         if (_editing)
         {
@@ -278,13 +305,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private void ShowMissingBook(PersonalLibrary library, MissingBookException exception)
     {
         Trace.TraceError(exception.ToString());
-        Books = library.Books;
-        Raise(nameof(Books));
-        SaveError = "Folium could not find that book.";
-        InputError = null;
-        Raise(nameof(SaveError));
-        Raise(nameof(InputError));
+        UseBooks(library.Books);
         ShowLibraryScreen();
+        SaveError = "Folium could not find that book.";
+        Raise(nameof(SaveError));
     }
 
     private void ShowStoreSaveError(LibraryStoreException exception)
@@ -316,15 +340,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         try
         {
             _library.Remove(_selected.Id);
-            Books = _library.Books;
-            Raise(nameof(Books));
+            UseBooks(_library.Books);
             ShowLibraryScreen();
         }
         catch (MissingBookException exception)
         {
             Trace.TraceError(exception.ToString());
-            Books = _library.Books;
-            Raise(nameof(Books));
+            UseBooks(_library.Books);
             SaveError = "Folium could not find that book.";
             Raise(nameof(SaveError));
             ShowLibraryScreen();
@@ -373,13 +395,159 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowEditor));
         Raise(nameof(ShowDetails));
         Raise(nameof(ShowConfirm));
+        Raise(nameof(SelectedTitle));
+        Raise(nameof(SelectedAuthor));
+        Raise(nameof(SelectedStatus));
+        Raise(nameof(LoadError));
+        RaiseLibraryShape();
+        RaiseCommands();
+    }
+
+    private void SetStatus(object? parameter)
+    {
+        if (_library is not PersonalLibrary library || !TrySelectedStatus(parameter, out ReadingStatus status))
+        {
+            return;
+        }
+
+        try
+        {
+            StoreSelectedStatus(library, status);
+        }
+        catch (MissingBookException exception)
+        {
+            ShowMissingBook(library, exception);
+        }
+        catch (LibraryStoreException exception)
+        {
+            ShowStatusSaveError(exception);
+        }
+    }
+
+    private bool TrySelectedStatus(object? parameter, out ReadingStatus status)
+    {
+        status = default;
+        return _selected is not null && parameter is string token && TryStatus(token, out status);
+    }
+
+    private void StoreSelectedStatus(PersonalLibrary library, ReadingStatus status)
+    {
+        Book saved = library.SetStatus(_selected!.Id, status);
+        UseBooks(library.Books);
+        _selected = saved;
+        ClearErrors();
+        Raise(nameof(SelectedStatus));
+    }
+
+    private void ShowStatusSaveError(LibraryStoreException exception)
+    {
+        Trace.TraceError(exception.ToString());
+        SaveError = "Folium could not save this status.";
+        Raise(nameof(SaveError));
+    }
+
+    private void ApplyFilter(object? parameter)
+    {
+        if (!TryFilter(parameter, out ReadingStatus? status))
+        {
+            return;
+        }
+
+        _filter = status;
+        ShownBooks = Rows(Books);
+        Raise(nameof(ShownBooks));
+        RaiseLibraryShape();
+    }
+
+    private void UseBooks(IReadOnlyList<Book> books)
+    {
+        Books = books;
+        ShownBooks = Rows(books);
+        Raise(nameof(Books));
+        Raise(nameof(ShownBooks));
+        RaiseLibraryShape();
+    }
+
+    private void RaiseLibraryShape()
+    {
         Raise(nameof(IsEmpty));
         Raise(nameof(ShowBooks));
         Raise(nameof(EmptyMessage));
-        Raise(nameof(SelectedTitle));
-        Raise(nameof(SelectedAuthor));
-        Raise(nameof(LoadError));
-        RaiseCommands();
+        Raise(nameof(ShowNoMatches));
+        Raise(nameof(NoMatchMessage));
+        Raise(nameof(FilterLabel));
+        Raise(nameof(ShowFilterLabel));
+    }
+
+    private List<BookRow> Rows(IReadOnlyList<Book> books)
+    {
+        List<BookRow> rows = [];
+        foreach (Book book in books)
+        {
+            if (Shows(book))
+            {
+                rows.Add(new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status)));
+            }
+        }
+
+        return rows;
+    }
+
+    private bool Shows(Book book)
+    {
+        return _filter is null || book.Status == _filter.Value;
+    }
+
+    private static bool TryFilter(object? parameter, out ReadingStatus? status)
+    {
+        status = null;
+        if (parameter is not string token)
+        {
+            return false;
+        }
+
+        if (string.Equals(token, "all", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (!TryStatus(token, out ReadingStatus parsed))
+        {
+            return false;
+        }
+
+        status = parsed;
+        return true;
+    }
+
+    private static bool TryStatus(string token, out ReadingStatus status)
+    {
+        switch (token)
+        {
+            case "to-read":
+                status = ReadingStatus.ToRead;
+                return true;
+            case "reading":
+                status = ReadingStatus.Reading;
+                return true;
+            case "finished":
+                status = ReadingStatus.Finished;
+                return true;
+            default:
+                status = default;
+                return false;
+        }
+    }
+
+    private static string StatusText(ReadingStatus status)
+    {
+        return status switch
+        {
+            ReadingStatus.ToRead => "To read",
+            ReadingStatus.Reading => "Reading",
+            ReadingStatus.Finished => "Finished",
+            _ => throw new ArgumentOutOfRangeException(nameof(status), "The reading status is not a defined value."),
+        };
     }
 
     private void SetInput(ref string field, string value, string propertyName)
@@ -416,7 +584,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         foreach (ICommand command in new[]
         {
             ShowAddCommand, SaveCommand, CancelCommand, OpenCommand, EditCommand,
-            AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand,
+            AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand, SetStatusCommand,
+            FilterCommand,
         })
         {
             if (command is Command relay)
