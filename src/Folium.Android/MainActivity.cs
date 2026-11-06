@@ -5,10 +5,10 @@ using Avalonia.Android;
 
 namespace Folium.Android;
 
+/// <summary>The Android activity that shows Folium.</summary>
 [Activity(Label = "Folium", Theme = "@style/Theme.AppCompat.NoActionBar", MainLauncher = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode,
     WindowSoftInputMode = SoftInput.AdjustResize)]
-/// <summary>The Android activity that shows Folium.</summary>
 public class MainActivity : AvaloniaMainActivity
 {
     private LibraryBackCallback? _libraryBackCallback;
