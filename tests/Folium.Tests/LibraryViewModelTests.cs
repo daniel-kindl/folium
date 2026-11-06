@@ -408,6 +408,180 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.Equal(nameof(LibraryViewModel.TitleInput), propertyName);
     }
 
+    [Fact]
+    public void NewBookStartsAsToRead()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        Assert.Equal("To read", Assert.Single(viewModel.ShownBooks).Status);
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        Assert.Equal("To read", viewModel.SelectedStatus);
+        Assert.Equal(ReadingStatus.ToRead, Assert.Single(viewModel.Books).Status);
+    }
+
+    [Fact]
+    public void DetailsChangeStatusAndRestartShowsIt()
+    {
+        (LibraryViewModel viewModel, string path) = OpenAtPath();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+
+        viewModel.SetStatusCommand.Execute("finished");
+
+        Assert.True(viewModel.ShowDetails);
+        Assert.Equal("Finished", viewModel.SelectedStatus);
+        LibraryViewModel reopened = LibraryViewModel.Open(new FileBookStore(path));
+        reopened.OpenCommand.Execute(reopened.Books[0].Id);
+        Assert.Equal("Finished", reopened.SelectedStatus);
+        Assert.Equal("Finished", Assert.Single(reopened.ShownBooks).Status);
+    }
+
+    [Fact]
+    public void FilterShowsBooksWithTheSelectedStatus()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        Add(viewModel, "Neuromancer", "William Gibson");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        viewModel.SetStatusCommand.Execute("reading");
+        Assert.True(viewModel.GoBack());
+
+        viewModel.FilterCommand.Execute("reading");
+
+        BookRow row = Assert.Single(viewModel.ShownBooks);
+        Assert.Equal("Dune", row.Title);
+        Assert.Equal("Frank Herbert", row.Author);
+        Assert.Equal("Reading", row.Status);
+        Assert.Equal(2, viewModel.Books.Count);
+        Assert.Equal("Reading", viewModel.FilterLabel);
+        Assert.True(viewModel.ShowFilterLabel);
+        Assert.False(viewModel.ShowNoMatches);
+        Assert.Null(viewModel.NoMatchMessage);
+    }
+
+    [Fact]
+    public void FilterWithNoMatchesExplainsTheEmptyStatus()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.FilterCommand.Execute("finished");
+
+        Assert.Empty(viewModel.ShownBooks);
+        Assert.False(viewModel.IsEmpty);
+        Assert.False(viewModel.ShowBooks);
+        Assert.Null(viewModel.EmptyMessage);
+        Assert.True(viewModel.ShowNoMatches);
+        Assert.Equal("No books with this status.", viewModel.NoMatchMessage);
+        Assert.Equal("Finished", viewModel.FilterLabel);
+    }
+
+    [Fact]
+    public void AllFilterShowsEveryBook()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        Add(viewModel, "Neuromancer", "William Gibson");
+        viewModel.FilterCommand.Execute("finished");
+
+        viewModel.FilterCommand.Execute("all");
+
+        Assert.Equal(2, viewModel.ShownBooks.Count);
+        Assert.Null(viewModel.FilterLabel);
+        Assert.False(viewModel.ShowFilterLabel);
+        Assert.False(viewModel.ShowNoMatches);
+    }
+
+    [Fact]
+    public void UnknownFilterKeepsTheCurrentList()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.FilterCommand.Execute("reading");
+
+        viewModel.FilterCommand.Execute("started");
+
+        Assert.Empty(viewModel.ShownBooks);
+        Assert.Equal("Reading", viewModel.FilterLabel);
+    }
+
+    [Fact]
+    public void UnknownStatusCommandKeepsTheSavedStatus()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+
+        viewModel.SetStatusCommand.Execute("started");
+
+        Assert.Equal("To read", viewModel.SelectedStatus);
+        Assert.Equal(ReadingStatus.ToRead, Assert.Single(viewModel.Books).Status);
+        Assert.True(viewModel.ShowDetails);
+        Assert.Null(viewModel.SaveError);
+    }
+
+    [Fact]
+    public void SetStatusFromTheLibraryDoesNothing()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.SetStatusCommand.Execute("finished");
+
+        Assert.True(viewModel.ShowLibrary);
+        Assert.Equal(ReadingStatus.ToRead, Assert.Single(viewModel.Books).Status);
+    }
+
+    [Fact]
+    public void FailedStatusChangeStaysOnDetails()
+    {
+        string path = NewPath();
+        LibraryViewModel viewModel = LibraryViewModel.Open(new FailOnSecondWriteStore(new FileBookStore(path)));
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+
+        viewModel.SetStatusCommand.Execute("finished");
+
+        Assert.True(viewModel.ShowDetails);
+        Assert.Equal("To read", viewModel.SelectedStatus);
+        Assert.Equal("Folium could not save this status.", viewModel.SaveError);
+        Assert.Equal(ReadingStatus.ToRead, Assert.Single(LibraryViewModel.Open(new FileBookStore(path)).Books).Status);
+    }
+
+    [Fact]
+    public void MissingBookDuringStatusChangeReturnsToTheLibrary()
+    {
+        string path = NewPath();
+        LibraryViewModel viewModel = LibraryViewModel.Open(new MissingOnSecondWriteStore(new FileBookStore(path)));
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+
+        viewModel.SetStatusCommand.Execute("reading");
+
+        Assert.True(viewModel.ShowLibrary);
+        Assert.Equal("Folium could not find that book.", viewModel.SaveError);
+        Assert.Equal(ReadingStatus.ToRead, Assert.Single(viewModel.Books).Status);
+    }
+
+    [Fact]
+    public void EditKeepsTheReadingStatusOnTheDetailsScreen()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        viewModel.SetStatusCommand.Execute("reading");
+        viewModel.EditCommand.Execute(parameter: null);
+        viewModel.TitleInput = "Dune Messiah";
+
+        viewModel.SaveCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowDetails);
+        Assert.Equal("Reading", viewModel.SelectedStatus);
+        Assert.Equal("Dune Messiah", viewModel.SelectedTitle);
+        Assert.Equal(ReadingStatus.Reading, Assert.Single(viewModel.Books).Status);
+    }
+
     private LibraryViewModel Open()
     {
         return OpenAtPath().ViewModel;
@@ -433,6 +607,27 @@ public sealed class LibraryViewModelTests : IDisposable
         viewModel.TitleInput = title;
         viewModel.AuthorInput = author;
         viewModel.SaveCommand.Execute(parameter: null);
+    }
+
+    private sealed class MissingOnSecondWriteStore(IBookStore store) : IBookStore
+    {
+        private int _writes;
+
+        public IReadOnlyList<Book> Read()
+        {
+            return store.Read();
+        }
+
+        public void Replace(IReadOnlyList<Book> books)
+        {
+            _writes++;
+            if (_writes > 1)
+            {
+                throw new MissingBookException(books[0].Id);
+            }
+
+            store.Replace(books);
+        }
     }
 
     private sealed class FailOnSecondWriteStore(IBookStore store) : IBookStore
