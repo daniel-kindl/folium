@@ -75,6 +75,12 @@ jobs:
           git -C "$RUNNER_TEMP/crap4csharp" checkout --detach 9e155ec73008af7314b78b8e7f51e5edc2fd2a41
       - name: Enforce method-level CRAP threshold
         run: |
+          real="$(command -v dotnet)"
+          mkdir -p "$RUNNER_TEMP/crap-path"
+          cp tools/crap-coverage-dotnet "$RUNNER_TEMP/crap-path/dotnet"
+          chmod +x "$RUNNER_TEMP/crap-path/dotnet"
+          export DOTNET_CRAP_REAL="$real"
+          export PATH="$RUNNER_TEMP/crap-path:$PATH"
           files=()
           while IFS= read -r file; do
             files+=("$file")
