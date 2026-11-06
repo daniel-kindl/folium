@@ -57,7 +57,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Screen.Edit => "Edit book",
         Screen.Details => "Book",
         Screen.ConfirmRemove => "Remove this book?",
-        Screen.Library => throw new NotImplementedException(),
+        Screen.Library => "Library",
         _ => "Library",
     };
 
@@ -375,12 +375,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     {
         bool missingTitle = exception.Problems.Contains(BookInputProblem.MissingTitle);
         bool missingAuthor = exception.Problems.Contains(BookInputProblem.MissingAuthor);
-        if (missingTitle && missingAuthor)
+        return (missingTitle, missingAuthor) switch
         {
-            return "Enter a title and an author.";
-        }
-
-        return missingTitle ? "Enter a title." : missingAuthor ? "Enter an author." : "Folium could not save this book.";
+            (true, true) => "Enter a title and an author.",
+            (true, false) => "Enter a title.",
+            (false, true) => "Enter an author.",
+            _ => "Folium could not save this book.",
+        };
     }
 
     private enum Screen
