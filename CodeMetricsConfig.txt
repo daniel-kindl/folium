@@ -1,0 +1,6 @@
+# Code metrics analyzer thresholds (Roslyn AdditionalFiles)
+# Keep thresholds reviewable. Diagnostics are errors in .editorconfig.
+CA1501: 4
+CA1502: 15
+CA1505: 10
+CA1506: 60
