@@ -10,10 +10,20 @@ namespace Folium.Android;
     WindowSoftInputMode = SoftInput.AdjustResize)]
 public class MainActivity : AvaloniaMainActivity
 {
+    private LibraryBackCallback? _libraryBackCallback;
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        OnBackPressedDispatcher.AddCallback(this, new LibraryBackCallback(this));
+        _libraryBackCallback = new LibraryBackCallback(this);
+        OnBackPressedDispatcher.AddCallback(this, _libraryBackCallback);
+    }
+
+    protected override void OnDestroy()
+    {
+        _libraryBackCallback?.Dispose();
+        _libraryBackCallback = null;
+        base.OnDestroy();
     }
 
     private static bool LeaveScreen()
