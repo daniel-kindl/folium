@@ -4,7 +4,7 @@ internal static class BookText
 {
     public static IReadOnlyList<BookInputProblem> Problems(string? title, string? author)
     {
-        var problems = new List<BookInputProblem>(2);
+        List<BookInputProblem> problems = new(2);
         if (string.IsNullOrWhiteSpace(title))
         {
             problems.Add(BookInputProblem.MissingTitle);
@@ -20,7 +20,7 @@ internal static class BookText
 
     public static (string Title, string Author) Require(string? title, string? author)
     {
-        var problems = Problems(title, author);
+        IReadOnlyList<BookInputProblem> problems = Problems(title, author);
         if (problems.Count > 0)
         {
             throw new BookInputException(problems);
