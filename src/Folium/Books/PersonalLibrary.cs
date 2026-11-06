@@ -12,12 +12,12 @@ public sealed class PersonalLibrary
         _books = [.. store.Read()];
     }
 
-    public IReadOnlyList<Book> Books => _books.ToArray();
+    public IReadOnlyList<Book> Books => [.. _books];
 
     public Book Add(string? title, string? author)
     {
         (string validTitle, string validAuthor) = BookText.Require(title, author);
-        Book book = new Book(Guid.NewGuid(), validTitle, validAuthor);
+        Book book = new(Guid.NewGuid(), validTitle, validAuthor);
         _store.Replace([.. _books, book]);
         _books.Add(book);
         return book;
@@ -28,7 +28,7 @@ public sealed class PersonalLibrary
         int index = IndexOf(id);
         (string validTitle, string validAuthor) = BookText.Require(title, author);
         Book updated = _books[index] with { Title = validTitle, Author = validAuthor };
-        Book[] next = _books.ToArray();
+        Book[] next = [.. _books];
         next[index] = updated;
         _store.Replace(next);
         _books[index] = updated;
@@ -38,7 +38,7 @@ public sealed class PersonalLibrary
     public void Remove(Guid id)
     {
         int index = IndexOf(id);
-        List<Book> next = _books.ToList();
+        List<Book> next = [.. _books];
         next.RemoveAt(index);
         _store.Replace(next);
         _books.RemoveAt(index);
@@ -47,11 +47,6 @@ public sealed class PersonalLibrary
     private int IndexOf(Guid id)
     {
         int index = _books.FindIndex(book => book.Id == id);
-        if (index < 0)
-        {
-            throw new MissingBookException(id);
-        }
-
-        return index;
+        return index < 0 ? throw new MissingBookException(id) : index;
     }
 }
