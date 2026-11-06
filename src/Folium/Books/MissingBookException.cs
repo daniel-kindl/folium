@@ -1,12 +1,10 @@
 namespace Folium.Books;
 
-public sealed class MissingBookException : Exception
+public sealed class MissingBookException(Guid bookId) : Exception($"The personal library does not contain book {bookId}.")
 {
-    public MissingBookException(Guid bookId)
-        : base($"The personal library does not contain book {bookId}.")
-    {
-        BookId = bookId;
-    }
+    public Guid BookId { get; } = bookId;
 
-    public Guid BookId { get; }
+    public MissingBookException()
+    {
+    }
 }
