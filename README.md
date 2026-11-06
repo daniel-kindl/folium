@@ -1,6 +1,6 @@
 # Folium
 
-Folium is an offline-first Android app for a personal book library. The initial app displays a placeholder; book search and library management are not implemented yet.
+Folium is an offline-first Android app for a personal book library. A person can add, browse, edit, and remove books on the device. Book search is not implemented yet.
 
 ## Prerequisites
 
@@ -60,11 +60,13 @@ press Home, and open Folium again to check resume.
 
 ## Structure
 
-- `src/Folium`: shared Avalonia UI and presentation logic.
+- `src/Folium`: shared Avalonia UI, book rules, and the private library file.
 - `src/Folium.Android`: Android application host.
 - `tests/Folium.Tests`: automated tests.
 
-Application logic, domain models, persistence, and external integration will be introduced when needed. See [AGENTS.md](AGENTS.md) for development instructions. Use [Conventional Commits and short-lived branches](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/version-control/index.md); versions follow [Semantic Versioning](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/versioning/index.md). Changes require independent pull-request review.
+A book has a title and an author. Folium stores the personal library in a private JSON file. On Android, that file is `library.json` in the app files directory. See [CONTEXT.md](CONTEXT.md) for the domain terms. Book search and import are not in the app yet.
+
+See [AGENTS.md](AGENTS.md) for development instructions. Use [Conventional Commits and short-lived branches](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/version-control/index.md). Versions follow [Semantic Versioning](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/versioning/index.md). Changes require independent pull-request review.
 
 ## License
 

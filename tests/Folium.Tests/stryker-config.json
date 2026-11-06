@@ -1,0 +1,20 @@
+{
+  "stryker-config": {
+    "project": "Folium.csproj",
+    "test-runner": "mtp",
+    "mutate": [
+      "Books/**/*.cs",
+      "Storage/**/*.cs"
+    ],
+    "thresholds": {
+      "high": 85,
+      "low": 70,
+      "break": 70
+    },
+    "reporters": [
+      "progress",
+      "html",
+      "json"
+    ]
+  }
+}

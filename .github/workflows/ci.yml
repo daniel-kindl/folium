@@ -12,6 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,9 +28,67 @@ jobs:
         run: dotnet workload restore
       - name: Restore and audit dependencies
         run: dotnet restore --locked-mode -p:NuGetAuditLevel=high -p:NuGetAuditMode=all -warnaserror:NU1903,NU1904
-      - name: Verify formatting
+      - name: Verify formatting and code style
         run: dotnet format --verify-no-changes --no-restore
-      - name: Build
+      - name: Build with analyzers
         run: dotnet build --configuration Release --no-restore
-      - name: Test
-        run: dotnet test --configuration Release --no-build --no-restore
+      - name: Test with coverage
+        run: dotnet test --project tests/Folium.Tests/Folium.Tests.csproj --configuration Release --no-build --no-restore --results-directory coverage -- --coverlet --coverlet-output-format cobertura
+      - name: Enforce line and branch coverage
+        run: python3 tools/check-coverage.py coverage --line-min 80 --branch-min 70
+
+  mutation:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Restore locked dependencies
+        run: dotnet restore tests/Folium.Tests/Folium.Tests.csproj --locked-mode
+      - name: Install pinned Stryker.NET
+        run: dotnet tool install dotnet-stryker --tool-path "$RUNNER_TEMP/stryker" --version 5.0.0
+      - name: Mutation test production domain and storage
+        working-directory: tests/Folium.Tests
+        run: "$RUNNER_TEMP/stryker/dotnet-stryker"
+
+  crap:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Restore locked dependencies
+        run: dotnet restore tests/Folium.Tests/Folium.Tests.csproj --locked-mode
+      - name: Fetch pinned crap4csharp
+        run: |
+          git clone https://github.com/microsoft/crap4csharp.git "$RUNNER_TEMP/crap4csharp"
+          git -C "$RUNNER_TEMP/crap4csharp" checkout --detach 9e155ec73008af7314b78b8e7f51e5edc2fd2a41
+      - name: Enforce method-level CRAP threshold
+        run: |
+          real="$(command -v dotnet)"
+          mkdir -p "$RUNNER_TEMP/crap-path"
+          cp tools/crap-coverage-dotnet "$RUNNER_TEMP/crap-path/dotnet"
+          chmod +x "$RUNNER_TEMP/crap-path/dotnet"
+          export DOTNET_CRAP_REAL="$real"
+          export PATH="$RUNNER_TEMP/crap-path:$PATH"
+          files=()
+          while IFS= read -r file; do
+            files+=("$file")
+          done < <(find src/Folium -type f -name '*.cs' -not -path '*/bin/*' -not -path '*/obj/*' | sort)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No C# files found under src/Folium." >&2
+            exit 1
+          fi
+          dotnet run --project "$RUNNER_TEMP/crap4csharp/src/Crap4CSharp" --configuration Release -- "${files[@]}"
+
+
