@@ -7,6 +7,8 @@ Folium follows [dkstack's coding standards](https://github.com/daniel-kindl/dkst
 - `dotnet format --verify-no-changes --no-restore`
 - `dotnet build --configuration Release --no-restore`
 - `AnalysisMode=All` enables the broad built-in analyzer set.
+- `GenerateDocumentationFile` is on so IDE0005 can run on build. See [dotnet/roslyn 41640](https://github.com/dotnet/roslyn/issues/41640).
+- Folium does not require XML documentation comments. `NoWarn` includes CS1591 only. `dotnet format` fails when the compiler reports that warning.
 - Meziantou.Analyzer and Roslynator.Analyzers are applied across projects.
 - xUnit v3 already includes xunit.analyzers as a dependency.
 - `CodeMetricsConfig.txt` defines thresholds for CA1501/1502/1505/1506; all are errors.
