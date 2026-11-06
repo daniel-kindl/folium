@@ -117,33 +117,35 @@
             </ScrollViewer>
 
             <Grid IsVisible="{Binding ShowDetails}" RowDefinitions="*,Auto">
-                <StackPanel Grid.Row="0" Spacing="12">
-                    <TextBlock Text="Title" FontSize="16" />
-                    <TextBlock Text="{Binding SelectedTitle}" FontSize="16" TextWrapping="Wrap" />
-                    <TextBlock Text="Author" FontSize="16" />
-                    <TextBlock Text="{Binding SelectedAuthor}" FontSize="16" TextWrapping="Wrap" />
-                    <TextBlock Text="Status" FontSize="16" />
-                    <TextBlock Text="{Binding SelectedStatus}" FontSize="16" TextWrapping="Wrap" />
-                </StackPanel>
+                <ScrollViewer Grid.Row="0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Title" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedTitle}" FontSize="16" TextWrapping="Wrap" />
+                        <TextBlock Text="Author" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedAuthor}" FontSize="16" TextWrapping="Wrap" />
+                        <TextBlock Text="Status" FontSize="16" />
+                        <TextBlock Text="{Binding SelectedStatus}" FontSize="16" TextWrapping="Wrap" />
+                        <Button Content="To read"
+                                Command="{Binding SetStatusCommand}"
+                                CommandParameter="to-read"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Content="Reading"
+                                Command="{Binding SetStatusCommand}"
+                                CommandParameter="reading"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                        <Button Content="Finished"
+                                Command="{Binding SetStatusCommand}"
+                                CommandParameter="finished"
+                                MinHeight="48"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                    </StackPanel>
+                </ScrollViewer>
                 <StackPanel Grid.Row="1" Spacing="8" Margin="0,16,0,0">
-                    <Button Content="To read"
-                            Command="{Binding SetStatusCommand}"
-                            CommandParameter="to-read"
-                            MinHeight="48"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center" />
-                    <Button Content="Reading"
-                            Command="{Binding SetStatusCommand}"
-                            CommandParameter="reading"
-                            MinHeight="48"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center" />
-                    <Button Content="Finished"
-                            Command="{Binding SetStatusCommand}"
-                            CommandParameter="finished"
-                            MinHeight="48"
-                            HorizontalAlignment="Stretch"
-                            HorizontalContentAlignment="Center" />
                     <Button Content="Edit"
                             Command="{Binding EditCommand}"
                             MinHeight="48"
