@@ -81,11 +81,16 @@ public sealed partial class SearchView : UserControl, IDisposable
             return;
         }
 
-        bool sameBytes = cover.Equals(_coverBytes) && _cover is not null;
-        _coverBytes = cover;
         _coverTarget = target;
         preview.Source = null;
         _resultImage?.Source = null;
+        target.Source = CoverBitmap(cover);
+    }
+
+    private Bitmap? CoverBitmap(ReadOnlyMemory<byte> cover)
+    {
+        bool sameBytes = cover.Equals(_coverBytes) && _cover is not null;
+        _coverBytes = cover;
         if (!sameBytes)
         {
             _cover?.Dispose();
@@ -94,7 +99,7 @@ public sealed partial class SearchView : UserControl, IDisposable
 
         if (cover.IsEmpty)
         {
-            return;
+            return null;
         }
 
         if (_cover is null)
@@ -102,7 +107,7 @@ public sealed partial class SearchView : UserControl, IDisposable
             DecodeCover();
         }
 
-        target.Source = _cover;
+        return _cover;
     }
 
     private void DecodeCover()

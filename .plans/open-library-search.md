@@ -2,7 +2,7 @@
 Status: BLOCKED
 Issue: https://github.com/daniel-kindl/folium/issues/7
 Branch: feat/open-library-search
-Claim-ID: folium-7-f88d4fd4-aaba-47db-b7d9-d08f692a151c
+Claim-ID: folium-7-8014629e-4df4-4c17-abd2-26722d4d2291
 
 ## Goal
 Find a book by title and inspect a specific edition before saving anything.
@@ -75,6 +75,18 @@ Evidence: 134 Release tests passed. Formatting verification passed.
 Release coverage: lines 95.00%, branches 88.33%.
 The Android release build passed with no warnings or errors.
 NOT RUN: mutation score, CRAP, locked dependency audit, live Open Library call, and the Android device check.
+
+### C04: CI repair
+Status: COMPLETED
+Depends on: C03
+Proposed commit: refactor(search): simplify cover updates
+Objective: Fix the failing CRAP check without changing cover behavior.
+Work: Separate bitmap reuse and decoding from image placement.
+Verification: Run the pinned CRAP tool and the existing headless tests.
+Evidence: The local check reproduced the CRAP score of 11 before the change.
+After the change, UpdateCover and CoverBitmap each score 6 with 100% coverage.
+All 134 tests passed. Formatting verification passed. No quality gate changed.
+The required Android device check remains pending.
 
 ## Final verification
 Review fixes passed the Release tests, formatting verification, coverage, and the Android release build.
