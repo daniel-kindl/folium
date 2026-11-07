@@ -2,7 +2,7 @@
 Status: BLOCKED
 Issue: https://github.com/daniel-kindl/folium/issues/7
 Branch: feat/open-library-search
-Claim-ID: folium-7-c819264b-934f-4f16-89b5-33dace056cf2
+Claim-ID: folium-7-f88d4fd4-aaba-47db-b7d9-d08f692a151c
 
 ## Goal
 Find a book by title and inspect a specific edition before saving anything.
@@ -63,10 +63,24 @@ The pinned CRAP tool passed with a maximum method score of 8.0.
 The tool ran on .NET 10 through runtime roll-forward; .NET 8 is not installed.
 NOT RUN: Android device usability. No device is connected.
 
+### C03: Review fixes
+Status: COMPLETED
+Depends on: C02
+Proposed commit: fix(search): correct preview and paging
+Actual commit:
+Objective: Fix the pull request 16 review comments.
+Work: Page from the raw provider count. Keep an edition when an author lookup fails. Show a repeated cover on the selected result. Name the page size and the cache limit.
+Verification: Release tests, formatting verification, coverage, and the Android release build.
+Evidence: 134 Release tests passed. Formatting verification passed.
+Release coverage: lines 95.00%, branches 88.33%.
+The Android release build passed with no warnings or errors.
+NOT RUN: mutation score, CRAP, locked dependency audit, live Open Library call, and the Android device check.
+
 ## Final verification
-Automated checks passed. Independent source checks found no remaining material
-issues. This is self-review preparation, not approval of the pull request.
+Review fixes passed the Release tests, formatting verification, coverage, and the Android release build.
+NOT RUN in this session: mutation, CRAP, the locked dependency audit, the live Open Library call, and the Android device check.
 The Android device check remains required before merge.
+The earlier session recorded mutation score 84.78%, a CRAP maximum of 8.0, a passed locked audit, and a live Dune check. Those checks were not repeated after the review fixes.
 
 ## Handoff
 Next action: Check search, editions, covers, cancellation, and Back on an Android

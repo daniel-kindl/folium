@@ -11,7 +11,7 @@ public sealed class OpenLibraryTests
         using FixtureHandler handler = new("search.json");
         using HttpClient http = new(handler);
         using OpenLibrary provider = new(http);
-        IReadOnlyList<SearchWork> works = await provider.SearchAsync("Dune & sand", 1, TestContext.Current.CancellationToken);
+        IReadOnlyList<SearchWork> works = (await provider.SearchAsync("Dune & sand", 1, TestContext.Current.CancellationToken)).Items;
         Assert.Equal(2, works.Count);
         Assert.Equal("Dune", works[0].Title);
         Assert.Equal("Frank Herbert", works[0].Authors);
@@ -29,7 +29,7 @@ public sealed class OpenLibraryTests
         using FixtureHandler handler = new("editions.json");
         using HttpClient http = new(handler);
         using OpenLibrary provider = new(http);
-        IReadOnlyList<SearchEdition> editions = await provider.EditionsAsync("/works/OL45804W", 1, TestContext.Current.CancellationToken);
+        IReadOnlyList<SearchEdition> editions = (await provider.EditionsAsync("/works/OL45804W", 1, TestContext.Current.CancellationToken)).Items;
         Assert.Equal("Ace", editions[0].Publisher);
         Assert.Equal("1990", editions[0].PublicationDate);
         Assert.Equal("9780441172719", editions[0].Isbn);
@@ -59,7 +59,7 @@ public sealed class OpenLibraryTests
         using FixtureHandler handler = new(json, literal: true);
         using HttpClient http = new(handler);
         using OpenLibrary provider = new(http);
-        Assert.Equal(expected, (await provider.SearchAsync("Title", 1, TestContext.Current.CancellationToken)).Count);
+        Assert.Equal(expected, (await provider.SearchAsync("Title", 1, TestContext.Current.CancellationToken)).Items.Count);
     }
 
     [Fact]

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Net;
 using Folium.Books;
 using Folium.Search;
 using Folium.ViewModels;
@@ -6,6 +8,7 @@ namespace Folium.Tests;
 
 public sealed class SearchViewModelTests
 {
+    private const int FULL_RAW_PAGE = 20;
     [Fact]
     public async Task SearchThenEditionPreviewKeepsEditionIdentity()
     {
@@ -55,7 +58,7 @@ public sealed class SearchViewModelTests
         Task searching = model.SearchAsync();
         Assert.True(model.IsBusy);
         model.Cancel();
-        provider.Pending.SetResult([new SearchWork("/works/OL1W", "Late", "", "")]);
+        provider.Pending.SetResult(new SearchPage<SearchWork>([new SearchWork("/works/OL1W", "Late", "", "")], HasAnotherPage: false));
         await searching.ConfigureAwait(true);
         Assert.Empty(model.Works);
         Assert.False(model.IsBusy);
@@ -205,6 +208,27 @@ public sealed class SearchViewModelTests
     }
 
     [Fact]
+    public async Task FullRawPageWithOneInvalidRecordStillHasAnotherPage()
+    {
+        string works = string.Join(',', Enumerable.Range(1, FULL_RAW_PAGE - 1).Select(index =>
+            string.Create(CultureInfo.InvariantCulture, $"{{\"key\":\"/works/OL{index}W\",\"title\":\"Dune\"}}")))
+            + ",{\"title\":\"No identifier\"}";
+        string editions = string.Join(',', Enumerable.Range(1, FULL_RAW_PAGE - 1).Select(index =>
+            string.Create(CultureInfo.InvariantCulture, $"{{\"key\":\"/books/OL{index}M\",\"title\":\"Dune\"}}")))
+            + ",{\"key\":\"/books/not-a-key\",\"title\":\"Bad\"}";
+        using RoutingHandler handler = new(works, editions);
+        using HttpClient http = new(handler);
+        using OpenLibrary provider = new(http);
+        SearchViewModel model = new(provider) { Query = "Dune" };
+        await model.SearchAsync();
+        Assert.Equal(19, model.Works.Count);
+        Assert.True(model.HasNext);
+        await model.OpenWorkAsync(model.Works[0]);
+        Assert.Equal(19, model.Editions.Count);
+        Assert.True(model.HasNext);
+    }
+
+    [Fact]
     public async Task NavigationNotifiesTheBoundHeading()
     {
         SearchViewModel model = new(new FakeSearch()) { Query = "Dune" };
@@ -219,6 +243,18 @@ public sealed class SearchViewModelTests
         Assert.Contains("Edition preview", headings, StringComparer.Ordinal);
         Assert.False(model.HasNext);
         Assert.False(model.HasPrevious);
+    }
+
+    private sealed class RoutingHandler(string works, string editions) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            string path = request.RequestUri!.AbsolutePath;
+            string json = path.Contains("/editions.json", StringComparison.Ordinal)
+                ? "{\"entries\":[" + editions + "]}"
+                : "{\"docs\":[" + works + "]}";
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) });
+        }
     }
 
     private sealed class CountingStore : IBookStore
@@ -248,41 +284,44 @@ public sealed class SearchViewModelTests
         public int LastPage { get; private set; }
         public bool Fail { get; set; }
         public bool Empty { get; set; }
-        public TaskCompletionSource<IReadOnlyList<SearchWork>>? Pending { get; set; }
+        public TaskCompletionSource<SearchPage<SearchWork>>? Pending { get; set; }
 
-        public Task<IReadOnlyList<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
+        public Task<SearchPage<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
         {
             LastPage = page;
             return WaitForCancel ? WaitAsync(cancellationToken) : ReadSearchPage();
         }
 
-        private Task<IReadOnlyList<SearchWork>> ReadSearchPage()
+        private Task<SearchPage<SearchWork>> ReadSearchPage()
         {
             return FullPage && !Fail ? FullResults() : SearchResults();
         }
 
-        private static async Task<IReadOnlyList<SearchWork>> WaitAsync(CancellationToken cancellationToken)
+        private static async Task<SearchPage<SearchWork>> WaitAsync(CancellationToken cancellationToken)
         {
             await Task.Delay(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
-            return [];
+            return new SearchPage<SearchWork>([], HasAnotherPage: false);
         }
 
-        private static Task<IReadOnlyList<SearchWork>> FullResults()
+        private static Task<SearchPage<SearchWork>> FullResults()
         {
-            return Task.FromResult<IReadOnlyList<SearchWork>>([.. Enumerable.Range(0, 20)
-                .Select(_ => new SearchWork("/works/OL1W", "Dune", "Frank Herbert", "1965"))]);
+            SearchWork[] works = [.. Enumerable.Range(0, FULL_RAW_PAGE)
+                .Select(_ => new SearchWork("/works/OL1W", "Dune", "Frank Herbert", "1965"))];
+            return Task.FromResult(new SearchPage<SearchWork>(works, HasAnotherPage: true));
         }
 
-        private Task<IReadOnlyList<SearchWork>> SearchResults()
+        private Task<SearchPage<SearchWork>> SearchResults()
         {
+            SearchWork[] works = Empty ? [] : [new("/works/OL1W", "Dune", "Frank Herbert", "1965")];
             return Fail
                 ? throw new SearchException("Connection failed.")
-                : Pending?.Task ?? Task.FromResult<IReadOnlyList<SearchWork>>(Empty ? [] : [new("/works/OL1W", "Dune", "Frank Herbert", "1965")]);
+                : Pending?.Task ?? Task.FromResult(new SearchPage<SearchWork>(works, HasAnotherPage: false));
         }
 
-        public Task<IReadOnlyList<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
+        public Task<SearchPage<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IReadOnlyList<SearchEdition>>(EmptyEditions ? [] : [Edition()]);
+            SearchEdition[] editions = EmptyEditions ? [] : [Edition()];
+            return Task.FromResult(new SearchPage<SearchEdition>(editions, HasAnotherPage: false));
         }
 
         public Task<SearchEdition> PreviewAsync(string editionKey, CancellationToken cancellationToken)

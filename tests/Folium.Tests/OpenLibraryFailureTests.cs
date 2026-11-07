@@ -85,7 +85,7 @@ public sealed class OpenLibraryFailureTests
         using HttpClient http = new(handler);
         using OpenLibrary provider = new(http);
         _ = await Assert.ThrowsAsync<SearchException>(() => provider.SearchAsync("Dune", 1, TestContext.Current.CancellationToken));
-        Assert.Empty(await provider.SearchAsync("Dune", 1, TestContext.Current.CancellationToken));
+        Assert.Empty((await provider.SearchAsync("Dune", 1, TestContext.Current.CancellationToken)).Items);
         Assert.Equal(2, handler.Calls);
     }
 
@@ -168,10 +168,36 @@ public sealed class OpenLibraryFailureTests
         using OpenLibrary provider = new(http);
         _ = await Assert.ThrowsAsync<SearchException>(() => provider.SearchAsync("Dune", 1, TestContext.Current.CancellationToken));
         using CancellationTokenSource cancel = new();
-        Task<IReadOnlyList<SearchWork>> retry = provider.SearchAsync("Dune", 1, cancel.Token);
+        Task<SearchPage<SearchWork>> retry = provider.SearchAsync("Dune", 1, cancel.Token);
         await cancel.CancelAsync();
         _ = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => retry);
         Assert.Equal(1, handler.Calls);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public async Task AuthorLookupFailureKeepsTheEditionPreview(HttpStatusCode authorStatus)
+    {
+        using RequestHandler handler = new(request => AuthorResponse(request.RequestUri!.AbsolutePath, authorStatus));
+        using HttpClient http = new(handler);
+        using OpenLibrary provider = new(http);
+        SearchEdition edition = await provider.PreviewAsync("/books/OL1M", TestContext.Current.CancellationToken);
+        Assert.Equal("Dune", edition.Title);
+        Assert.Equal("Ace", edition.Publisher);
+        Assert.Contains("9780441172719", edition.Isbn, StringComparison.Ordinal);
+        Assert.Equal("Desert", edition.Description);
+        Assert.Equal("Frank Herbert", edition.Authors);
+    }
+
+    [Fact]
+    public async Task CanceledAuthorLookupDoesNotReturnAPreview()
+    {
+        using CancellationTokenSource cancel = new();
+        using RequestHandler handler = new(request => AuthorCancellation(request, cancel));
+        using HttpClient http = new(handler);
+        using OpenLibrary provider = new(http);
+        _ = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.PreviewAsync("/books/OL1M", cancel.Token));
     }
 
     [Fact]
@@ -203,6 +229,44 @@ public sealed class OpenLibraryFailureTests
         _ = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => provider.EditionsAsync("/works/OL1W", 0, TestContext.Current.CancellationToken));
         _ = await Assert.ThrowsAsync<ArgumentException>(() => provider.PreviewAsync("/books/../", TestContext.Current.CancellationToken));
         Assert.Equal(0, handler.Calls);
+    }
+
+    private static HttpResponseMessage AuthorResponse(string path, HttpStatusCode authorStatus)
+    {
+        return path switch
+        {
+            "/authors/OL9A.json" => new HttpResponseMessage(authorStatus),
+            "/authors/OL2A.json" => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(/*lang=json,strict*/ "{\"name\":\"Frank Herbert\"}"),
+            },
+            _ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(/*lang=json,strict*/ "{\"key\":\"/books/OL1M\",\"title\":\"Dune\",\"publishers\":[\"Ace\"],\"isbn_13\":[\"9780441172719\"],\"description\":\"Desert\",\"authors\":[{\"key\":\"/authors/OL9A\"},{\"key\":\"/authors/OL2A\"}]}"),
+            },
+        };
+    }
+
+    private static HttpResponseMessage AuthorCancellation(HttpRequestMessage request, CancellationTokenSource cancel)
+    {
+        if (!request.RequestUri!.AbsolutePath.Contains("/authors/", StringComparison.Ordinal))
+        {
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(/*lang=json,strict*/ "{\"key\":\"/books/OL1M\",\"title\":\"Dune\",\"authors\":[{\"key\":\"/authors/OL1A\"}]}"),
+            };
+        }
+
+        cancel.Cancel();
+        throw new OperationCanceledException(cancel.Token);
+    }
+
+    private sealed class RequestHandler(Func<HttpRequestMessage, HttpResponseMessage> response) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(response(request));
+        }
     }
 
     private sealed class ResponseHandler(Func<HttpResponseMessage> response) : HttpMessageHandler

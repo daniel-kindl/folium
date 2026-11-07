@@ -8,6 +8,9 @@ namespace Folium.Search;
 /// <param name="http">The HTTP client used for provider requests.</param>
 public sealed class OpenLibrary(HttpClient http) : IBookSearch, IDisposable
 {
+    private const int PAGE_SIZE = 20;
+    private const int METADATA_CACHE_LIMIT = 64;
+
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Dictionary<string, byte[]> _cache = new(StringComparer.Ordinal);
     private DateTimeOffset _nextRequest;
@@ -19,29 +22,34 @@ public sealed class OpenLibrary(HttpClient http) : IBookSearch, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
+    public async Task<SearchPage<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
         string url = "https://openlibrary.org/search.json?title=" + Uri.EscapeDataString(title.Trim())
-            + "&fields=key,title,author_name,first_publish_year,cover_i&limit=20&page=" + page.ToString(CultureInfo.InvariantCulture);
+            + "&fields=key,title,author_name,first_publish_year,cover_i&limit=" + PAGE_SIZE.ToString(CultureInfo.InvariantCulture)
+            + "&page=" + page.ToString(CultureInfo.InvariantCulture);
         using JsonDocument document = await ReadJsonAsync(url, cancellationToken).ConfigureAwait(false);
-        return OpenLibraryJson.Works(document.RootElement);
+        return Page(document.RootElement, "docs", OpenLibraryJson.Works(document.RootElement));
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
+    public async Task<SearchPage<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
     {
         RequireKey(workKey, "works", 'W');
         ArgumentOutOfRangeException.ThrowIfLessThan(page, 1);
-        string url = "https://openlibrary.org" + workKey + "/editions.json?limit=20&offset=" + ((page - 1) * 20).ToString(CultureInfo.InvariantCulture);
+        int offset = (page - 1) * PAGE_SIZE;
+        string url = "https://openlibrary.org" + workKey + "/editions.json?limit=" + PAGE_SIZE.ToString(CultureInfo.InvariantCulture)
+            + "&offset=" + offset.ToString(CultureInfo.InvariantCulture);
         using JsonDocument document = await ReadJsonAsync(url, cancellationToken).ConfigureAwait(false);
         try
         {
-            OpenLibraryJson.RequireArray(document.RootElement, "entries");
-            return [.. OpenLibraryJson.Array(document.RootElement, "entries")
+            JsonElement root = document.RootElement;
+            OpenLibraryJson.RequireArray(root, "entries");
+            SearchEdition[] editions = [.. OpenLibraryJson.Array(root, "entries")
                 .Where(item => OpenLibraryJson.ValidKey(OpenLibraryJson.Text(item, "key"), "books", 'M'))
                 .Select(OpenLibraryJson.Edition)];
+            return Page(root, "entries", editions);
         }
         catch (JsonException exception)
         {
@@ -64,8 +72,11 @@ public sealed class OpenLibrary(HttpClient http) : IBookSearch, IDisposable
                 continue;
             }
 
-            using JsonDocument person = await ReadJsonAsync("https://openlibrary.org" + key + ".json", cancellationToken).ConfigureAwait(false);
-            authors.Add(OpenLibraryJson.Text(person.RootElement, "name"));
+            string? name = await ReadAuthorNameAsync(key, cancellationToken).ConfigureAwait(false);
+            if (name is not null)
+            {
+                authors.Add(name);
+            }
         }
 
         return edition with { Authors = string.Join(", ", authors) };
@@ -140,7 +151,7 @@ public sealed class OpenLibrary(HttpClient http) : IBookSearch, IDisposable
             ValidateMetadata(url, bytes);
         }
 
-        if (_cache.Count >= 64)
+        if (_cache.Count >= METADATA_CACHE_LIMIT)
         {
             _cache.Clear();
         }
@@ -210,9 +221,28 @@ public sealed class OpenLibrary(HttpClient http) : IBookSearch, IDisposable
             throw new SearchException("Open Library is receiving too many requests. Wait before trying again.");
         }
 
-        if ((int)response.StatusCode >= 500)
+        if (response.StatusCode >= HttpStatusCode.InternalServerError)
         {
             throw new SearchException("Open Library is unavailable. Try again later.");
+        }
+    }
+
+    private static SearchPage<T> Page<T>(JsonElement root, string arrayName, IReadOnlyList<T> items)
+    {
+        int received = OpenLibraryJson.Array(root, arrayName).Count();
+        return new SearchPage<T>(items, received == PAGE_SIZE);
+    }
+
+    private async Task<string?> ReadAuthorNameAsync(string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using JsonDocument person = await ReadJsonAsync("https://openlibrary.org" + key + ".json", cancellationToken).ConfigureAwait(false);
+            return OpenLibraryJson.Text(person.RootElement, "name");
+        }
+        catch (SearchException)
+        {
+            return null;
         }
     }
 

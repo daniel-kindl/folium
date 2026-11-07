@@ -53,6 +53,48 @@ public sealed class SearchViewTests
         }, TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public async Task RepeatedCoverIdShowsOnTheNewlySelectedResult()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            LibraryViewModel library = LibraryViewModel.Open(new EmptyStore(), new SameCoverProvider());
+            MainView view = new() { DataContext = library };
+            Window window = new() { Content = view, Width = 400, Height = 850 };
+            window.Show();
+            Click(view, "Find a book online");
+            SearchView search = view.GetVisualDescendants().OfType<SearchView>().Single();
+            TextBox title = search.GetVisualDescendants().OfType<TextBox>().Single();
+            Assert.True(title.Focus());
+            window.KeyTextInput("Dune");
+            Click(search, "Search Open Library");
+            window.UpdateLayout();
+            List<Button> works = [.. search.GetVisualDescendants().OfType<Button>().Where(button => button.Tag is SearchWork)];
+            Assert.Equal(2, works.Count);
+            Image first = CoverImage(works[0]);
+            Image second = CoverImage(works[1]);
+            Assert.NotSame(first, second);
+            Activate(CoverButton(works[0]));
+            Assert.NotNull(first.Source);
+            Assert.Null(second.Source);
+            Activate(CoverButton(works[1]));
+            Assert.NotNull(second.Source);
+            Assert.Null(first.Source);
+            window.Close();
+        }, TestContext.Current.CancellationToken);
+    }
+
+    private static Button CoverButton(Button work)
+    {
+        return work.GetVisualDescendants().OfType<Button>().First(button => Equals(button.Content, "Preview cover"));
+    }
+
+    private static Image CoverImage(Button work)
+    {
+        return work.GetVisualDescendants().OfType<Image>().Single();
+    }
+
     private static void ReturnToLibrary(SearchView search, LibraryViewModel library)
     {
         Click(search, "Try again");
@@ -97,14 +139,14 @@ public sealed class SearchViewTests
     {
         public int CoverCalls { get; private set; }
 
-        public Task<IReadOnlyList<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
+        public Task<SearchPage<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IReadOnlyList<SearchWork>>([new("/works/OL1W", "Dune", "Frank Herbert", "1965", 12)]);
+            return Task.FromResult(new SearchPage<SearchWork>([new("/works/OL1W", "Dune", "Frank Herbert", "1965", 12)], HasAnotherPage: false));
         }
 
-        public Task<IReadOnlyList<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
+        public Task<SearchPage<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IReadOnlyList<SearchEdition>>([Edition()]);
+            return Task.FromResult(new SearchPage<SearchEdition>([Edition()], HasAnotherPage: false));
         }
 
         public Task<SearchEdition> PreviewAsync(string editionKey, CancellationToken cancellationToken)
@@ -121,6 +163,34 @@ public sealed class SearchViewTests
         private static SearchEdition Edition()
         {
             return new("/books/OL1M", "Dune", "Frank Herbert", "Ace", "1990", "123", "Paperback", "eng", "Desert planet.", 12);
+        }
+    }
+
+    private sealed class SameCoverProvider : IBookSearch
+    {
+        private readonly byte[] _cover = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j1WQAAAAASUVORK5CYII=");
+
+        public Task<SearchPage<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new SearchPage<SearchWork>([
+                new("/works/OL1W", "Dune", "Frank Herbert", "1965", 12),
+                new("/works/OL2W", "Dune Messiah", "Frank Herbert", "1969", 12),
+            ], HasAnotherPage: false));
+        }
+
+        public Task<SearchPage<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new SearchPage<SearchEdition>([], HasAnotherPage: false));
+        }
+
+        public Task<SearchEdition> PreviewAsync(string editionKey, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<byte[]?> CoverAsync(int coverId, CancellationToken cancellationToken)
+        {
+            return Task.FromResult<byte[]?>(_cover);
         }
     }
 }

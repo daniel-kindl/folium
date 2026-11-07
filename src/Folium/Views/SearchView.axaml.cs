@@ -17,6 +17,7 @@ public sealed partial class SearchView : UserControl, IDisposable
     private SearchViewModel? _model;
     private Bitmap? _cover;
     private Image? _resultImage;
+    private Image? _coverTarget;
     private ReadOnlyMemory<byte> _coverBytes;
 
     /// <summary>Loads the search markup.</summary>
@@ -34,6 +35,8 @@ public sealed partial class SearchView : UserControl, IDisposable
         _cover?.Dispose();
         _cover = null;
         _coverBytes = default;
+        _coverTarget = null;
+        _resultImage = null;
         _model = null;
     }
 
@@ -70,31 +73,44 @@ public sealed partial class SearchView : UserControl, IDisposable
 
     private void UpdateCover()
     {
-        if (_coverBytes.Equals(_model?.Cover ?? ReadOnlyMemory<byte>.Empty))
+        Image preview = this.FindControl<Image>("CoverImage")!;
+        Image target = _model?.ShowPreview == true || _resultImage is null ? preview : _resultImage;
+        ReadOnlyMemory<byte> cover = _model?.Cover ?? ReadOnlyMemory<byte>.Empty;
+        if (cover.Equals(_coverBytes) && ReferenceEquals(target, _coverTarget))
         {
             return;
         }
 
-        _coverBytes = _model?.Cover ?? ReadOnlyMemory<byte>.Empty;
-        Image image = this.FindControl<Image>("CoverImage")!;
-        image.Source = null;
+        bool sameBytes = cover.Equals(_coverBytes) && _cover is not null;
+        _coverBytes = cover;
+        _coverTarget = target;
+        preview.Source = null;
         _resultImage?.Source = null;
-        _cover?.Dispose();
-        _cover = null;
-        if (!_coverBytes.IsEmpty)
+        if (!sameBytes)
         {
-            DecodeCover(image);
+            _cover?.Dispose();
+            _cover = null;
         }
+
+        if (cover.IsEmpty)
+        {
+            return;
+        }
+
+        if (_cover is null)
+        {
+            DecodeCover();
+        }
+
+        target.Source = _cover;
     }
 
-    private void DecodeCover(Image image)
+    private void DecodeCover()
     {
         try
         {
             using MemoryStream stream = new(_coverBytes.ToArray());
             _cover = new Bitmap(stream);
-            Image target = _model?.ShowPreview == true || _resultImage is null ? image : _resultImage;
-            target.Source = _cover;
         }
         catch (ArgumentException exception)
         {

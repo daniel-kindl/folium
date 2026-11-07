@@ -15,6 +15,8 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     private string _searchedTitle = "";
     private SearchWork? _work;
     private SearchEdition? _edition;
+    private bool _worksHaveAnotherPage;
+    private bool _editionsHaveAnotherPage;
     private Stage _stage;
 
     /// <summary>Signals a change to the screen state.</summary>
@@ -62,8 +64,8 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     /// <summary>True when a preceding result page exists.</summary>
     public bool HasPrevious => !ShowPreview && _page > 1 && !IsBusy;
 
-    /// <summary>True when another page could exist.</summary>
-    public bool HasNext => !ShowPreview && !IsBusy && (ShowWorks ? Works.Count : Editions.Count) == 20;
+    /// <summary>True when the current raw provider page was full.</summary>
+    public bool HasNext => !ShowPreview && !IsBusy && (ShowWorks ? _worksHaveAnotherPage : _editionsHaveAnotherPage);
 
     /// <summary>True when a request is available to retry.</summary>
     public bool CanRetry => !IsBusy && _searchedTitle.Length > 0;
@@ -86,6 +88,7 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
         _page = 1;
         _stage = Stage.Works;
         Works = [];
+        _worksHaveAnotherPage = false;
         return LoadPageAsync();
     }
 
@@ -98,6 +101,7 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
         _page = 1;
         _stage = Stage.Editions;
         Editions = [];
+        _editionsHaveAnotherPage = false;
         return LoadPageAsync();
     }
 
@@ -206,22 +210,24 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
         {
             if (ShowWorks)
             {
-                IReadOnlyList<SearchWork> results = await provider.SearchAsync(_searchedTitle, page, token).ConfigureAwait(true);
+                SearchPage<SearchWork> results = await provider.SearchAsync(_searchedTitle, page, token).ConfigureAwait(true);
                 if (generation == _generation)
                 {
                     _page = page;
-                    Works = results;
-                    Message = results.Count == 0 ? "No books found. Try another title." : "Choose a book to see its editions.";
+                    Works = results.Items;
+                    _worksHaveAnotherPage = results.HasAnotherPage;
+                    Message = results.Items.Count == 0 ? "No books found. Try another title." : "Choose a book to see its editions.";
                 }
             }
             else
             {
-                IReadOnlyList<SearchEdition> results = await provider.EditionsAsync(_work!.Key, page, token).ConfigureAwait(true);
+                SearchPage<SearchEdition> results = await provider.EditionsAsync(_work!.Key, page, token).ConfigureAwait(true);
                 if (generation == _generation)
                 {
                     _page = page;
-                    Editions = results;
-                    Message = results.Count == 0 ? "No editions on this page. Return to the previous page or try another book." : "Choose an edition to preview its metadata.";
+                    Editions = results.Items;
+                    _editionsHaveAnotherPage = results.HasAnotherPage;
+                    Message = results.Items.Count == 0 ? "No editions on this page. Return to the previous page or try another book." : "Choose an edition to preview its metadata.";
                 }
             }
         });
