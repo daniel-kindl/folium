@@ -1,6 +1,6 @@
 # Folium
 
-Folium is an offline-first Android app for a personal book library. A person can add, browse, edit, and remove books on the device, and can mark a book as to read, reading, or finished. Book search is not implemented yet.
+Folium is an offline-first Android app for a personal book library. A person can add, browse, edit, and remove books on the device, and can mark a book as to read, reading, or finished. A person can also search Open Library by title and preview editions online.
 
 ## Prerequisites
 
@@ -64,10 +64,29 @@ press Home, and open Folium again to check resume.
 - `src/Folium.Android`: Android application host.
 - `tests/Folium.Tests`: automated tests.
 
-A book has a title, an author, and a reading status. Folium stores the personal library in a private JSON file. On Android, that file is `library.json` in the app files directory. See [CONTEXT.md](CONTEXT.md) for the domain terms. Book search and import are not in the app yet.
+A book has a title, an author, and a reading status. Folium stores the personal library in a private JSON file. On Android, that file is `library.json` in the app files directory. See [CONTEXT.md](CONTEXT.md) for the domain terms. Search and preview do not save books. Import is separate and is not implemented yet.
 
 See [AGENTS.md](AGENTS.md) for development instructions. Use [Conventional Commits and short-lived branches](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/version-control/index.md). Versions follow [Semantic Versioning](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/versioning/index.md). Changes require independent pull-request review.
 
 ## License
 
 [MIT](LICENSE)
+
+## Search Open Library
+
+Choose **Find a book online**, enter a title, then select **Search Open Library**.
+Select a work to browse its editions. Publisher, date, language, ISBN and edition
+identifiers help distinguish editions. Select an edition to inspect its metadata.
+Use **Preview cover** on a result to load an available cover. Empty metadata fields
+mean Open Library did not supply the value.
+
+Search requires a network connection. You can cancel a pending request or use Back.
+Failures leave the title available for another attempt. Nothing in search changes
+the saved library.
+
+The client uses the [Open Library APIs](https://openlibrary.org/developers/api) and
+[covers service](https://openlibrary.org/dev/docs/api/covers). Requests start after
+user actions, run at most once per second, and identify Folium by its repository
+URL. Successful responses stay in a bounded session cache. The client honors
+Retry-After and does not retry automatically. Result pages contain at most 20
+works or editions. No API key or backend is required.

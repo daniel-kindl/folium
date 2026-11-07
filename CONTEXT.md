@@ -23,3 +23,13 @@ _Avoid_: Writer, creator
 **Reading status**:
 The place of a saved book in the person's reading. The values are to read, reading, and finished.
 _Avoid_: Progress, state, shelf
+
+**Provider work**:
+An Open Library grouping of editions. A search result is not a saved book.
+
+**Edition**:
+A specific publication of a provider work. ISBN, publisher, publication date and
+cover belong to that edition.
+
+**Preview**:
+A read-only view of provider metadata. A preview does not save a book.

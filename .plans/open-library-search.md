@@ -1,5 +1,5 @@
 # Feature: Open Library search
-Status: IN_PROGRESS
+Status: BLOCKED
 Issue: https://github.com/daniel-kindl/folium/issues/7
 Branch: feat/open-library-search
 Claim-ID: folium-7-c819264b-934f-4f16-89b5-33dace056cf2
@@ -37,10 +37,10 @@ Use explicit next/previous pages, never background prefetch. No open questions.
 
 ## Commit plan
 ### C01: Search provider and mapping
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: none
 Proposed commit: feat(search): query Open Library metadata
-Actual commit: none
+Actual commit: cf45eb8
 Objective: Isolate provider requests and map work and edition fixtures.
 Work: Write failing fixture tests, then implement mapping, pacing and errors.
 Verification: Deterministic tests with a fake HTTP handler.
@@ -48,19 +48,29 @@ Evidence: 129 tests passed in Release; deterministic provider fixtures passed.
 The live Dune check returned works, editions, metadata and cover bytes.
 
 ### C02: Search and preview screens
-Status: PENDING
+Status: BLOCKED
 Depends on: C01
 Proposed commit: feat(search): add edition preview screens
 Actual commit: none
 Objective: Add search, editions and preview without library writes.
 Work: Write state tests first, then implement navigation, cancellation and UI.
 Verification: State tests, full build, coverage, formatting and Android check.
-Evidence: not yet run
+Evidence: 129 Release tests passed, including real headless keyboard input.
+Release coverage: lines 94.85%, branches 87.65%. The full Android release build
+passed with no warnings or errors. Formatting verification and locked restore
+with the high/critical dependency audit passed. Mutation score: 84.78%.
+The pinned CRAP tool passed with a maximum method score of 8.0.
+The tool ran on .NET 10 through runtime roll-forward; .NET 8 is not installed.
+NOT RUN: Android device usability. No device is connected.
 
 ## Final verification
-Not yet run.
+Automated checks passed. Independent source checks found no remaining material
+issues. This is self-review preparation, not approval of the pull request.
+The Android device check remains required before merge.
 
 ## Handoff
-Next action: Commit the provider, then commit search screens.
-Blockers: none
+Next action: Check search, editions, covers, cancellation, and Back on an Android
+phone or emulator. Record the result, complete this plan, and remove it before
+requesting final review of the pull request.
+Blockers: The required Android usability check has no available device.
 Risks: Live provider fields can be absent. Device verification requires an available device.
