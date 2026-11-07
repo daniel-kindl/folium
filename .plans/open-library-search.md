@@ -67,7 +67,7 @@ NOT RUN: Android device usability. No device is connected.
 Status: COMPLETED
 Depends on: C02
 Proposed commit: fix(search): correct preview and paging
-Actual commit:
+Actual commit: 7b972c6
 Objective: Fix the pull request 16 review comments.
 Work: Page from the raw provider count. Keep an edition when an author lookup fails. Show a repeated cover on the selected result. Name the page size and the cache limit.
 Verification: Release tests, formatting verification, coverage, and the Android release build.
