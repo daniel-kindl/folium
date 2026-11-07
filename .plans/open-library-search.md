@@ -51,7 +51,7 @@ The live Dune check returned works, editions, metadata and cover bytes.
 Status: BLOCKED
 Depends on: C01
 Proposed commit: feat(search): add edition preview screens
-Actual commit: none
+Actual commit: 4305e1f
 Objective: Add search, editions and preview without library writes.
 Work: Write state tests first, then implement navigation, cancellation and UI.
 Verification: State tests, full build, coverage, formatting and Android check.
