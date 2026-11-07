@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Folium.ViewModels"
+             xmlns:search="using:Folium.Search"
+             x:Class="Folium.Views.SearchView"
+             x:DataType="vm:SearchViewModel">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <StackPanel Spacing="8">
+            <TextBlock Text="{Binding Heading}" FontSize="22" TextWrapping="Wrap" />
+            <StackPanel IsVisible="{Binding ShowWorks}" Spacing="8">
+                <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="Book title" AutomationProperties.Name="Book title" MinHeight="48" />
+                <Button Content="Search Open Library" Click="SearchClicked" IsEnabled="{Binding !IsBusy}" MinHeight="48" HorizontalAlignment="Stretch" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Spacing="8" Margin="0,8">
+            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Height="4" />
+            <Button Content="Cancel search" Click="CancelClicked" IsVisible="{Binding IsBusy}" MinHeight="48" />
+            <Button Content="Try again" Click="RetryClicked" IsVisible="{Binding CanRetry}" MinHeight="48" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="2">
+            <StackPanel Spacing="8">
+                <ItemsControl ItemsSource="{Binding Works}" IsVisible="{Binding ShowWorks}" IsEnabled="{Binding !IsBusy}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="search:SearchWork">
+                            <Button Click="WorkClicked" Tag="{Binding}" MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,0,0,8">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding Title}" FontSize="18" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Authors}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding FirstPublished, StringFormat='First published: {0}'}" />
+                                    <TextBlock Text="Choose an edition →" />
+                                    <Image Name="ResultCover" MaxHeight="160" Stretch="Uniform" />
+                                    <Button Content="Preview cover" IsVisible="{Binding HasCover}" Tag="{Binding CoverId}" Click="CoverClicked" MinHeight="48" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ItemsControl ItemsSource="{Binding Editions}" IsVisible="{Binding ShowEditions}" IsEnabled="{Binding !IsBusy}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="search:SearchEdition">
+                            <Button Click="EditionClicked" Tag="{Binding}" MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,0,0,8">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="{Binding Title}" FontSize="18" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Publisher}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding PublicationDate}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Edition}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Language}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Isbn, StringFormat='ISBN: {0}'}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding Key}" />
+                                    <Image Name="ResultCover" MaxHeight="160" Stretch="Uniform" />
+                                    <Button Content="Preview cover" IsVisible="{Binding HasCover}" Tag="{Binding CoverId}" Click="CoverClicked" MinHeight="48" />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel IsVisible="{Binding ShowPreview}" Spacing="8">
+                    <Image Name="CoverImage" MaxHeight="220" Stretch="Uniform" AutomationProperties.Name="Edition cover" />
+                    <TextBlock Text="{Binding Preview.Title}" FontSize="22" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Authors, StringFormat='Authors: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Publisher, StringFormat='Publisher: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.PublicationDate, StringFormat='Published: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Isbn, StringFormat='ISBN: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Edition, StringFormat='Edition: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Language, StringFormat='Language: {0}'}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Description}" TextWrapping="Wrap" />
+                    <TextBlock Text="Empty fields are not supplied by Open Library." TextWrapping="Wrap" />
+                    <Button Content="View edition on Open Library" Click="SourceClicked" MinHeight="48" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <StackPanel Grid.Row="3" Spacing="8" Margin="0,8,0,0">
+            <Grid ColumnDefinitions="*,*" IsVisible="{Binding !ShowPreview}">
+                <Button Content="Previous page" Click="PreviousClicked" IsEnabled="{Binding HasPrevious}" MinHeight="48" />
+                <Button Grid.Column="1" Content="Next page" Click="NextClicked" IsEnabled="{Binding HasNext}" MinHeight="48" />
+            </Grid>
+            <Button Content="Back" Click="BackClicked" MinHeight="48" HorizontalAlignment="Stretch" />
+            <TextBlock Text="Metadata and covers from Open Library" FontSize="12" TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>

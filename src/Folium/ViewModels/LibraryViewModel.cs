@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Input;
 using Folium.Books;
+using Folium.Search;
 using Folium.Storage;
 
 namespace Folium.ViewModels;
@@ -9,6 +10,16 @@ namespace Folium.ViewModels;
 /// <summary>The screen state for the personal library.</summary>
 public sealed class LibraryViewModel : INotifyPropertyChanged
 {
+    private static readonly Dictionary<Screen, string> Headings = new()
+    {
+        [Screen.Library] = "Library",
+        [Screen.Add] = "Add a book",
+        [Screen.Edit] = "Edit book",
+        [Screen.Details] = "Book",
+        [Screen.ConfirmRemove] = "Remove this book?",
+        [Screen.Search] = "Search",
+    };
+    private static readonly IBookSearch SearchProvider = new OpenLibrary(new HttpClient());
     private readonly PersonalLibrary? _library;
     private Screen _screen = Screen.Library;
     private bool _editing;
@@ -17,15 +28,17 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private string _titleInput = "";
     private string _authorInput = "";
 
-    private LibraryViewModel(PersonalLibrary? library)
+    private LibraryViewModel(PersonalLibrary? library, IBookSearch? search)
     {
         _library = library;
+        Search = new SearchViewModel(search ?? SearchProvider);
         if (library is not null)
         {
             Books = library.Books;
             ShownBooks = Rows(library.Books);
         }
 
+        ShowSearchCommand = new Command(_ => SetScreen(Screen.Search), _ => ShowLibrary);
         ShowAddCommand = new Command(_ => ShowAdd(), _ => ShowLibrary);
         SaveCommand = new Command(_ => Save(), _ => ShowEditor);
         CancelCommand = new Command(_ => GoBack(), _ => ShowEditor);
@@ -40,6 +53,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>Tells the view that a bound value changed.</summary>
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>The independent metadata search state.</summary>
+    public SearchViewModel Search { get; }
+
+    /// <summary>Opens metadata search.</summary>
+    public ICommand ShowSearchCommand { get; }
+
+    /// <summary>True when metadata search is open.</summary>
+    public bool ShowSearch => _screen == Screen.Search;
 
     /// <summary>Opens the add-book screen.</summary>
     public ICommand ShowAddCommand { get; }
@@ -72,15 +94,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public ICommand FilterCommand { get; }
 
     /// <summary>The name of the current screen.</summary>
-    public string Heading => _screen switch
-    {
-        Screen.Add => "Add a book",
-        Screen.Edit => "Edit book",
-        Screen.Details => "Book",
-        Screen.ConfirmRemove => "Remove this book?",
-        Screen.Library => "Library",
-        _ => "Library",
-    };
+    public string Heading => Headings[_screen];
 
     /// <summary>The books on the library screen.</summary>
     public IReadOnlyList<Book> Books { get; private set; } = [];
@@ -163,23 +177,34 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>Opens the library from the store. A store failure leaves the library closed and the file unchanged.</summary>
     /// <param name="store">The store that holds the saved books. Must not be null.</param>
-    public static LibraryViewModel Open(IBookStore store)
+    /// <param name="search">The metadata provider. Null uses Open Library.</param>
+    public static LibraryViewModel Open(IBookStore store, IBookSearch? search = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         try
         {
-            return new LibraryViewModel(new PersonalLibrary(store));
+            return new LibraryViewModel(new PersonalLibrary(store), search);
         }
         catch (LibraryStoreException exception)
         {
             Trace.TraceError(exception.ToString());
-            return new LibraryViewModel(library: null);
+            return new LibraryViewModel(library: null, search);
         }
     }
 
     /// <summary>Moves to the previous screen. Returns false on the library screen so the host can leave the app.</summary>
     public bool GoBack()
     {
+        if (ShowSearch)
+        {
+            if (!Search.GoBack())
+            {
+                ShowLibraryScreen();
+            }
+
+            return true;
+        }
+
         if (ShowConfirm || (_editing && ShowEditor))
         {
             ShowDetailsScreen();
@@ -395,6 +420,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowEditor));
         Raise(nameof(ShowDetails));
         Raise(nameof(ShowConfirm));
+        Raise(nameof(ShowSearch));
         Raise(nameof(SelectedTitle));
         Raise(nameof(SelectedAuthor));
         Raise(nameof(SelectedStatus));
@@ -585,7 +611,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             ShowAddCommand, SaveCommand, CancelCommand, OpenCommand, EditCommand,
             AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand, SetStatusCommand,
-            FilterCommand,
+            FilterCommand, ShowSearchCommand,
         })
         {
             if (command is Command relay)
@@ -620,6 +646,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Edit = 2,
         Details = 3,
         ConfirmRemove = 4,
+        Search = 5,
     }
 
     private sealed class Command(Action<object?> execute, Func<object?, bool> canExecute) : ICommand

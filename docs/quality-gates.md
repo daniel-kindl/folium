@@ -29,7 +29,7 @@ Coverlet writes a Cobertura report for `tests/Folium.Tests`.
 - Line coverage at least 80%.
 - Branch coverage at least 70%.
 - Missing, ambiguous or malformed coverage reports fail.
-- `.axaml` files are not in the rate. The unit tests do not load the view.
+- `.axaml` files are not in the rate. Headless UI tests load the view and check search navigation, bindings, and covers.
 
 These are minimum floors, not substitutes for meaningful assertions.
 
