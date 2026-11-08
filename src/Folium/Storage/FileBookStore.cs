@@ -134,7 +134,7 @@ public sealed class FileBookStore : IBookStore
         {
             (true, _) => throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use."),
             (_, true) => throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author."),
-            _ => new Book(stored.Id, stored.Title!, stored.Author!, RequireStatus(stored.ReadingStatus)),
+            _ => new Book(stored.Id, stored.Title!, stored.Author!, RequireStatus(stored.ReadingStatus), stored.Metadata),
         };
     }
 
@@ -163,6 +163,7 @@ public sealed class FileBookStore : IBookStore
                 Title = book.Title,
                 Author = book.Author,
                 ReadingStatus = Token(book.Status),
+                Metadata = book.Metadata,
             },
         };
     }
@@ -199,5 +200,7 @@ public sealed class FileBookStore : IBookStore
         public string? Author { get; set; }
 
         public string? ReadingStatus { get; set; }
+
+        public BookMetadata? Metadata { get; set; }
     }
 }

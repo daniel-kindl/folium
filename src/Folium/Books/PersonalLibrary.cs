@@ -21,10 +21,11 @@ public sealed class PersonalLibrary
     /// <summary>Saves a new book when the title and the author contain text. Duplicate text is allowed.</summary>
     /// <param name="title">The title text. Blank text is rejected.</param>
     /// <param name="author">The author text. Blank text is rejected.</param>
-    public Book Add(string? title, string? author)
+    /// <param name="metadata">Optional edition metadata and cover.</param>
+    public Book Add(string? title, string? author, BookMetadata? metadata = null)
     {
         (string validTitle, string validAuthor) = BookText.Require(title ?? string.Empty, author ?? string.Empty);
-        Book book = new(Guid.NewGuid(), validTitle, validAuthor);
+        Book book = new(Guid.NewGuid(), validTitle, validAuthor, Metadata: metadata);
         _store.Replace([.. _books, book]);
         _books.Add(book);
         return book;
@@ -34,11 +35,12 @@ public sealed class PersonalLibrary
     /// <param name="id">The identifier of the saved book.</param>
     /// <param name="title">The title text. Blank text is rejected.</param>
     /// <param name="author">The author text. Blank text is rejected.</param>
-    public Book Edit(Guid id, string? title, string? author)
+    /// <param name="metadata">Replacement metadata. Null keeps the saved metadata.</param>
+    public Book Edit(Guid id, string? title, string? author, BookMetadata? metadata = null)
     {
         int index = IndexOf(id);
         (string validTitle, string validAuthor) = BookText.Require(title ?? string.Empty, author ?? string.Empty);
-        Book updated = _books[index] with { Title = validTitle, Author = validAuthor };
+        Book updated = _books[index] with { Title = validTitle, Author = validAuthor, Metadata = metadata ?? _books[index].Metadata };
         Book[] next = [.. _books];
         next[index] = updated;
         _store.Replace(next);
