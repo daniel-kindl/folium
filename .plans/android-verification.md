@@ -30,17 +30,17 @@ Record device results as device results. Do not claim emulator execution.
 
 ## Commit plan
 ### C01: Automate isolated Android verification
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: none
 Proposed commit: test(android): add device workflow verification
-Actual commit: none
+Actual commit: 05cf471
 Objective: Exercise the native UI with deterministic external data.
 Work: ADB runner, compile-time verification host, fixture data and reproducible commands.
-Verification: Run on the connected phone. Compare the original library hash before and after.
-Evidence: Device connected. Existing app exposes Android accessibility nodes.
+Verification: Pixel 9a API 37 run verified launch, CRUD, status, Back, search, pagination, and edition preview.
+Evidence: Screenshots and logs are in artifacts/android-device-api37-pixel9a. The original library hash stayed unchanged.
 
 ### C02: Repair confirmed workflow defects
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C01
 Proposed commit: fix(android): repair verified workflow defects
 Actual commit: none
@@ -50,7 +50,7 @@ Verification: Focused regression tests and repeat affected device scenarios.
 Evidence: Not yet run.
 
 ### C03: Record evidence and verify gates
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C01, C02
 Proposed commit: docs(android): record device verification
 Actual commit: none
@@ -60,9 +60,9 @@ Verification: Format, build, test, coverage, mutation, CRAP and design gates.
 Evidence: Not yet run.
 
 ## Final verification
-Not yet run.
+Release build, formatting, 144 tests, coverage thresholds, mutation threshold, design tokens, and contrast passed. CI build passed. CI mutation and CRAP checks were pending at the last review. Device import and later scenarios remain unverified because UiAutomation exited with code 137.
 
 ## Handoff
-Next action: Implement the isolated verification runner.
-Blockers: None established.
-Risks: API 37 does not establish API 31 or API 35 compatibility. Physical device testing replaces emulator execution only by the owner's chat instruction.
+Next action: Fix device import interactions and run the API 35 emulator workflow after restoring that workflow file.
+Blockers: The current GitHub credential rejected workflow-file pushes.
+Risks: API 37 does not establish API 31 or API 35 compatibility. The emulator workflow is not in the current PR because GitHub rejected the workflow-file push. Artifact screenshots and logs are intentionally tracked as review evidence.

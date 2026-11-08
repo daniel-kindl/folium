@@ -61,8 +61,8 @@ class Device:
         self.capture('failure')
         raise AssertionError(f'Android UI does not contain {text!r} ({cls}).')
 
-    def tap(self, text, cls='Button'):
-        node = self.wait(text, cls)
+    def tap(self, text, cls='Button', tree=None):
+        node = self.wait(text, cls) if tree is None else self.nodes(tree, text, cls)[0]
         assert node.get('enabled') == 'true', f'{text!r} is disabled.'
         x1, y1, x2, y2 = map(int, re.findall(r'\d+', node.get('bounds')))
         assert x2 > x1 and y2 > y1, f'{text!r} has no visible bounds.'
@@ -111,7 +111,7 @@ class Device:
     def search(self, title='Dune'):
         self.tap('Find a book online')
         self.enter('Book title', title, replace=True)
-        self.back()
+        self.hide_keyboard()
         self.tap('Search Open Library')
         self.wait('Choose a book to see its editions.', 'TextBlock')
 
@@ -131,15 +131,18 @@ class Device:
         self.enter('Publisher', 'Device publisher', replace=True)
         self.capture('import-keyboard')
         self.hide_keyboard()
-        # The Save control is below the keyboard-fold scroll viewport. Tap its fixed portrait position after dismissing the IME.
-        self.shell('input', 'tap', '540', '2200')
+        tree = self.tree()
+        save = next((n for n in self.nodes(tree, 'Save', 'Button') if n.get('enabled') == 'true'), None)
+        if save is None:
+            raise AssertionError('Save is not visible after keyboard dismissal.')
+        self.tap('Save', tree=tree)
         time.sleep(.5)
         boxes = [n for n in self.tree().iter('node') if n.get('class') == 'CheckBox']
         assert len(boxes) == 1 and boxes[0].get('checked') == 'false', 'Cover permission must start unchecked.'
         if keep_cover:
             self.tap('I have permission to save this cover on my device', 'CheckBox')
         self.capture('import-permission-'+str(keep_cover).lower())
-        self.shell('input', 'tap', '540', '2200')
+        self.tap('Save')
         self.wait(title, 'Button')
 
 
