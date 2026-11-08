@@ -98,6 +98,8 @@ Empty states explain the state and provide one useful action. Loading states res
 
 [Avalonia automation peers](https://docs.avaloniaui.net/docs/app-development/accessibility) expose roles, names, and states. Label icon buttons with AutomationProperties, hide decorative covers from duplicate announcements, and check reading order. Android API support does not prove TalkBack behavior. Test TalkBack, keyboard focus, system font scaling through 200%, landscape, narrow width, and reduced motion on a physical device. Reflow or use lists instead of clipping enlarged text.
 
+For enforceable checks, CI coverage, screenshot baselines and Android verification, see [visual quality gates](visual-quality-gates.md). The research PR activates palette contrast checks only; renderer and device gates start with the visual implementation.
+
 ## Separate implementation issue
 
 After owner selection, implement shared theme dictionaries, styles, the selected icon subset with license notices, and bundled font weights. Record exact upstream hashes and asset sizes. Prove theme switching, Czech/fallback rendering, touch bounds, TalkBack, enlarged text, and contrast in every control state on the USB device. Measure APK growth and scrolling behavior. Do not add book features, a full Material framework, branding production, telemetry, or remote asset downloads.
