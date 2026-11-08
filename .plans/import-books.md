@@ -28,21 +28,22 @@ Tracker preflight passed with no missing capabilities or labels.
 Use optional book metadata to retain compatibility with existing library files.
 Store optional cover bytes in the same atomic document to avoid a second transaction.
 Keep search read-only. The library owns import and the editable draft.
-Cover rights documentation is under investigation before the cover option is finalized.
+Each import starts with cover storage disabled. The user must confirm permission.
+Existing title and author requirements remain. The user can complete missing text.
 
 ## Commit plan
 ### C01: Persist imported metadata
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: none
 Proposed commit: feat(books): persist imported metadata
-Actual commit: none
+Actual commit: cf0e74d
 Objective: Save metadata and cover together and retain old library compatibility.
 Work: Failing persistence and edit tests, then optional metadata in book and store.
 Verification: Domain and storage tests, including restart and write failures.
-Evidence: not yet run
+Evidence: 141 tests passed, including metadata restart and editing tests.
 
 ### C02: Review and edit an import
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C01
 Proposed commit: feat(import): review and save editions
 Actual commit: none
@@ -65,6 +66,6 @@ Evidence: not yet run
 NOT RUN for feature changes.
 
 ## Handoff
-Next action: Write persistence tests.
+Next action: Verify the decoder fallback, then run the required gates.
 Blockers: none.
 Risks: Cover rights must not be inferred from metadata licensing. Android usability requires a device check.

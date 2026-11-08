@@ -23,6 +23,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private readonly PersonalLibrary? _library;
     private Screen _screen = Screen.Library;
     private bool _editing;
+    private bool _importing;
     private Book? _selected;
     private ReadingStatus? _filter;
     private string _titleInput = "";
@@ -38,6 +39,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             ShownBooks = Rows(library.Books);
         }
 
+        ImportCommand = new Command(_ => BeginImport(), _ => ShowSearch && Search.ShowPreview && Search.Preview is not null && !Search.IsBusy);
+        Search.PropertyChanged += (_, _) => ((Command)ImportCommand).RaiseCanExecuteChanged();
         ShowSearchCommand = new Command(_ => SetScreen(Screen.Search), _ => ShowLibrary);
         ShowAddCommand = new Command(_ => ShowAdd(), _ => ShowLibrary);
         SaveCommand = new Command(_ => Save(), _ => ShowEditor);
@@ -56,6 +59,21 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>The independent metadata search state.</summary>
     public SearchViewModel Search { get; }
+
+    /// <summary>Reviews the current edition in the book editor.</summary>
+    public ICommand ImportCommand { get; }
+
+    /// <summary>The optional edition metadata being edited.</summary>
+    public BookMetadataEditor? MetadataEditor { get; private set; }
+
+    /// <summary>The selected book's saved edition metadata.</summary>
+    public BookMetadata? SelectedMetadata => _selected?.Metadata;
+
+    /// <summary>True when the selected book contains edition metadata.</summary>
+    public bool HasSelectedMetadata => SelectedMetadata is not null;
+
+    /// <summary>The selected book's local cover, or empty bytes.</summary>
+    public ReadOnlyMemory<byte> SelectedCover => SelectedMetadata?.Cover ?? ReadOnlyMemory<byte>.Empty;
 
     /// <summary>Opens metadata search.</summary>
     public ICommand ShowSearchCommand { get; }
@@ -205,6 +223,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return true;
         }
 
+        if (_importing && ShowEditor)
+        {
+            _importing = false;
+            MetadataEditor = null;
+            ClearErrors();
+            SetScreen(Screen.Search);
+            return true;
+        }
+
         if (ShowConfirm || (_editing && ShowEditor))
         {
             ShowDetailsScreen();
@@ -220,8 +247,28 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         return false;
     }
 
+    private void BeginImport()
+    {
+        if (Search.Preview is not SearchEdition edition)
+        {
+            return;
+        }
+
+        ShowAdd();
+        _importing = true;
+        TitleInput = edition.Title;
+        AuthorInput = edition.Authors;
+        BookMetadata metadata = new(Search.WorkKey, edition.Key, edition.Publisher,
+            edition.PublicationDate, edition.Isbn, edition.Edition, edition.Language,
+            edition.Description, edition.CoverId, Search.Cover.ToArray());
+        MetadataEditor = new BookMetadataEditor(metadata, keepCover: false);
+        Raise(nameof(MetadataEditor));
+    }
+
     private void ShowAdd()
     {
+        _importing = false;
+        MetadataEditor = null;
         _editing = false;
         _selected = null;
         SetText(ref _titleInput, "", nameof(TitleInput));
@@ -238,6 +285,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         _editing = true;
+        MetadataEditor = _selected.Metadata is null ? null : new BookMetadataEditor(_selected.Metadata, keepCover: true);
         SetText(ref _titleInput, _selected.Title, nameof(TitleInput));
         SetText(ref _authorInput, _selected.Author, nameof(AuthorInput));
         ClearErrors();
@@ -305,8 +353,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         Book saved = _editing
-            ? library.Edit(_selected!.Id, _titleInput, _authorInput)
-            : library.Add(_titleInput, _authorInput);
+            ? library.Edit(_selected!.Id, _titleInput, _authorInput, MetadataEditor?.ToMetadata())
+            : library.Add(_titleInput, _authorInput, MetadataEditor?.ToMetadata());
         UseBooks(library.Books);
         ClearErrors();
         if (_editing)
@@ -316,6 +364,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return;
         }
 
+        _importing = false;
+        MetadataEditor = null;
         ShowLibraryScreen();
     }
 
@@ -424,6 +474,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(SelectedTitle));
         Raise(nameof(SelectedAuthor));
         Raise(nameof(SelectedStatus));
+        Raise(nameof(MetadataEditor));
+        Raise(nameof(SelectedMetadata));
+        Raise(nameof(HasSelectedMetadata));
+        Raise(nameof(SelectedCover));
         Raise(nameof(LoadError));
         RaiseLibraryShape();
         RaiseCommands();
@@ -611,7 +665,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             ShowAddCommand, SaveCommand, CancelCommand, OpenCommand, EditCommand,
             AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand, SetStatusCommand,
-            FilterCommand, ShowSearchCommand,
+            FilterCommand, ShowSearchCommand, ImportCommand,
         })
         {
             if (command is Command relay)

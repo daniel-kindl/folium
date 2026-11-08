@@ -114,6 +114,26 @@
                     <TextBox Text="{Binding AuthorInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              MinHeight="48"
                              AutomationProperties.Name="Author" />
+                    <StackPanel IsVisible="{Binding MetadataEditor, Converter={x:Static conv:ObjectConverters.IsNotNull}}" Spacing="8">
+                        <TextBlock Text="Review metadata from Open Library" FontSize="18" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding MetadataEditor.EditionKey}" TextWrapping="Wrap" />
+                        <TextBlock Text="Publisher" />
+                        <TextBox Name="PublisherInput" Text="{Binding MetadataEditor.Publisher, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="48" AutomationProperties.Name="Publisher" />
+                        <TextBlock Text="Publication date" />
+                        <TextBox Name="PublicationDateInput" Text="{Binding MetadataEditor.PublicationDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="48" AutomationProperties.Name="Publication date" />
+                        <TextBlock Text="ISBN" />
+                        <TextBox Name="IsbnInput" Text="{Binding MetadataEditor.Isbn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="48" AutomationProperties.Name="ISBN" />
+                        <TextBlock Text="Edition" />
+                        <TextBox Name="EditionInput" Text="{Binding MetadataEditor.Edition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="48" AutomationProperties.Name="Edition" />
+                        <TextBlock Text="Language" />
+                        <TextBox Name="LanguageInput" Text="{Binding MetadataEditor.Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="48" AutomationProperties.Name="Language" />
+                        <TextBlock Text="Description" />
+                        <TextBox Name="DescriptionInput" Text="{Binding MetadataEditor.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" MinHeight="48" AutomationProperties.Name="Description" />
+                        <CheckBox Name="KeepCoverInput" IsChecked="{Binding MetadataEditor.KeepCover, Mode=TwoWay}" IsVisible="{Binding MetadataEditor.HasCover}" MinHeight="48">
+                            <TextBlock Text="I have permission to save this cover on my device" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <TextBlock Text="Cover images can have separate copyright restrictions. Leave the box unchecked to save without a cover." TextWrapping="Wrap" />
+                    </StackPanel>
                     <TextBlock Text="{Binding InputError}" FontSize="16" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding SaveError}" FontSize="16" TextWrapping="Wrap" />
                     <Button Content="Save"
@@ -136,6 +156,25 @@
                         <TextBlock Text="{Binding SelectedTitle}" FontSize="16" TextWrapping="Wrap" />
                         <TextBlock Text="Author" FontSize="16" />
                         <TextBlock Text="{Binding SelectedAuthor}" FontSize="16" TextWrapping="Wrap" />
+                        <views:LocalCover Name="SavedCover" Bytes="{Binding SelectedCover}" MaxHeight="220" Stretch="Uniform" AutomationProperties.Name="Saved book cover" />
+                        <TextBlock Text="No saved cover" IsVisible="{Binding #SavedCover.Source, Converter={x:Static conv:ObjectConverters.IsNull}}" />
+                        <StackPanel IsVisible="{Binding HasSelectedMetadata}" Spacing="8">
+                            <TextBlock Text="Metadata from Open Library" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SelectedMetadata.WorkKey}" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding SelectedMetadata.EditionKey}" TextWrapping="Wrap" />
+                            <TextBlock Text="Publisher" />
+                            <TextBlock Text="{Binding SelectedMetadata.Publisher}" TextWrapping="Wrap" />
+                            <TextBlock Text="Publication date" />
+                            <TextBlock Text="{Binding SelectedMetadata.PublicationDate}" TextWrapping="Wrap" />
+                            <TextBlock Text="ISBN" />
+                            <TextBlock Text="{Binding SelectedMetadata.Isbn}" TextWrapping="Wrap" />
+                            <TextBlock Text="Edition" />
+                            <TextBlock Text="{Binding SelectedMetadata.Edition}" TextWrapping="Wrap" />
+                            <TextBlock Text="Language" />
+                            <TextBlock Text="{Binding SelectedMetadata.Language}" TextWrapping="Wrap" />
+                            <TextBlock Text="Description" />
+                            <TextBlock Text="{Binding SelectedMetadata.Description}" TextWrapping="Wrap" />
+                        </StackPanel>
                         <TextBlock Text="Status" FontSize="16" />
                         <TextBlock Text="{Binding SelectedStatus}" FontSize="16" TextWrapping="Wrap" />
                         <Button Content="To read"
