@@ -1,6 +1,7 @@
 # Feature: Import books
 Status: BLOCKED
 Issue: https://github.com/daniel-kindl/folium/issues/8
+PR: https://github.com/daniel-kindl/folium/pull/17
 Branch: feat/8-import-books
 Claim-ID: 090a38b1-1ffe-45fa-ad66-377cdb3fca6c
 
@@ -78,7 +79,7 @@ Evidence: All local automated gates passed. Human Android usability remains NOT 
   its .NET 8 runtime is absent and this environment has .NET 10.
 
 ## Handoff
-Next action: Publish a draft PR. Obtain independent PR review and human Android usability evidence.
+Next action: Complete independent review of draft PR #17 and obtain human Android usability evidence.
 Keep this plan while the required human check is incomplete.
 Blockers: A human must verify Android usability before merge.
 Risks: Cover rights must not be inferred from metadata licensing. Android usability requires a device check.
