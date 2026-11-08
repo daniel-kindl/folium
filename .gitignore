@@ -22,3 +22,6 @@ local.properties
 # OS files
 .DS_Store
 Thumbs.db
+
+# Native Android verification evidence
+artifacts/

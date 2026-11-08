@@ -1,0 +1,152 @@
+--------- beginning of system
+11-08 14:33:06.320 28855 28855 D ActivityThread: Set OS env TMPDIR to /data/user/0/dev.danielkindl.folium/cache
+11-08 14:33:06.570 28855 28896 I DisplayManager: Choreographer implicitly registered for the refresh rate.
+11-08 14:33:07.135 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:07.135 28855 28855 I ImeTracker: dev.danielkindl.folium:0ac816bc: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:17.627 28855 28855 I ImeTracker: dev.danielkindl.folium:92b9f9bc: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:17.628 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:17.628 28855 28855 I ImeTracker: dev.danielkindl.folium:92b9f9bc: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:25.637 28855 28855 I ImeTracker: dev.danielkindl.folium:11acb442: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:25.638 28855 28855 D InsetsController: show(ime())
+11-08 14:33:25.638 28855 28855 D InsetsController: Setting requestedVisibleTypes to 511 (was 503)
+11-08 14:33:25.644 28855 28855 I ImeTracker: dev.danielkindl.folium:1f05aa07: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:25.644 28855 28855 D InsetsController: show(ime())
+11-08 14:33:25.644 28855 28855 I ImeTracker: dev.danielkindl.folium:1f05aa07: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+11-08 14:33:25.871 28855 28855 I ImeTracker: dev.danielkindl.folium:11acb442: onShown
+11-08 14:33:28.460 28855 28855 I ImeTracker: dev.danielkindl.folium:c9a34c67: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:28.460 28855 28855 D InsetsController: show(ime())
+11-08 14:33:28.460 28855 28855 I ImeTracker: dev.danielkindl.folium:c9a34c67: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 14:33:28.462 28855 28855 I ImeTracker: dev.danielkindl.folium:46052e98: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:28.462 28855 28855 D InsetsController: show(ime())
+11-08 14:33:28.462 28855 28855 I ImeTracker: dev.danielkindl.folium:46052e98: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 14:33:28.808 28855 28855 I ImeTracker: dev.danielkindl.folium:18a9d3be: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_REQUEST_HIDE_WITH_CONTROL fromUser true userId 0 displayId 0
+11-08 14:33:28.808 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:28.809 28855 28855 D InsetsController: Setting requestedVisibleTypes to 503 (was 511)
+11-08 14:33:28.827 28855 28855 I ImeTracker: system_server:6fa59dd1: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+11-08 14:33:31.376 28855 28855 I ImeTracker: dev.danielkindl.folium:ccaeaf60: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:31.376 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:31.376 28855 28855 I ImeTracker: dev.danielkindl.folium:ccaeaf60: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:31.462 28855 28855 I ImeTracker: dev.danielkindl.folium:c6c9bdf0: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:31.462 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:31.462 28855 28855 I ImeTracker: dev.danielkindl.folium:c6c9bdf0: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:39.641 28855 28855 I ImeTracker: dev.danielkindl.folium:3cb42766: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:39.641 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:39.642 28855 28855 I ImeTracker: dev.danielkindl.folium:3cb42766: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:50.624 28855 28855 I ImeTracker: dev.danielkindl.folium:f6f81e4b: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:50.624 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:50.624 28855 28855 I ImeTracker: dev.danielkindl.folium:f6f81e4b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:53.004 28855 28855 I ImeTracker: dev.danielkindl.folium:c8b56983: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:53.004 28855 28855 D InsetsController: show(ime())
+11-08 14:33:53.004 28855 28855 D InsetsController: Setting requestedVisibleTypes to 511 (was 503)
+11-08 14:33:53.006 28855 28855 I ImeTracker: dev.danielkindl.folium:548aad31: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:53.006 28855 28855 D InsetsController: show(ime())
+11-08 14:33:53.007 28855 28855 I ImeTracker: dev.danielkindl.folium:548aad31: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+11-08 14:33:53.243 28855 28855 I ImeTracker: dev.danielkindl.folium:c8b56983: onShown
+11-08 14:33:53.548 28855 28855 I ImeTracker: dev.danielkindl.folium:93402323: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_REQUEST_HIDE_WITH_CONTROL fromUser true userId 0 displayId 0
+11-08 14:33:53.548 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:53.549 28855 28855 D InsetsController: Setting requestedVisibleTypes to 503 (was 511)
+11-08 14:33:53.573 28855 28855 I ImeTracker: system_server:60b5217a: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+11-08 14:33:56.191 28855 28855 I ImeTracker: dev.danielkindl.folium:77754558: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:56.192 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:56.192 28855 28855 I ImeTracker: dev.danielkindl.folium:77754558: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:33:56.207 28855 28855 I ImeTracker: dev.danielkindl.folium:8010d97b: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:33:56.207 28855 28855 D InsetsController: hide(ime())
+11-08 14:33:56.207 28855 28855 I ImeTracker: dev.danielkindl.folium:8010d97b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:01.217 28855 28855 I ImeTracker: dev.danielkindl.folium:526f634f: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:01.218 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:01.218 28855 28855 I ImeTracker: dev.danielkindl.folium:526f634f: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:03.769 28855 28855 I ImeTracker: dev.danielkindl.folium:73c1cda2: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:03.769 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:03.769 28855 28855 I ImeTracker: dev.danielkindl.folium:73c1cda2: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:08.953 28855 28855 I ImeTracker: dev.danielkindl.folium:a50a2dbd: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:08.954 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:08.954 28855 28855 I ImeTracker: dev.danielkindl.folium:a50a2dbd: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:14.080 28855 28855 I ImeTracker: dev.danielkindl.folium:2fc752c8: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:14.081 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:14.081 28855 28855 I ImeTracker: dev.danielkindl.folium:2fc752c8: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:16.645 28855 28855 I ImeTracker: dev.danielkindl.folium:39702e1f: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:16.645 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:16.645 28855 28855 I ImeTracker: dev.danielkindl.folium:39702e1f: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:21.688 28855 28855 I ImeTracker: dev.danielkindl.folium:e5179063: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:21.689 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:21.689 28855 28855 I ImeTracker: dev.danielkindl.folium:e5179063: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:24.281 28855 28855 I ImeTracker: dev.danielkindl.folium:9bbba586: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:24.281 28855 28855 D InsetsController: show(ime())
+11-08 14:34:24.281 28855 28855 D InsetsController: Setting requestedVisibleTypes to 511 (was 503)
+11-08 14:34:24.283 28855 28855 I ImeTracker: dev.danielkindl.folium:2065a314: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:24.283 28855 28855 D InsetsController: show(ime())
+11-08 14:34:24.284 28855 28855 I ImeTracker: dev.danielkindl.folium:2065a314: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+11-08 14:34:24.496 28855 28855 I ImeTracker: dev.danielkindl.folium:9bbba586: onShown
+11-08 14:34:24.556 28855 28855 I ImeTracker: dev.danielkindl.folium:6983e1c2: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_REQUEST_HIDE_WITH_CONTROL fromUser true userId 0 displayId 0
+11-08 14:34:24.556 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:24.556 28855 28855 D InsetsController: Setting requestedVisibleTypes to 503 (was 511)
+11-08 14:34:24.576 28855 28855 I ImeTracker: system_server:98230f6b: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+11-08 14:34:27.221 28855 28855 I ImeTracker: dev.danielkindl.folium:b9d60c90: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:27.221 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:27.221 28855 28855 I ImeTracker: dev.danielkindl.folium:b9d60c90: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:27.226 28855 28855 I ImeTracker: dev.danielkindl.folium:55c32aa1: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:27.227 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:27.227 28855 28855 I ImeTracker: dev.danielkindl.folium:55c32aa1: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:32.259 28855 28855 I ImeTracker: dev.danielkindl.folium:a7999e02: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:32.260 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:32.260 28855 28855 I ImeTracker: dev.danielkindl.folium:a7999e02: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:34.854 28855 28855 I ImeTracker: dev.danielkindl.folium:ef7b1624: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:34.854 28855 28855 D InsetsController: show(ime())
+11-08 14:34:34.855 28855 28855 D InsetsController: Setting requestedVisibleTypes to 511 (was 503)
+11-08 14:34:34.857 28855 28855 I ImeTracker: dev.danielkindl.folium:fdc71d17: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:34.857 28855 28855 D InsetsController: show(ime())
+11-08 14:34:34.857 28855 28855 I ImeTracker: dev.danielkindl.folium:fdc71d17: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+11-08 14:34:35.078 28855 28855 I ImeTracker: dev.danielkindl.folium:ef7b1624: onShown
+11-08 14:34:35.315 28855 28855 I ImeTracker: dev.danielkindl.folium:81ca1568: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT_REQUEST_HIDE_WITH_CONTROL fromUser true userId 0 displayId 0
+11-08 14:34:35.315 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:35.316 28855 28855 D InsetsController: Setting requestedVisibleTypes to 503 (was 511)
+11-08 14:34:35.337 28855 28855 I ImeTracker: system_server:d5c91953: onCancelled at PHASE_CLIENT_ON_CONTROLS_CHANGED
+11-08 14:34:37.895 28855 28855 I ImeTracker: dev.danielkindl.folium:fab7786b: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:37.895 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:37.895 28855 28855 I ImeTracker: dev.danielkindl.folium:fab7786b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:37.913 28855 28855 I ImeTracker: dev.danielkindl.folium:528fbaf8: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:37.913 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:37.913 28855 28855 I ImeTracker: dev.danielkindl.folium:528fbaf8: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:46.888 28855 28855 I ImeTracker: dev.danielkindl.folium:c999ad8f: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:46.888 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:46.888 28855 28855 I ImeTracker: dev.danielkindl.folium:c999ad8f: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:52.035 28855 28855 I ImeTracker: dev.danielkindl.folium:dac86732: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:52.035 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:52.035 28855 28855 I ImeTracker: dev.danielkindl.folium:dac86732: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+--------- beginning of main
+11-08 14:34:52.106 28855 28855 I ielkindl.folium: Explicit concurrent mark compact GC freed 1864KB AllocSpace bytes, 2(264KB) LOS objects, 98% free, 3296KB/256MB, paused 49us,1.155ms total 7.882ms
+11-08 14:34:57.539 28855 28855 I ImeTracker: dev.danielkindl.folium:f2f6b4b7: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:34:57.539 28855 28855 D InsetsController: hide(ime())
+11-08 14:34:57.539 28855 28855 I ImeTracker: dev.danielkindl.folium:f2f6b4b7: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:34:57.611 28855 28855 I ielkindl.folium: Explicit concurrent mark compact GC freed 1240KB AllocSpace bytes, 2(264KB) LOS objects, 98% free, 3272KB/256MB, paused 37us,702us total 5.802ms
+11-08 14:34:57.743 28855 28855 I ielkindl.folium: Explicit concurrent mark compact GC freed 156KB AllocSpace bytes, 0(0B) LOS objects, 98% free, 3244KB/256MB, paused 39us,742us total 5.568ms
+11-08 14:35:01.628 28855 28855 I ielkindl.folium: Explicit concurrent mark compact GC freed 528KB AllocSpace bytes, 0(0B) LOS objects, 98% free, 3260KB/256MB, paused 84us,1.813ms total 18.345ms
+11-08 14:35:05.768 28855 28855 I ImeTracker: dev.danielkindl.folium:54cdfba7: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:05.768 28855 28855 D InsetsController: hide(ime())
+11-08 14:35:05.768 28855 28855 I ImeTracker: dev.danielkindl.folium:54cdfba7: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:35:07.901 28855 28855 I ielkindl.folium: Explicit concurrent mark compact GC freed 976KB AllocSpace bytes, 6(792KB) LOS objects, 98% free, 3276KB/256MB, paused 43us,741us total 5.753ms
+11-08 14:35:17.824 28855 28855 I ImeTracker: dev.danielkindl.folium:67202882: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:17.825 28855 28855 D InsetsController: hide(ime())
+11-08 14:35:17.825 28855 28855 I ImeTracker: dev.danielkindl.folium:67202882: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:35:19.433 28855 28855 I ielkindl.folium: Explicit concurrent mark compact GC freed 1004KB AllocSpace bytes, 0(0B) LOS objects, 98% free, 3264KB/256MB, paused 94us,1.989ms total 11.886ms
+11-08 14:35:28.711 28855 28855 I ImeTracker: dev.danielkindl.folium:55a619ab: onRequestHide at ORIGIN_CLIENT reason HIDE_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:28.711 28855 28855 D InsetsController: hide(ime())
+11-08 14:35:28.711 28855 28855 I ImeTracker: dev.danielkindl.folium:55a619ab: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+11-08 14:35:32.007 28855 28855 I ImeTracker: dev.danielkindl.folium:88c8caab: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:32.007 28855 28855 D InsetsController: show(ime())
+11-08 14:35:32.007 28855 28855 D InsetsController: Setting requestedVisibleTypes to 511 (was 503)
+11-08 14:35:32.014 28855 28855 I ImeTracker: dev.danielkindl.folium:bcdb18e2: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:32.014 28855 28855 D InsetsController: show(ime())
+11-08 14:35:32.014 28855 28855 I ImeTracker: dev.danielkindl.folium:bcdb18e2: onCancelled at PHASE_CLIENT_REPORT_REQUESTED_VISIBLE_TYPES
+11-08 14:35:32.036 28855 28855 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.view.ImeBackAnimationController@76c7730
+11-08 14:35:32.037 28855 28909 D WindowOnBackDispatcher: setOnBackInvokedCallbackInfo: android.view.ImeBackAnimationController@76c7730
+11-08 14:35:32.063 28855 28855 D VRI[MainActivity]: WindowInsets changed: ime:[0,0,0,1065]
+11-08 14:35:32.216 28855 28855 I ImeTracker: dev.danielkindl.folium:88c8caab: onShown
+11-08 14:35:34.696 28855 28855 I ImeTracker: dev.danielkindl.folium:88637d21: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:34.696 28855 28855 D InsetsController: show(ime())
+11-08 14:35:34.696 28855 28855 I ImeTracker: dev.danielkindl.folium:88637d21: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 14:35:34.698 28855 28855 I ImeTracker: dev.danielkindl.folium:e1d5bc24: onRequestShow at ORIGIN_CLIENT reason SHOW_SOFT_INPUT fromUser true userId 0 displayId 0
+11-08 14:35:34.698 28855 28855 D InsetsController: show(ime())
+11-08 14:35:34.698 28855 28855 I ImeTracker: dev.danielkindl.folium:e1d5bc24: onCancelled at PHASE_CLIENT_APPLY_ANIMATION
+11-08 14:35:34.704 28855 28855 W RemoteInputConnectionImpl: getSurroundingText on inactive InputConnection
+11-08 14:35:34.706 28855 28855 W RemoteInputConnectionImpl: getTextBeforeCursor on inactive InputConnection

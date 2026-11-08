@@ -10,6 +10,7 @@
          CS1591 is an error. Each public member needs an XML summary. -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
+    <DefineConstants Condition="'$(FoliumVerification)' == 'true'">$(DefineConstants);FOLIUM_VERIFICATION</DefineConstants>
     <ImplicitUsings>enable</ImplicitUsings>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
