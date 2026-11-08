@@ -7,8 +7,11 @@ corresponding UI/assets exist and have been tested.
 
 ## Active now: required CI
 
+- Run `python3 -B -m unittest discover -s docs/design -p 'test_*.py'`.
+  This checks token constraints and rejection of invalid palettes and low contrast.
+
 - Run `python3 docs/research/check_contrast.py` on every PR. This checks the
-  proposed light/dark opaque semantic foreground pairs against background,
+  [canonical token file](../design/tokens.json) light/dark opaque semantic foreground pairs against background,
   surface, and raised tokens (WCAG 2.2 AA: 4.5:1 text, 3:1 relevant non-text).
 - Assert known reference ratios (black/white 21:1, identical colors 1:1) so a
   broken formula fails before palette verification.

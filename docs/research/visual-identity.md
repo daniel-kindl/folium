@@ -45,6 +45,10 @@ All three are candidates for Czech, including carons and acute accents. Coverage
 
 ## Theme and token proposal
 
+The [token contract](../design/README.md) records these values in
+[machine-readable JSON](../design/tokens.json) for later implementation.
+The app does not load the contract.
+
 [Avalonia theme variants](https://docs.avaloniaui.net/docs/styling/theme-variants) provide Light, Dark, system preference inheritance, and RequestedThemeVariant overrides. FluentTheme supports both variants. Keep Default as the initial preference; later offer explicit Light and Dark choices.
 
 Define semantic brushes once in application ResourceDictionary theme dictionaries. Reference changing brushes with DynamicResource. Keep spacing, sizes, and geometry as shared resources. Map colors into FluentTheme palettes and shared control styles, including focus, validation, selection, and popup states. Do not create a separate theme service or hardcode colors in each view. Verify the exact palette keys against pinned 12.1.5 before implementation.
@@ -98,7 +102,7 @@ Empty states explain the state and provide one useful action. Loading states res
 
 [Avalonia automation peers](https://docs.avaloniaui.net/docs/app-development/accessibility) expose roles, names, and states. Label icon buttons with AutomationProperties, hide decorative covers from duplicate announcements, and check reading order. Android API support does not prove TalkBack behavior. Test TalkBack, keyboard focus, system font scaling through 200%, landscape, narrow width, and reduced motion on a physical device. Reflow or use lists instead of clipping enlarged text.
 
-For enforceable checks, CI coverage, screenshot baselines and Android verification, see [visual quality gates](visual-quality-gates.md). The research PR activates palette contrast checks only; renderer and device gates start with the visual implementation.
+For enforceable checks, CI coverage, screenshot baselines and Android verification, see [visual quality gates](visual-quality-gates.md). The research PR activates token contract and palette contrast checks. Renderer and device gates start with the visual implementation.
 
 ## Separate implementation issue
 

@@ -1,21 +1,29 @@
 """Check proposed Folium token pairs. Run with Python 3, without dependencies."""
 
-PALETTES = {
-    'light': {
-        'background': '#FAF8F3', 'surface': '#FFFFFF', 'raised': '#F1EFE8',
-        'text': '#202922', 'muted': '#536157', 'primary': '#315C43',
-        'onPrimary': '#FFFFFF', 'secondary': '#5B5269', 'accent': '#835A27',
-        'border': '#6B786E', 'success': '#28613C', 'warning': '#805600',
-        'error': '#A52F35', 'info': '#285E86',
-    },
-    'dark': {
-        'background': '#171C18', 'surface': '#202922', 'raised': '#29352D',
-        'text': '#F1F3EC', 'muted': '#B8C4B8', 'primary': '#AED4B3',
-        'onPrimary': '#173823', 'secondary': '#CEC0DF', 'accent': '#E8BE82',
-        'border': '#87998A', 'success': '#A2D5AF', 'warning': '#E8C36B',
-        'error': '#FFB3B6', 'info': '#A9CEE9',
-    },
-}
+import json
+from pathlib import Path
+
+TOKEN_PATH = Path(__file__).resolve().parents[1] / 'design' / 'tokens.json'
+
+
+def load_palettes(path=TOKEN_PATH):
+    """Read both palettes from the design contract."""
+    tokens = json.loads(path.read_text(encoding='utf-8'))
+    palettes = tokens['color']
+    required = {'background', 'surface', 'raised', 'text', 'muted', 'primary',
+                'onPrimary', 'secondary', 'accent', 'border', 'success',
+                'warning', 'error', 'info'}
+    if set(palettes) != {'light', 'dark'}:
+        raise ValueError('Define exactly the light and dark palettes.')
+    for theme, palette in palettes.items():
+        if set(palette) != required:
+            raise ValueError(f'{theme}: define every semantic color token.')
+        for name, color in palette.items():
+            if (not isinstance(color, str) or len(color) != 7
+                    or color[0] != '#'
+                    or any(c not in '0123456789abcdefABCDEF' for c in color[1:])):
+                raise ValueError(f'{theme}/{name}: use an opaque #RRGGBB color.')
+    return palettes
 
 
 def luminance(color):
@@ -37,7 +45,7 @@ def main():
     failures = []
     print('| Theme | Foreground | Minimum across three surfaces | Required |')
     print('| --- | --- | ---: | ---: |')
-    for theme, palette in PALETTES.items():
+    for theme, palette in load_palettes().items():
         for token in ('text', 'muted', 'primary', 'secondary', 'accent',
                       'border', 'success', 'warning', 'error', 'info'):
             value = min(ratio(palette[token], palette[surface])

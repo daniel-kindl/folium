@@ -30,6 +30,8 @@ jobs:
         run: dotnet restore --locked-mode -p:NuGetAuditLevel=high -p:NuGetAuditMode=all -warnaserror:NU1903,NU1904
       - name: Verify formatting and code style
         run: dotnet format --verify-no-changes --no-restore
+      - name: Verify design token contract
+        run: python3 -B -m unittest discover -s docs/design -p 'test_*.py'
       - name: Verify proposed design contrast
         run: python3 docs/research/check_contrast.py
       - name: Build with analyzers
