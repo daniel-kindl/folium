@@ -223,28 +223,44 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return true;
         }
 
-        if (_importing && ShowEditor)
+        if (ShowEditor)
         {
-            _importing = false;
-            MetadataEditor = null;
-            ClearErrors();
-            SetScreen(Screen.Search);
+            CancelEditor();
             return true;
         }
 
-        if (ShowConfirm || (_editing && ShowEditor))
+        if (ShowConfirm)
         {
             ShowDetailsScreen();
             return true;
         }
 
-        if (ShowEditor || ShowDetails)
+        if (ShowDetails)
         {
             ShowLibraryScreen();
             return true;
         }
 
         return false;
+    }
+
+    private void CancelEditor()
+    {
+        if (_importing)
+        {
+            _importing = false;
+            MetadataEditor = null;
+            ClearErrors();
+            SetScreen(Screen.Search);
+        }
+        else if (_editing)
+        {
+            ShowDetailsScreen();
+        }
+        else
+        {
+            ShowLibraryScreen();
+        }
     }
 
     private void BeginImport()
