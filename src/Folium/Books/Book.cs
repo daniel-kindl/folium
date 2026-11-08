@@ -5,4 +5,5 @@ namespace Folium.Books;
 /// <param name="Title">Text that names the book.</param>
 /// <param name="Author">Text that names the writer.</param>
 /// <param name="Status">The reading status. A new book uses <see cref="ReadingStatus.ToRead"/>.</param>
-public sealed record Book(Guid Id, string Title, string Author, ReadingStatus Status = ReadingStatus.ToRead);
+/// <param name="Metadata">Optional imported metadata and cover.</param>
+public sealed record Book(Guid Id, string Title, string Author, ReadingStatus Status = ReadingStatus.ToRead, BookMetadata? Metadata = null);

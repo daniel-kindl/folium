@@ -66,6 +66,7 @@
                     <TextBlock Text="{Binding Preview.Language, StringFormat='Language: {0}'}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Description}" TextWrapping="Wrap" />
                     <TextBlock Text="Empty fields are not supplied by Open Library." TextWrapping="Wrap" />
+                    <Button Content="Review and save" Click="ImportClicked" IsEnabled="{Binding !IsBusy}" MinHeight="48" />
                     <Button Content="View edition on Open Library" Click="SourceClicked" MinHeight="48" />
                 </StackPanel>
             </StackPanel>

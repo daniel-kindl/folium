@@ -189,6 +189,14 @@ public sealed partial class SearchView : UserControl, IDisposable
         }
     }
 
+    private void ImportClicked(object? sender, RoutedEventArgs args)
+    {
+        if (this.FindAncestorOfType<MainView>()?.DataContext is LibraryViewModel library)
+        {
+            library.ImportCommand.Execute(parameter: null);
+        }
+    }
+
     private async void SourceClicked(object? sender, RoutedEventArgs args)
     {
         if (_model?.Source is Uri source)

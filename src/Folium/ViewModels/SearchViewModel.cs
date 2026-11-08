@@ -31,6 +31,9 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     /// <summary>The current edition results.</summary>
     public IReadOnlyList<SearchEdition> Editions { get; private set; } = [];
 
+    /// <summary>The selected work path, or empty text before selection.</summary>
+    public string WorkKey => _work?.Key ?? "";
+
     /// <summary>The selected edition's metadata.</summary>
     public SearchEdition? Preview { get; private set; }
 
