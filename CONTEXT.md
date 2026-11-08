@@ -9,7 +9,7 @@ The books a person saves on one device.
 _Avoid_: Catalog, collection, shelf
 
 **Book**:
-One saved work in the personal library. Two books can share a title and an author. Each book remains distinct.
+A saved book with its own local identifier. Two books can share a title and an author. Each book remains distinct.
 _Avoid_: Entry, record, item, document
 
 **Title**:
@@ -33,3 +33,15 @@ cover belong to that edition.
 
 **Preview**:
 A read-only view of provider metadata. A preview does not save a book.
+
+**Import draft**:
+An editable copy of a selected edition before the person saves it as a book.
+Canceling the draft does not change the personal library.
+
+**Source identifiers**:
+The original Open Library work path, edition path, and cover identifier retained
+with an imported book. Local metadata edits do not change these identifiers.
+
+**Saved cover**:
+A private image copy that the person confirms they have permission to save.
+A book does not require a saved cover.

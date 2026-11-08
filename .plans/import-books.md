@@ -43,17 +43,17 @@ Verification: Domain and storage tests, including restart and write failures.
 Evidence: 141 tests passed, including metadata restart and editing tests.
 
 ### C02: Review and edit an import
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: C01
 Proposed commit: feat(import): review and save editions
-Actual commit: none
+Actual commit: 5774fbc
 Objective: Connect edition preview to the editor and offline details.
 Work: Failing navigation and mapping tests, then draft mapping and UI.
 Verification: Headless UI and view model tests for save, cancel, missing data and covers.
-Evidence: not yet run
+Evidence: 143 tests passed. The cover fallback test failed before the fix and passed after it.
 
 ### C03: Document and verify import
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C02
 Proposed commit: docs: describe offline imports and cover rights
 Actual commit: none
@@ -63,9 +63,20 @@ Verification: Format, build, tests, coverage, mutation and CRAP gates.
 Evidence: not yet run
 
 ## Final verification
-NOT RUN for feature changes.
+- 143 tests passed. Line coverage 94.62%, branch coverage 87.90%.
+- Mutation testing passed at 85.11%. Existing survivors remain outside the new behavior.
+- CRAP passed with maximum 8.0 after separating editor cancellation from screen navigation.
+- Locked restore and high/critical vulnerability audit passed.
+- Android Release build passed with no warnings or errors. Final repeat is in progress.
+- Format verification passed before the final cancellation refactor. Final repeat is in progress.
+- Android usability: NOT RUN. No device is connected. A human check is a merge requirement.
+- The headless decoder accepts arbitrary bytes. The fallback test reproduces its failure result
+  by clearing the image source. Native decoder failure is not verified on Android.
+- Local test coverage needs TESTINGPLATFORM_PIPE_DIRECTORY=/tmp because the default path
+  exceeds the Unix socket limit. The CRAP tool runs with DOTNET_ROLL_FORWARD=Major because
+  its .NET 8 runtime is absent and this environment has .NET 10.
 
 ## Handoff
-Next action: Verify the decoder fallback, then run the required gates.
-Blockers: none.
+Next action: Finish final checks, publish a draft PR, and request independent review.
+Blockers: A human must verify Android usability before merge.
 Risks: Cover rights must not be inferred from metadata licensing. Android usability requires a device check.
