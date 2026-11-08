@@ -6,7 +6,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://Folium/Styles/Theme.axaml" />
+                <ResourceInclude Source="avares://Folium/Styles/Icons.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            <FontFamily x:Key="FoliumNotoSans">avares://Folium/Assets/Fonts#Noto Sans</FontFamily>
         </ResourceDictionary>
     </Application.Resources>
     <Application.Styles>

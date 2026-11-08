@@ -1,8 +1,17 @@
-<Styles xmlns="https://github.com/avaloniaui">
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="UserControl">
         <Setter Property="Background" Value="{DynamicResource FoliumBackgroundBrush}" />
     </Style>
     <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource FoliumNotoSans}" />
         <Setter Property="Foreground" Value="{DynamicResource FoliumTextBrush}" />
+    </Style>
+    <Style Selector="Path.folium-icon">
+        <Setter Property="Fill" Value="{x:Null}" />
+        <Setter Property="Stroke" Value="{DynamicResource FoliumTextBrush}" />
+        <Setter Property="StrokeThickness" Value="2" />
+        <Setter Property="StrokeLineCap" Value="Round" />
+        <Setter Property="StrokeJoin" Value="Round" />
     </Style>
 </Styles>

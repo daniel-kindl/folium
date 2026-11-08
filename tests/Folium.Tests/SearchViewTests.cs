@@ -9,6 +9,7 @@ using Folium.Views;
 
 namespace Folium.Tests;
 
+[Collection("Avalonia UI")]
 public sealed class SearchViewTests
 {
     [Fact]

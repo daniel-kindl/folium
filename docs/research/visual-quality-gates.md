@@ -15,6 +15,8 @@ corresponding UI/assets exist and have been tested.
   surface, and raised tokens (WCAG 2.2 AA: 4.5:1 text, 3:1 relevant non-text).
 - Assert known reference ratios (black/white 21:1, identical colors 1:1) so a
   broken formula fails before palette verification.
+- Run `python3 tools/design/build_lucide.py --check` to confirm that generated
+  Lucide resources match the pinned SVG sources.
 - Existing CI continues to restore, audit, format, build, and test the app.
 
 These checks do **not** prove rendered contrast, screen-reader accessibility,

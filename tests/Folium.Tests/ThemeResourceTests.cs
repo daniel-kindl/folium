@@ -8,6 +8,8 @@ using Avalonia.Styling;
 
 namespace Folium.Tests;
 
+[CollectionDefinition("Avalonia UI", DisableParallelization = true)]
+[Collection("Avalonia UI")]
 public sealed class ThemeResourceTests
 {
     [Fact]

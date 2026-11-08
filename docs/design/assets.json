@@ -1,0 +1,80 @@
+{
+  "notoSans": {
+    "source": "notofonts/latin-greek-cyrillic@NotoSans-v2.015",
+    "tagObject": "0aabc14885f9edaf467f05a2499a1a00c09f0b56",
+    "releaseArchiveSha256": "0c34df072a3fa7efbb7cbf34950e1f971a4447cffe365d3a359e2d4089b958f5",
+    "license": "SIL Open Font License 1.1",
+    "licenseFile": "src/Folium/Assets/Fonts/OFL.txt",
+    "files": [
+      {
+        "path": "src/Folium/Assets/Fonts/NotoSans-Regular.ttf",
+        "sha256": "478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823"
+      },
+      {
+        "path": "src/Folium/Assets/Fonts/NotoSans-Medium.ttf",
+        "sha256": "635d93d1131d791f2576de90b3bb0f7cdf61929906e8420a61b5f7f8e76420bb"
+      },
+      {
+        "path": "src/Folium/Assets/Fonts/NotoSans-SemiBold.ttf",
+        "sha256": "a4e91fd530ac2b4ef5367240144ff37d7d65d66cf76f2e9a2187b93c676f92d0"
+      }
+    ]
+  },
+  "lucide": {
+    "source": "lucide-icons/lucide@1.67.0",
+    "commit": "4b203ec9b6002fd74fd5dadc8612220e64289305",
+    "releaseArchiveSha256": "035253db719965b1eee4877f4fb675a695822181a21d06caae60b9d9c0ec4e66",
+    "license": "ISC License, with the MIT notice for inherited Feather icons",
+    "licenseFile": "src/Folium/Assets/Lucide/LICENSE",
+    "files": [
+      {
+        "path": "docs/design/assets/lucide/source/arrow-left.svg",
+        "sha256": "c5f4b88076108eb1a0d95336e1aa7e7bb1419a3a92af96f6247d88cd3456f933"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/book-check.svg",
+        "sha256": "b71e4df5415de5eed7a2512e97d70908a05a5c07ca027139dd6fb35970cdbdf2"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/book-open.svg",
+        "sha256": "9b9bed0ff057283d5c5c5a1c71f8d3e927db26a56639603a92fdf7b25961510e"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/bookmark.svg",
+        "sha256": "1d5023760db81f21c3b5a63f012ef540acc01932731c733e4645012a876d39f4"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/circle-alert.svg",
+        "sha256": "ce3e98b7a03b78c0071131df42466e4e1ff5187fccad30e739ec9ce951cf685a"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/clock.svg",
+        "sha256": "e9d3e3acf4d1c280fcf8092293439dc0a4756a908ceb859de144b12451cd1cb9"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/ellipsis.svg",
+        "sha256": "4f495cc72013ffdfec677f03b33a150f7b4dd741979283fd6853a09024bca112"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/library.svg",
+        "sha256": "892ba1bd1ee2e5bba320eea1c30c83ed83055ded5a0a0c0e7e4ee5fb06c307a5"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/pencil.svg",
+        "sha256": "7e1ca7a6f5c1eb949671df762f2baadd32f5bd841d43153c3a15279af7d78d0c"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/plus.svg",
+        "sha256": "7f6af73bf1ff6c4bca3f18351c8d1bdec6749c0c2530c4de5da85d520c21df17"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/search.svg",
+        "sha256": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/trash.svg",
+        "sha256": "27299f69ad7c6272be64b1b8e2d48cbd6dcf0ef0d4f92827a1affa945c91700e"
+      }
+    ]
+  }
+}

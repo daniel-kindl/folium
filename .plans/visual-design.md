@@ -2,6 +2,7 @@
 Status: IN_PROGRESS
 Issue: https://github.com/daniel-kindl/folium/issues/20
 Branch: feat/20-visual-design
+Claim-ID: f64d335e-7abc-44d5-9e51-0305ebbc9545
 
 ## Goal
 Apply the approved forest-and-paper design to the library, editor, details and online search views.
@@ -30,29 +31,29 @@ Navigation rewrite, unrelated behavior, remote assets, new runtime dependencies,
 
 ## Decisions and open questions
 - Use compile-time Avalonia resources based on the canonical token file; add validation that detects token/resource drift.
-- Use a small checked-in set of Lucide paths after a visual check. Retain complete upstream license notices and source revision/hash records.
+- Use Avalonia stroked paths and shapes from the selected Lucide SVGs. Avalonia supports the source stroke width, caps and joins. This preserves the source appearance without a runtime SVG parser. Keep the source files and full license notices. Record source revisions and hashes.
 - No unresolved product questions. Measure the chosen responsive layout behavior and Android APK delta during implementation.
 
 ## Commit plan
 
 ### C01: Add canonical theme resources and resource checks
-Status: PENDING
+Status: COMPLETED
 Depends on: none
 Proposed commit: feat(ui): add semantic theme resources
-Actual commit: none
+Actual commit: 148ce59daf2fe87ab28698a4c9b87a3ff37b5de3
 Objective: Make token-based light and dark semantic resources available to Avalonia.
 Work: Add failing resource and AXAML checks, shared resources/styles, DynamicResource use, and a narrow color-literal guard.
 Verification: Resource values match tokens; real AXAML loads and theme switching works in headless checks.
-Evidence: Not yet run.
+Evidence: The focused theme test passed (3 tests). Release app build and `dotnet format Folium.slnx --verify-no-changes --no-restore` passed on Linux. `git diff --check` passed.
 
 ### C02: Bundle approved fonts and icon roles
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C01
 Proposed commit: feat(ui): bundle approved type and icons
 Objective: Use local Noto Sans and selected Lucide roles with complete attribution.
-Work: Add licensed static font assets and selected icon geometry. Record upstream revision and hashes; expose accessible labels.
-Verification: Assets are bundled, licenses and hashes match, required glyphs render, and no runtime download exists.
-Evidence: Not yet run.
+Work: Bundle licensed font faces, selected icon geometry, complete licenses and pinned source records. Add a deterministic geometry generator.
+Verification: Check embedded assets, licenses, source hashes, glyph availability and absence of runtime downloads.
+Evidence: Asset tests pass for embedded fonts, all icon roles, hashes and Czech, Greek and Cyrillic glyphs. `python3 tools/design/build_lucide.py --check`, Release app build, format, token and contrast checks pass. Android glyph rendering remains to run.
 
 ### C03: Apply tokens to library, editor and details
 Status: PENDING
@@ -85,6 +86,6 @@ Evidence: Not yet run.
 Run format, Release build, tests, coverage, mutation, CRAP, token and contrast checks. Run required Android checks on the connected device with isolated storage. Record any check that cannot run as NOT RUN.
 
 ## Handoff
-Next action: Confirm the plan and issue readiness, claim issue 20, then implement C01 with a failing resource test.
+Next action: Complete C02. Then style the library, editor, details and online search views.
 Blockers: None known.
 Risks: Full TalkBack and 200% scaling verification may need a separately installed accessibility setup; do not claim these checks without device evidence.

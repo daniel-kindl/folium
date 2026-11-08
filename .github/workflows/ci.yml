@@ -32,6 +32,8 @@ jobs:
         run: dotnet format --verify-no-changes --no-restore
       - name: Verify design token contract
         run: python3 -B -m unittest discover -s docs/design -p 'test_*.py'
+      - name: Verify Lucide geometry resources
+        run: python3 tools/design/build_lucide.py --check
       - name: Verify proposed design contrast
         run: python3 docs/research/check_contrast.py
       - name: Build with analyzers
