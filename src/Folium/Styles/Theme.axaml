@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="FoliumBackgroundBrush" Color="#FAF8F3" />
+            <SolidColorBrush x:Key="FoliumSurfaceBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="FoliumRaisedBrush" Color="#F1EFE8" />
+            <SolidColorBrush x:Key="FoliumTextBrush" Color="#202922" />
+            <SolidColorBrush x:Key="FoliumMutedBrush" Color="#536157" />
+            <SolidColorBrush x:Key="FoliumPrimaryBrush" Color="#315C43" />
+            <SolidColorBrush x:Key="FoliumOnPrimaryBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="FoliumSecondaryBrush" Color="#5B5269" />
+            <SolidColorBrush x:Key="FoliumAccentBrush" Color="#835A27" />
+            <SolidColorBrush x:Key="FoliumBorderBrush" Color="#6B786E" />
+            <SolidColorBrush x:Key="FoliumSuccessBrush" Color="#28613C" />
+            <SolidColorBrush x:Key="FoliumWarningBrush" Color="#805600" />
+            <SolidColorBrush x:Key="FoliumErrorBrush" Color="#A52F35" />
+            <SolidColorBrush x:Key="FoliumInfoBrush" Color="#285E86" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="FoliumBackgroundBrush" Color="#171C18" />
+            <SolidColorBrush x:Key="FoliumSurfaceBrush" Color="#202922" />
+            <SolidColorBrush x:Key="FoliumRaisedBrush" Color="#29352D" />
+            <SolidColorBrush x:Key="FoliumTextBrush" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="FoliumMutedBrush" Color="#B8C4B8" />
+            <SolidColorBrush x:Key="FoliumPrimaryBrush" Color="#AED4B3" />
+            <SolidColorBrush x:Key="FoliumOnPrimaryBrush" Color="#173823" />
+            <SolidColorBrush x:Key="FoliumSecondaryBrush" Color="#CEC0DF" />
+            <SolidColorBrush x:Key="FoliumAccentBrush" Color="#E8BE82" />
+            <SolidColorBrush x:Key="FoliumBorderBrush" Color="#87998A" />
+            <SolidColorBrush x:Key="FoliumSuccessBrush" Color="#A2D5AF" />
+            <SolidColorBrush x:Key="FoliumWarningBrush" Color="#E8C36B" />
+            <SolidColorBrush x:Key="FoliumErrorBrush" Color="#FFB3B6" />
+            <SolidColorBrush x:Key="FoliumInfoBrush" Color="#A9CEE9" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>
