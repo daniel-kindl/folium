@@ -31,6 +31,9 @@ def ratio(first, second):
 
 
 def main():
+    # Formula sanity checks catch regressions before checking palette tokens.
+    assert abs(ratio('#000000', '#FFFFFF') - 21.0) < 1e-9
+    assert abs(ratio('#315C43', '#315C43') - 1.0) < 1e-9
     failures = []
     print('| Theme | Foreground | Minimum across three surfaces | Required |')
     print('| --- | --- | ---: | ---: |')
