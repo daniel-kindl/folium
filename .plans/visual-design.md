@@ -60,6 +60,7 @@ Evidence: Asset tests pass for embedded fonts, all icon roles, hashes and Czech,
 Status: COMPLETED
 Depends on: C01, C02
 Proposed commit: feat(ui): style library and book views
+Actual commit: b76ab6d
 Objective: Apply approved typography, spacing, surfaces and control states to local library flows.
 Work: Style library, filters, empty/no-match/error states, book rows, editor and details while retaining bindings and commands.
 Verification: Headless AXAML and state checks cover CRUD/status paths, semantics, accessibility names, focus, narrow and landscape layouts.
@@ -69,6 +70,7 @@ Evidence: Headless checks cover shared typography, theme state, focus, accessibl
 Status: COMPLETED
 Depends on: C01, C02
 Proposed commit: feat(ui): style online search views
+Actual commit: b76ab6d
 Objective: Apply the same visual system to search, results, editions, preview and loading/error states.
 Work: Style current search layouts and controls without changing search behavior.
 Verification: Existing search tests plus headless state, theme, accessibility and responsive layout checks pass.
@@ -81,10 +83,10 @@ Proposed commit: test(ui): verify visual system on Android
 Objective: Produce reviewable screenshot and real-device evidence for the issue's manual acceptance criteria.
 Work: Capture deliberate light/dark library, search and details baselines; run isolated Android checks for TalkBack, scaling, reachability, themes, covers and landscape; record APK size delta.
 Verification: Required project gates and automated visual checks pass. Record each manual check as passed, failed or not run with evidence.
-Evidence: Automated headless portrait and landscape layout checks pass. No ADB device is visible in this session, so visual baselines and device accessibility checks have not run.
+Evidence: All 144 tests pass. Line coverage is 94.73% and branch coverage is 88.01%. Mutation score is 85.11%. CRAP gate passes. Token contract, contrast, icon geometry, format, Release build and automated headless portrait and landscape layout checks pass. NOT RUN: Android screenshots, TalkBack, text scaling, device reachability, light/dark device behavior, native cover rendering and APK size delta. `adb devices -l` returned no devices in this session.
 
 ## Final verification
-Run format, Release build, tests, coverage, mutation, CRAP, token and contrast checks. Run required Android checks on the connected device with isolated storage. Record any check that cannot run as NOT RUN.
+Linux quality gates pass: format, Release build, tests, coverage, mutation, CRAP, token, contrast and asset checks. Run the remaining Android checks on the connected device with isolated storage. Record any check that cannot run as NOT RUN.
 
 ## Handoff
 Next action: Run screenshot and accessibility checks on the connected device when ADB can see it. Then run final quality gates and independent review.
