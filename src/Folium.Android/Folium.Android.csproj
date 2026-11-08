@@ -10,9 +10,14 @@
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+    <EmbedAssembliesIntoApk Condition="'$(FoliumVerification)' == 'true'">true</EmbedAssembliesIntoApk>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
     <ProjectReference Include="../Folium/Folium.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(FoliumVerification)' == 'true'">
+    <Compile Include="../../tools/android/VerificationHttpHandler.cs" Link="VerificationHttpHandler.cs" />
+    <AndroidAsset Include="../../tools/android/fixtures/*" Link="%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

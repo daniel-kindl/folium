@@ -13,6 +13,11 @@ public class App : Application
     /// <summary>The library file path. The Android host sets it before the main view opens.</summary>
     public static string? LibraryFilePath { get; set; }
 
+#if FOLIUM_VERIFICATION
+    /// <summary>The deterministic search provider for native verification builds.</summary>
+    public static Search.IBookSearch? VerificationSearch { get; set; }
+#endif
+
     /// <summary>The open library. Null before the main view opens.</summary>
     public LibraryViewModel? Library { get; private set; }
 
@@ -36,7 +41,11 @@ public class App : Application
     private MainView CreateMainView()
     {
         string path = string.IsNullOrWhiteSpace(LibraryFilePath) ? LibraryPaths.DefaultPath() : LibraryFilePath;
+#if FOLIUM_VERIFICATION
+        LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path), VerificationSearch);
+#else
         LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path));
+#endif
         Library = library;
         return new MainView { DataContext = library };
     }

@@ -79,7 +79,7 @@
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Background="Transparent"
-                                        Command="{Binding $parent[vm:LibraryViewModel].OpenCommand}"
+                                        Command="{Binding $parent[views:MainView].DataContext.OpenCommand}"
                                         CommandParameter="{Binding Id}">
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="{Binding Title}" FontSize="16" TextWrapping="Wrap" />

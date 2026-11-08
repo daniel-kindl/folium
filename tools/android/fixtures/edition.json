@@ -1,0 +1,1 @@
+{"key": "/books/OL1M", "title": "Dune", "publishers": ["Ace"], "publish_date": "1990", "isbn_13": ["9780441172719"], "isbn_10": ["0441172717"], "description": {"type": "/type/text", "value": "A desert planet."}, "covers": [123], "authors": [{"key": "/authors/OL1A"}], "edition_name": "Paperback", "languages": [{"key": "/languages/eng"}]}

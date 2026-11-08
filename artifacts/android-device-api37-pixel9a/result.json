@@ -1,0 +1,35 @@
+{
+  "device": "Pixel 9a",
+  "api": 37,
+  "serial": "5B051JEBF00522",
+  "passed": [
+    "Launch isolated library",
+    "Add/edit/remove local book",
+    "Change reading status",
+    "Keep book confirmation",
+    "Cancel and Back",
+    "Search work and editions",
+    "Open edition preview",
+    "Pagination",
+    "Saved-book navigation"
+  ],
+  "not_verified": [
+    "Keyboard or scroll import workflow",
+    "Cover opt-in persistence on device",
+    "Offline relaunch",
+    "Orientation change",
+    "invalid bitmap fallback",
+    "ANR/crash-free full matrix"
+  ],
+  "failure": "Accessibility interaction at the import form caused Android UiAutomation to exit with code 137 on this device. The normal app and original library file were restored.",
+  "automated_checks": {
+    "tests": "144 passed",
+    "line_coverage": "94.73%",
+    "branch_coverage": "88.01%",
+    "mutation_score": "85.11%",
+    "format": "passed",
+    "release_build": "passed",
+    "design_token_tests": "4 passed",
+    "contrast": "passed"
+  }
+}
