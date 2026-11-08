@@ -47,45 +47,46 @@ Verification: Resource values match tokens; real AXAML loads and theme switching
 Evidence: The focused theme test passed (3 tests). Release app build and `dotnet format Folium.slnx --verify-no-changes --no-restore` passed on Linux. `git diff --check` passed.
 
 ### C02: Bundle approved fonts and icon roles
-Status: IN_PROGRESS
+Status: COMPLETED
 Depends on: C01
 Proposed commit: feat(ui): bundle approved type and icons
+Actual commit: 7e74335b7971002947389757ee37cf3c66983576
 Objective: Use local Noto Sans and selected Lucide roles with complete attribution.
 Work: Bundle licensed font faces, selected icon geometry, complete licenses and pinned source records. Add a deterministic geometry generator.
 Verification: Check embedded assets, licenses, source hashes, glyph availability and absence of runtime downloads.
-Evidence: Asset tests pass for embedded fonts, all icon roles, hashes and Czech, Greek and Cyrillic glyphs. `python3 tools/design/build_lucide.py --check`, Release app build, format, token and contrast checks pass. Android glyph rendering remains to run.
+Evidence: Asset tests pass for embedded fonts, all icon roles, hashes and Czech, Greek and Cyrillic glyphs. The geometry check, Release app build, format, token and contrast checks pass on Linux. Android glyph rendering remains to run.
 
 ### C03: Apply tokens to library, editor and details
-Status: PENDING
+Status: COMPLETED
 Depends on: C01, C02
 Proposed commit: feat(ui): style library and book views
 Objective: Apply approved typography, spacing, surfaces and control states to local library flows.
 Work: Style library, filters, empty/no-match/error states, book rows, editor and details while retaining bindings and commands.
 Verification: Headless AXAML and state checks cover CRUD/status paths, semantics, accessibility names, focus, narrow and landscape layouts.
-Evidence: Not yet run.
+Evidence: Headless checks cover shared typography, theme state, focus, accessible active-filter state, library touch bounds in portrait and landscape, CRUD, status, editor and details. Focused library, search, theme and asset tests pass (16 tests). Release build, format and diff checks pass.
 
 ### C04: Apply tokens to online search
-Status: PENDING
+Status: COMPLETED
 Depends on: C01, C02
 Proposed commit: feat(ui): style online search views
 Objective: Apply the same visual system to search, results, editions, preview and loading/error states.
 Work: Style current search layouts and controls without changing search behavior.
 Verification: Existing search tests plus headless state, theme, accessibility and responsive layout checks pass.
-Evidence: Not yet run.
+Evidence: Existing headless search tests pass (12 tests), including search, paging, preview, import, cover and return flows. Release build and format pass. Android screenshot review remains for C05.
 
 ### C05: Review visual baselines and Android evidence
-Status: PENDING
+Status: IN_PROGRESS
 Depends on: C03, C04
 Proposed commit: test(ui): verify visual system on Android
 Objective: Produce reviewable screenshot and real-device evidence for the issue's manual acceptance criteria.
 Work: Capture deliberate light/dark library, search and details baselines; run isolated Android checks for TalkBack, scaling, reachability, themes, covers and landscape; record APK size delta.
 Verification: Required project gates and automated visual checks pass. Record each manual check as passed, failed or not run with evidence.
-Evidence: Not yet run.
+Evidence: Automated headless portrait and landscape layout checks pass. No ADB device is visible in this session, so visual baselines and device accessibility checks have not run.
 
 ## Final verification
 Run format, Release build, tests, coverage, mutation, CRAP, token and contrast checks. Run required Android checks on the connected device with isolated storage. Record any check that cannot run as NOT RUN.
 
 ## Handoff
-Next action: Complete C02. Then style the library, editor, details and online search views.
-Blockers: None known.
+Next action: Run screenshot and accessibility checks on the connected device when ADB can see it. Then run final quality gates and independent review.
+Blockers: The claimed connected device is not visible to ADB in this session (`adb devices -l` returns no devices).
 Risks: Full TalkBack and 200% scaling verification may need a separately installed accessibility setup; do not claim these checks without device evidence.

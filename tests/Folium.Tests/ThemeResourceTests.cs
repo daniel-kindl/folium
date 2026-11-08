@@ -42,9 +42,10 @@ public sealed class ThemeResourceTests
         await session.Dispatch(() =>
         {
             TextBlock text = new() { Text = "Theme" };
+            UserControl view = new() { Content = text };
             Window window = new()
             {
-                Content = text,
+                Content = view,
                 RequestedThemeVariant = ThemeVariant.Light,
                 Width = 200,
                 Height = 100,
@@ -56,6 +57,51 @@ public sealed class ThemeResourceTests
             window.RequestedThemeVariant = ThemeVariant.Dark;
             window.UpdateLayout();
             AssertBrushColor("#F1F3EC", text.Foreground);
+            window.Close();
+        }, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task SharedStylesApplyTypographyAndControlStates()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            TextBlock title = new() { Text = "Library", Classes = { "folium-title" } };
+            Button primary = new() { Content = "Add", Classes = { "folium-primary" } };
+            Button disabled = new() { Content = "Unavailable", IsEnabled = false };
+            TextBox field = new() { Text = "Dune" };
+            UserControl view = new()
+            {
+                Content = new StackPanel { Children = { title, primary, disabled, field } },
+            };
+            Window window = new()
+            {
+                Content = view,
+                RequestedThemeVariant = ThemeVariant.Light,
+                Width = 400,
+                Height = 400,
+            };
+            window.Show();
+            window.UpdateLayout();
+
+            Assert.Equal(28, title.FontSize);
+            Assert.Equal(36, title.LineHeight);
+            Assert.Equal(FontWeight.SemiBold, title.FontWeight);
+            AssertBrushColor("#315C43", primary.Background);
+            AssertBrushColor("#FFFFFF", primary.Foreground);
+            AssertBrushColor("#536157", disabled.Foreground);
+            Assert.Equal(1, disabled.Opacity);
+            Assert.True(primary.Bounds.Height >= 48);
+            Assert.Equal(new CornerRadius(8), primary.CornerRadius);
+            Assert.True(field.Focus());
+            Assert.Equal(new Thickness(2), field.BorderThickness);
+
+            window.RequestedThemeVariant = ThemeVariant.Dark;
+            window.UpdateLayout();
+            AssertBrushColor("#AED4B3", primary.Background);
+            AssertBrushColor("#173823", primary.Foreground);
+            AssertBrushColor("#B8C4B8", disabled.Foreground);
             window.Close();
         }, TestContext.Current.CancellationToken);
     }
@@ -79,6 +125,20 @@ public sealed class ThemeResourceTests
         }
     }
 
+    [Fact]
+    public async Task SharedDimensionResourcesMatchCanonicalTokens()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            foreach ((string key, string[] tokenPath) in DimensionResources())
+            {
+                Assert.True(Application.Current!.Resources.TryGetResource(key, ThemeVariant.Light, out object? value), key);
+                Assert.Equal(TokenNumber(tokenPath), Assert.IsType<double>(value));
+            }
+        }, TestContext.Current.CancellationToken);
+    }
+
     private static void AssertBrushColor(string expectedColor, IBrush? actual)
     {
         SolidColorBrush brush = Assert.IsType<SolidColorBrush>(actual);
@@ -96,6 +156,51 @@ public sealed class ThemeResourceTests
         using JsonDocument tokens = JsonDocument.Parse(File.ReadAllText(path));
         string color = tokens.RootElement.GetProperty("color").GetProperty(theme).GetProperty(role).GetString()!;
         return Color.Parse(color).ToString();
+    }
+
+    private static double TokenNumber(string[] path)
+    {
+        string tokenPath = Path.Combine(RepositoryRoot(), "docs", "design", "tokens.json");
+        using JsonDocument tokens = JsonDocument.Parse(File.ReadAllText(tokenPath));
+        JsonElement value = tokens.RootElement;
+        foreach (string segment in path)
+        {
+            value = value.GetProperty(segment);
+        }
+
+        return value.GetDouble();
+    }
+
+    private static (string Key, string[] TokenPath)[] DimensionResources()
+    {
+        return [
+            ("FoliumCaptionFontSize", ["typography", "styles", "caption", "fontSize"]),
+            ("FoliumCaptionLineHeight", ["typography", "styles", "caption", "lineHeight"]),
+            ("FoliumBodyFontSize", ["typography", "styles", "body", "fontSize"]),
+            ("FoliumBodyLineHeight", ["typography", "styles", "body", "lineHeight"]),
+            ("FoliumLabelFontSize", ["typography", "styles", "label", "fontSize"]),
+            ("FoliumLabelLineHeight", ["typography", "styles", "label", "lineHeight"]),
+            ("FoliumSectionFontSize", ["typography", "styles", "section", "fontSize"]),
+            ("FoliumSectionLineHeight", ["typography", "styles", "section", "lineHeight"]),
+            ("FoliumTitleFontSize", ["typography", "styles", "title", "fontSize"]),
+            ("FoliumTitleLineHeight", ["typography", "styles", "title", "lineHeight"]),
+            ("FoliumSpacingXs", ["spacing", "xs"]),
+            ("FoliumSpacingSm", ["spacing", "sm"]),
+            ("FoliumSpacingMd", ["spacing", "md"]),
+            ("FoliumSpacingLg", ["spacing", "lg"]),
+            ("FoliumSpacingXl", ["spacing", "xl"]),
+            ("FoliumSpacingXxl", ["spacing", "xxl"]),
+            ("FoliumGutter", ["layout", "gutter"]),
+            ("FoliumGutterWide", ["layout", "gutterWide"]),
+            ("FoliumTouchTargetMin", ["layout", "touchTargetMin"]),
+            ("FoliumInteractiveGapMin", ["layout", "interactiveGapMin"]),
+            ("FoliumControlRadius", ["radius", "control"]),
+            ("FoliumGroupRadius", ["radius", "group"]),
+            ("FoliumFocusWidth", ["border", "focusWidth"]),
+            ("FoliumInlineIconSize", ["icon", "size", "inline"]),
+            ("FoliumActionIconSize", ["icon", "size", "action"]),
+            ("FoliumEmptyIconSize", ["icon", "size", "empty"]),
+        ];
     }
 
     private static string RepositoryRoot()

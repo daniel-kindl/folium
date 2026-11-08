@@ -37,7 +37,6 @@ public sealed class SearchViewTests
         }, TestContext.Current.CancellationToken);
     }
 
-
     [Fact]
     public async Task UnavailableDecodedCoverShowsFallbackAndKeepsBookDetails()
     {

@@ -34,4 +34,46 @@
             <SolidColorBrush x:Key="FoliumInfoBrush" Color="#A9CEE9" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
+    <x:Double x:Key="FoliumCaptionFontSize">14</x:Double>
+    <x:Double x:Key="FoliumCaptionLineHeight">20</x:Double>
+    <x:Double x:Key="FoliumBodyFontSize">16</x:Double>
+    <x:Double x:Key="FoliumBodyLineHeight">24</x:Double>
+    <x:Double x:Key="FoliumLabelFontSize">16</x:Double>
+    <x:Double x:Key="FoliumLabelLineHeight">24</x:Double>
+    <x:Double x:Key="FoliumSectionFontSize">20</x:Double>
+    <x:Double x:Key="FoliumSectionLineHeight">28</x:Double>
+    <x:Double x:Key="FoliumTitleFontSize">28</x:Double>
+    <x:Double x:Key="FoliumTitleLineHeight">36</x:Double>
+    <x:Double x:Key="FoliumSpacingXs">4</x:Double>
+    <x:Double x:Key="FoliumSpacingSm">8</x:Double>
+    <x:Double x:Key="FoliumSpacingMd">12</x:Double>
+    <x:Double x:Key="FoliumSpacingLg">16</x:Double>
+    <x:Double x:Key="FoliumSpacingXl">24</x:Double>
+    <x:Double x:Key="FoliumSpacingXxl">32</x:Double>
+    <x:Double x:Key="FoliumGutter">16</x:Double>
+    <x:Double x:Key="FoliumGutterWide">24</x:Double>
+    <x:Double x:Key="FoliumTouchTargetMin">48</x:Double>
+    <x:Double x:Key="FoliumInteractiveGapMin">8</x:Double>
+    <x:Double x:Key="FoliumControlRadius">8</x:Double>
+    <x:Double x:Key="FoliumGroupRadius">12</x:Double>
+    <x:Double x:Key="FoliumFocusWidth">2</x:Double>
+    <x:Double x:Key="FoliumInlineIconSize">20</x:Double>
+    <x:Double x:Key="FoliumActionIconSize">24</x:Double>
+    <x:Double x:Key="FoliumEmptyIconSize">48</x:Double>
+    <Thickness x:Key="FoliumSpacingXsThickness">4</Thickness>
+    <Thickness x:Key="FoliumSpacingSmThickness">8</Thickness>
+    <Thickness x:Key="FoliumSpacingMdThickness">12</Thickness>
+    <Thickness x:Key="FoliumSpacingLgThickness">16</Thickness>
+    <Thickness x:Key="FoliumSpacingXlThickness">24</Thickness>
+    <Thickness x:Key="FoliumSpacingXxlThickness">32</Thickness>
+    <Thickness x:Key="FoliumGutterThickness">16</Thickness>
+    <Thickness x:Key="FoliumTopSpacingSm">0,8,0,0</Thickness>
+    <Thickness x:Key="FoliumTopSpacingLg">0,16,0,0</Thickness>
+    <Thickness x:Key="FoliumTopSpacingXl">0,24,0,0</Thickness>
+    <Thickness x:Key="FoliumBottomSpacingSm">0,0,0,8</Thickness>
+    <Thickness x:Key="FoliumRightSpacingSm">0,0,8,0</Thickness>
+    <Thickness x:Key="FoliumFilterCellGap">0,0,8,8</Thickness>
+    <CornerRadius x:Key="FoliumControlCornerRadius">8</CornerRadius>
+    <CornerRadius x:Key="FoliumGroupCornerRadius">12</CornerRadius>
+    <Thickness x:Key="FoliumFocusThickness">2</Thickness>
 </ResourceDictionary>
