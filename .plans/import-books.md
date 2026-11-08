@@ -1,5 +1,5 @@
 # Feature: Import books
-Status: IN_PROGRESS
+Status: BLOCKED
 Issue: https://github.com/daniel-kindl/folium/issues/8
 Branch: feat/8-import-books
 Claim-ID: 090a38b1-1ffe-45fa-ad66-377cdb3fca6c
@@ -11,6 +11,7 @@ Review an Open Library edition, edit its metadata, and save a book for offline u
 - Search, select, review, and save available metadata and an optional cover.
 - Edit imported metadata and retain it after restart without network access.
 - Missing optional metadata or a failed cover request does not prevent saving.
+- Missing or undecodable covers show a fallback.
 - Test mapping and persistence deterministically. Document sources and cover rights.
 
 ## In scope
@@ -53,22 +54,22 @@ Verification: Headless UI and view model tests for save, cancel, missing data an
 Evidence: 143 tests passed. The cover fallback test failed before the fix and passed after it.
 
 ### C03: Document and verify import
-Status: IN_PROGRESS
+Status: BLOCKED
 Depends on: C02
 Proposed commit: docs: describe offline imports and cover rights
-Actual commit: none
+Actual commit: 1365f03
 Objective: Document attribution, rights, and verification.
 Work: Documentation, required checks and independent review.
 Verification: Format, build, tests, coverage, mutation and CRAP gates.
-Evidence: not yet run
+Evidence: All local automated gates passed. Human Android usability remains NOT RUN.
 
 ## Final verification
 - 143 tests passed. Line coverage 94.62%, branch coverage 87.90%.
-- Mutation testing passed at 85.11%. Existing survivors remain outside the new behavior.
+- Mutation testing passed at 85.11%. The report retains surviving and uncovered mutants.
 - CRAP passed with maximum 8.0 after separating editor cancellation from screen navigation.
 - Locked restore and high/critical vulnerability audit passed.
-- Android Release build passed with no warnings or errors. Final repeat is in progress.
-- Format verification passed before the final cancellation refactor. Final repeat is in progress.
+- Final Android Release build passed with no warnings or errors.
+- Final format verification passed.
 - Android usability: NOT RUN. No device is connected. A human check is a merge requirement.
 - The headless decoder accepts arbitrary bytes. The fallback test reproduces its failure result
   by clearing the image source. Native decoder failure is not verified on Android.
@@ -77,6 +78,7 @@ Evidence: not yet run
   its .NET 8 runtime is absent and this environment has .NET 10.
 
 ## Handoff
-Next action: Finish final checks, publish a draft PR, and request independent review.
+Next action: Publish a draft PR. Obtain independent PR review and human Android usability evidence.
+Keep this plan while the required human check is incomplete.
 Blockers: A human must verify Android usability before merge.
 Risks: Cover rights must not be inferred from metadata licensing. Android usability requires a device check.
