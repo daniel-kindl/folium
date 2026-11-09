@@ -6,27 +6,27 @@
     </Style>
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource FoliumNotoSans}" />
-        <Setter Property="FontSize" Value="{StaticResource FoliumBodyFontSize}" />
-        <Setter Property="LineHeight" Value="{StaticResource FoliumBodyLineHeight}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumBodyFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumBodyLineHeight}" />
         <Setter Property="FontWeight" Value="Normal" />
     </Style>
     <Style Selector="TextBlock.folium-caption">
-        <Setter Property="FontSize" Value="{StaticResource FoliumCaptionFontSize}" />
-        <Setter Property="LineHeight" Value="{StaticResource FoliumCaptionLineHeight}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumCaptionFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumCaptionLineHeight}" />
     </Style>
     <Style Selector="TextBlock.folium-label">
-        <Setter Property="FontSize" Value="{StaticResource FoliumLabelFontSize}" />
-        <Setter Property="LineHeight" Value="{StaticResource FoliumLabelLineHeight}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumLabelFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumLabelLineHeight}" />
         <Setter Property="FontWeight" Value="Medium" />
     </Style>
     <Style Selector="TextBlock.folium-section">
-        <Setter Property="FontSize" Value="{StaticResource FoliumSectionFontSize}" />
-        <Setter Property="LineHeight" Value="{StaticResource FoliumSectionLineHeight}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumSectionFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumSectionLineHeight}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.folium-title">
-        <Setter Property="FontSize" Value="{StaticResource FoliumTitleFontSize}" />
-        <Setter Property="LineHeight" Value="{StaticResource FoliumTitleLineHeight}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumTitleFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumTitleLineHeight}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="TextBlock.folium-muted">
@@ -40,6 +40,8 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Button">
+        <Setter Property="FontFamily" Value="{StaticResource FoliumNotoSans}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumBodyFontSize}" />
         <Setter Property="MinHeight" Value="{StaticResource FoliumTouchTargetMin}" />
         <Setter Property="CornerRadius" Value="{StaticResource FoliumControlCornerRadius}" />
         <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
@@ -60,6 +62,9 @@
         <Setter Property="Foreground" Value="{DynamicResource FoliumErrorBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumErrorBrush}" />
     </Style>
+    <Style Selector="Button.folium-filter">
+        <Setter Property="Padding" Value="{StaticResource FoliumSpacingXsThickness}" />
+    </Style>
     <Style Selector="Button:focus">
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumPrimaryBrush}" />
         <Setter Property="BorderThickness" Value="{StaticResource FoliumFocusThickness}" />
@@ -70,7 +75,8 @@
     </Style>
     <Style Selector="TextBox">
         <Setter Property="FontFamily" Value="{StaticResource FoliumNotoSans}" />
-        <Setter Property="FontSize" Value="{StaticResource FoliumBodyFontSize}" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumBodyFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumBodyLineHeight}" />
         <Setter Property="Foreground" Value="{DynamicResource FoliumTextBrush}" />
         <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumBorderBrush}" />
@@ -89,6 +95,12 @@
         <Setter Property="StrokeThickness" Value="2" />
         <Setter Property="StrokeLineCap" Value="Round" />
         <Setter Property="StrokeJoin" Value="Round" />
+    </Style>
+    <Style Selector="Path.folium-icon-primary">
+        <Setter Property="Stroke" Value="{DynamicResource FoliumOnPrimaryBrush}" />
+    </Style>
+    <Style Selector="Path.folium-icon-danger">
+        <Setter Property="Stroke" Value="{DynamicResource FoliumErrorBrush}" />
     </Style>
     <Style Selector="Border.folium-group">
         <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />

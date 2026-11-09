@@ -19,7 +19,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
                                     <Path Data="{StaticResource FoliumSearchIcon}"
-                                          Classes="folium-icon"
+                                          Classes="folium-icon folium-icon-primary"
                                           Stroke="{DynamicResource FoliumOnPrimaryBrush}"
                                           Width="{StaticResource FoliumActionIconSize}"
                                           Height="{StaticResource FoliumActionIconSize}" />
@@ -28,36 +28,45 @@
                             </DataTemplate>
                         </Button.ContentTemplate>
                     </Button>
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
-                        <Button Grid.Row="0"
+                    <Grid x:Name="FilterGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                        <Button x:Name="AllFilter"
+                                Grid.Row="0"
                                 Grid.Column="0"
                                 Content="All"
+                                Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="all"
                                 Margin="{StaticResource FoliumFilterCellGap}"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center" />
-                        <Button Grid.Row="0"
+                        <Button x:Name="ToReadFilter"
+                                Grid.Row="0"
                                 Grid.Column="1"
                                 Content="To read"
+                                Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="to-read"
-                                Margin="{StaticResource FoliumBottomSpacingSm}"
+                                Margin="{StaticResource FoliumFilterCellGap}"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center" />
-                        <Button Grid.Row="1"
+                        <Button x:Name="ReadingFilter"
+                                Grid.Row="1"
                                 Grid.Column="0"
                                 Content="Reading"
+                                Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="reading"
-                                Margin="{StaticResource FoliumRightSpacingSm}"
+                                Margin="{StaticResource FoliumFilterCellGap}"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center" />
-                        <Button Grid.Row="1"
+                        <Button x:Name="FinishedFilter"
+                                Grid.Row="1"
                                 Grid.Column="1"
                                 Content="Finished"
+                                Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="finished"
+                                Margin="{StaticResource FoliumFilterCellGap}"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center" />
                     </Grid>
@@ -73,42 +82,43 @@
                                AutomationProperties.Name="{Binding SaveError}"
                                AutomationProperties.LiveSetting="Assertive" />
                 </StackPanel>
-                <StackPanel Grid.Row="1" Spacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding IsEmpty}">
-                    <Path Data="{StaticResource FoliumEmptyIcon}"
-                          Classes="folium-icon"
-                          Stroke="{DynamicResource FoliumPrimaryBrush}"
-                          Width="{StaticResource FoliumEmptyIconSize}"
-                          Height="{StaticResource FoliumEmptyIconSize}" />
-                    <TextBlock Text="{Binding EmptyMessage}" Classes="folium-section" TextWrapping="Wrap" />
-                </StackPanel>
-                <TextBlock Grid.Row="1"
-                           Text="{Binding NoMatchMessage}"
-                           Classes="folium-muted"
-                           TextWrapping="Wrap"
-                           IsVisible="{Binding ShowNoMatches}" />
-                <ScrollViewer Grid.Row="1" IsVisible="{Binding ShowBooks}">
-                    <ItemsControl ItemsSource="{Binding ShownBooks}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="vm:BookRow">
-                                <Button
-                                        Margin="{StaticResource FoliumBottomSpacingSm}"
-                                        Padding="{StaticResource FoliumSpacingMdThickness}"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Background="{DynamicResource FoliumSurfaceBrush}"
-                                        BorderBrush="{DynamicResource FoliumBorderBrush}"
-                                        BorderThickness="1"
-                                        Command="{Binding $parent[views:MainView].DataContext.OpenCommand}"
-                                        CommandParameter="{Binding Id}">
-                                    <StackPanel Spacing="{StaticResource FoliumSpacingXs}">
-                                        <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding Author}" Classes="folium-body" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding Status}" Classes="folium-caption folium-muted" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                        <StackPanel Spacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding IsEmpty}">
+                            <Path x:Name="EmptyIcon"
+                                  Data="{StaticResource FoliumEmptyIcon}"
+                                  Classes="folium-icon"
+                                  Stroke="{DynamicResource FoliumPrimaryBrush}"
+                                  Width="{StaticResource FoliumEmptyIconSize}"
+                                  Height="{StaticResource FoliumEmptyIconSize}" />
+                            <TextBlock Text="{Binding EmptyMessage}" Classes="folium-section" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding NoMatchMessage}"
+                                   Classes="folium-muted"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding ShowNoMatches}" />
+                        <ItemsControl ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBooks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:BookRow">
+                                    <Button Margin="{StaticResource FoliumBottomSpacingSm}"
+                                            Padding="{StaticResource FoliumSpacingMdThickness}"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Background="{DynamicResource FoliumSurfaceBrush}"
+                                            BorderBrush="{DynamicResource FoliumBorderBrush}"
+                                            BorderThickness="1"
+                                            Command="{Binding $parent[views:MainView].DataContext.OpenCommand}"
+                                            CommandParameter="{Binding Id}">
+                                        <StackPanel Spacing="{StaticResource FoliumSpacingXs}">
+                                            <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Author}" Classes="folium-body" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Status}" Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </ScrollViewer>
                 <Button Grid.Row="2"
                         Content="Add a book"
@@ -121,7 +131,7 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
                                 <Path Data="{StaticResource FoliumAddIcon}"
-                                      Classes="folium-icon"
+                                      Classes="folium-icon folium-icon-primary"
                                       Stroke="{DynamicResource FoliumOnPrimaryBrush}"
                                       Width="{StaticResource FoliumActionIconSize}"
                                       Height="{StaticResource FoliumActionIconSize}" />
@@ -283,7 +293,7 @@
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
-                                    <Path Data="{StaticResource FoliumDeleteIcon}" Classes="folium-icon" Stroke="{DynamicResource FoliumErrorBrush}" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+                                    <Path Data="{StaticResource FoliumDeleteIcon}" Classes="folium-icon folium-icon-danger" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
                                     <TextBlock Text="{Binding}" Classes="folium-label" />
                                 </StackPanel>
                             </DataTemplate>

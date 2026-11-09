@@ -69,11 +69,12 @@ public sealed class ThemeResourceTests
         {
             TextBlock title = new() { Text = "Library", Classes = { "folium-title" } };
             Button primary = new() { Content = "Add", Classes = { "folium-primary" } };
+            Button filter = new() { Content = "Finished", Classes = { "folium-filter" } };
             Button disabled = new() { Content = "Unavailable", IsEnabled = false };
             TextBox field = new() { Text = "Dune" };
             UserControl view = new()
             {
-                Content = new StackPanel { Children = { title, primary, disabled, field } },
+                Content = new StackPanel { Children = { title, primary, filter, disabled, field } },
             };
             Window window = new()
             {
@@ -88,6 +89,7 @@ public sealed class ThemeResourceTests
             Assert.Equal(28, title.FontSize);
             Assert.Equal(36, title.LineHeight);
             Assert.Equal(FontWeight.SemiBold, title.FontWeight);
+            Assert.Equal(16, filter.FontSize);
             AssertBrushColor("#315C43", primary.Background);
             AssertBrushColor("#FFFFFF", primary.Foreground);
             AssertBrushColor("#536157", disabled.Foreground);
@@ -97,6 +99,11 @@ public sealed class ThemeResourceTests
             Assert.True(field.Focus());
             Assert.Equal(new Thickness(2), field.BorderThickness);
 
+            App app = Assert.IsType<App>(Application.Current);
+            AssertTypographyAtScale(app, title, filter, field, 1.5);
+            AssertTypographyAtScale(app, title, filter, field, 2);
+            AssertTypographyAtScale(app, title, filter, field, 1);
+
             window.RequestedThemeVariant = ThemeVariant.Dark;
             window.UpdateLayout();
             AssertBrushColor("#AED4B3", primary.Background);
@@ -104,6 +111,15 @@ public sealed class ThemeResourceTests
             AssertBrushColor("#B8C4B8", disabled.Foreground);
             window.Close();
         }, TestContext.Current.CancellationToken);
+    }
+
+    private static void AssertTypographyAtScale(App app, TextBlock title, Button filter, TextBox field, double scale)
+    {
+        app.ApplySystemFontScale(scale);
+        Assert.Equal(28 * scale, title.FontSize);
+        Assert.Equal(36 * scale, title.LineHeight);
+        Assert.Equal(16 * scale, filter.FontSize);
+        Assert.Equal(16 * scale, field.FontSize);
     }
 
     [Fact]

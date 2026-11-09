@@ -1,4 +1,5 @@
 using Android.Content.PM;
+using Android.Content.Res;
 using Android.Views;
 using AndroidX.Activity;
 using Avalonia.Android;
@@ -7,7 +8,7 @@ namespace Folium.Android;
 
 /// <summary>The Android activity that shows Folium.</summary>
 [Activity(Label = "Folium", Theme = "@style/Theme.AppCompat.NoActionBar", MainLauncher = true,
-    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode,
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode | ConfigChanges.FontScale,
     WindowSoftInputMode = SoftInput.AdjustResize)]
 public class MainActivity : AvaloniaMainActivity
 {
@@ -18,8 +19,18 @@ public class MainActivity : AvaloniaMainActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        ApplySystemFontScale(Resources?.Configuration?.FontScale ?? 1);
         _libraryBackCallback = new LibraryBackCallback(this);
         OnBackPressedDispatcher.AddCallback(this, _libraryBackCallback);
+    }
+
+    /// <summary>Applies the system text size after a handled configuration change.</summary>
+    /// <param name="newConfig">The new Android configuration.</param>
+    public override void OnConfigurationChanged(Configuration newConfig)
+    {
+        ArgumentNullException.ThrowIfNull(newConfig);
+        base.OnConfigurationChanged(newConfig);
+        ApplySystemFontScale(newConfig.FontScale);
     }
 
     /// <summary>Releases the back callback before the activity stops.</summary>
@@ -46,6 +57,14 @@ public class MainActivity : AvaloniaMainActivity
     private static bool LeaveScreen()
     {
         return Avalonia.Application.Current is App { Library: { } library } && library.GoBack();
+    }
+
+    private static void ApplySystemFontScale(double scale)
+    {
+        if (Avalonia.Application.Current is App app)
+        {
+            app.ApplySystemFontScale(scale);
+        }
     }
 
     private sealed class LibraryBackCallback(MainActivity activity) : OnBackPressedCallback(enabled: true)
