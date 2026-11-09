@@ -66,6 +66,8 @@ press Home, and open Folium again to check resume.
 
 A book has a title, an author, and a reading status. Folium stores the personal library in a private JSON file. On Android, that file is `library.json` in the app files directory. See [CONTEXT.md](CONTEXT.md) for the domain terms. Search and preview do not save books. Choose **Review and save** to import an edition into the personal library.
 
+In the Library screen, search checks saved titles and authors. It trims the query, uses Unicode Form D normalization, removes combining marks, and compares without case. An empty query leaves the status filter in effect. The default order is title A–Z, with local book ID as the ascending tie-breaker. You can also sort by title or author in either direction. Search and sorting run on the device and do not change saved records.
+
 See [AGENTS.md](AGENTS.md) for development instructions. Use [Conventional Commits and short-lived branches](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/version-control/index.md). Versions follow [Semantic Versioning](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/versioning/index.md). Changes require independent pull-request review.
 
 ## License

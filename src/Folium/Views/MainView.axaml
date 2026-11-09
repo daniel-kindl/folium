@@ -73,8 +73,36 @@
                                AutomationProperties.Name="{Binding SaveError}"
                                AutomationProperties.LiveSetting="Assertive" />
                 </StackPanel>
-                <ScrollViewer Grid.Row="1">
+                <ScrollViewer x:Name="LibraryContentScroll" Grid.Row="1">
                     <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                            <TextBox x:Name="LibrarySearchInput"
+                                     Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     PlaceholderText="Search saved books"
+                                     AutomationProperties.Name="Search saved books" />
+                            <Button Grid.Column="1"
+                                    Content="Clear"
+                                    Command="{Binding ClearSearchCommand}"
+                                    IsVisible="{Binding ShowClearSearch}"
+                                    AutomationProperties.Name="Clear saved book search" />
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingXs}">
+                            <TextBlock Text="Sort by:" Classes="folium-label" />
+                            <TextBlock Text="{Binding SortLabel}"
+                                       Classes="folium-label"
+                                       AutomationProperties.Name="Current sort order"
+                                       AutomationProperties.LiveSetting="Polite" />
+                        </StackPanel>
+                        <Grid x:Name="SortGrid"
+                              ColumnDefinitions="*,*"
+                              RowDefinitions="Auto,Auto"
+                              ColumnSpacing="{StaticResource FoliumSpacingSm}"
+                              RowSpacing="{StaticResource FoliumSpacingSm}">
+                            <Button Content="Title A–Z" Classes="folium-filter" Command="{Binding SortCommand}" CommandParameter="title-asc" />
+                            <Button Grid.Column="1" Content="Title Z–A" Classes="folium-filter" Command="{Binding SortCommand}" CommandParameter="title-desc" />
+                            <Button Grid.Row="1" Content="Author A–Z" Classes="folium-filter" Command="{Binding SortCommand}" CommandParameter="author-asc" />
+                            <Button Grid.Row="1" Grid.Column="1" Content="Author Z–A" Classes="folium-filter" Command="{Binding SortCommand}" CommandParameter="author-desc" />
+                        </Grid>
                         <StackPanel Spacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding IsEmpty}">
                             <Viewbox x:Name="EmptyIcon"
                                      Width="{StaticResource FoliumEmptyIconSize}"
@@ -91,7 +119,7 @@
                                    Classes="folium-muted"
                                    TextWrapping="Wrap"
                                    IsVisible="{Binding ShowNoMatches}" />
-                        <ItemsControl ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBooks}">
+                        <ItemsControl x:Name="LibraryBooksList" ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBooks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BookRow">
                                     <Button Margin="{StaticResource FoliumBottomSpacingSm}"
