@@ -597,6 +597,145 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.Equal(ReadingStatus.Reading, Assert.Single(viewModel.Books).Status);
     }
 
+    [Fact]
+    public void SearchMatchesTrimmedCaseInsensitiveTitleAndAuthorText()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        Add(viewModel, "Neuromancer", "William Gibson");
+
+        viewModel.SearchQuery = "  fRaNk  ";
+
+        BookRow row = Assert.Single(viewModel.ShownBooks);
+        Assert.Equal("Dune", row.Title);
+        Assert.Equal("Frank Herbert", row.Author);
+    }
+
+    [Fact]
+    public void SearchIgnoresDiacriticsInComposedAndDecomposedText()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Café", "José Saramago");
+
+        viewModel.SearchQuery = "cafe\u0301";
+
+        BookRow row = Assert.Single(viewModel.ShownBooks);
+        Assert.Equal("Café", row.Title);
+
+        viewModel.SearchQuery = "jose";
+
+        Assert.Equal("Café", Assert.Single(viewModel.ShownBooks).Title);
+    }
+
+    [Fact]
+    public void SearchCombinesWithStatusFilterAndKeepsBothAfterEditing()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        Add(viewModel, "Dune Messiah", "Frank Herbert");
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        viewModel.SetStatusCommand.Execute("reading");
+        Assert.True(viewModel.GoBack());
+        viewModel.SearchQuery = "dune";
+        viewModel.FilterCommand.Execute("reading");
+
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        viewModel.EditCommand.Execute(parameter: null);
+        viewModel.TitleInput = "Dune: The Desert Planet";
+        viewModel.SaveCommand.Execute(parameter: null);
+        Assert.True(viewModel.GoBack());
+
+        Assert.Equal("dune", viewModel.SearchQuery);
+        Assert.Equal("Reading", viewModel.FilterLabel);
+        Assert.Equal("Dune: The Desert Planet", Assert.Single(viewModel.ShownBooks).Title);
+    }
+
+    [Fact]
+    public void SearchResultsUseTitleThenLocalIdAndCanSortByAuthorDescending()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        Add(viewModel, "Dune", "Isaac Asimov");
+        Add(viewModel, "Foundation", "Isaac Asimov");
+
+        Assert.Equal(viewModel.Books.OrderBy(book => book.Title, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(book => book.Id).Select(book => book.Id), viewModel.ShownBooks.Select(book => book.Id));
+        viewModel.SortCommand.Execute("unknown");
+        viewModel.SortCommand.Execute("title-asc");
+
+        viewModel.SortCommand.Execute("title-desc");
+
+        Assert.Equal(viewModel.Books.OrderByDescending(book => book.Title, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(book => book.Id).Select(book => book.Id), viewModel.ShownBooks.Select(book => book.Id));
+
+        viewModel.SortCommand.Execute("author-asc");
+
+        Assert.Equal(viewModel.Books.OrderBy(book => book.Author, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(book => book.Id).Select(book => book.Id), viewModel.ShownBooks.Select(book => book.Id));
+
+        viewModel.SortCommand.Execute("author-desc");
+
+        Assert.Equal(viewModel.Books.OrderByDescending(book => book.Author, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(book => book.Id).Select(book => book.Id), viewModel.ShownBooks.Select(book => book.Id));
+    }
+
+    [Fact]
+    public void SearchNoMatchesIsDifferentFromAnEmptyLibraryAndCanBeCleared()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.SearchQuery = "missing";
+
+        Assert.True(viewModel.ShowNoMatches);
+        Assert.Equal("No books match your search.", viewModel.NoMatchMessage);
+        Assert.False(viewModel.IsEmpty);
+
+        viewModel.ClearSearchCommand.Execute(parameter: null);
+
+        Assert.Equal("", viewModel.SearchQuery);
+        Assert.True(viewModel.ShowBooks);
+
+        viewModel.SearchQuery = "   ";
+
+        _ = Assert.Single(viewModel.ShownBooks);
+        Assert.False(viewModel.ShowNoMatches);
+    }
+
+    [Fact]
+    public void SearchResultsRefreshAfterAddEditStatusChangeAndDelete()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.SearchQuery = "dune";
+
+        Add(viewModel, "Dune Messiah", "Frank Herbert");
+
+        Assert.Equal(2, viewModel.ShownBooks.Count);
+        Guid editedId = viewModel.Books.Single(book => string.Equals(book.Title, "Dune Messiah", StringComparison.Ordinal)).Id;
+        viewModel.OpenCommand.Execute(editedId);
+        viewModel.EditCommand.Execute(parameter: null);
+        viewModel.TitleInput = "Messiah";
+        viewModel.SaveCommand.Execute(parameter: null);
+        Assert.Equal("Dune", Assert.Single(viewModel.ShownBooks).Title);
+        Assert.True(viewModel.GoBack());
+
+        viewModel.OpenCommand.Execute(viewModel.Books.Single(book => string.Equals(book.Title, "Dune", StringComparison.Ordinal)).Id);
+        viewModel.SetStatusCommand.Execute("reading");
+        Assert.Equal(ReadingStatus.Reading, viewModel.Books.Single(book => string.Equals(book.Title, "Dune", StringComparison.Ordinal)).Status);
+        Assert.True(viewModel.GoBack());
+        viewModel.FilterCommand.Execute("reading");
+        Assert.Equal("Dune", Assert.Single(viewModel.ShownBooks).Title);
+
+        viewModel.OpenCommand.Execute(viewModel.Books.Single(book => string.Equals(book.Title, "Dune", StringComparison.Ordinal)).Id);
+        viewModel.AskRemoveCommand.Execute(parameter: null);
+        viewModel.ConfirmRemoveCommand.Execute(parameter: null);
+
+        Assert.Empty(viewModel.ShownBooks);
+        Assert.True(viewModel.ShowNoMatches);
+        _ = Assert.Single(viewModel.Books);
+    }
+
     private LibraryViewModel Open()
     {
         return OpenAtPath().ViewModel;

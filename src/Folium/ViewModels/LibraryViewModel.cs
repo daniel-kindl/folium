@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 using System.Windows.Input;
 using Folium.Books;
 using Folium.Search;
@@ -10,6 +12,14 @@ namespace Folium.ViewModels;
 /// <summary>The screen state for the personal library.</summary>
 public sealed class LibraryViewModel : INotifyPropertyChanged
 {
+    private static readonly HashSet<string> SortModes = new(StringComparer.Ordinal)
+    {
+        "title-asc",
+        "title-desc",
+        "author-asc",
+        "author-desc",
+    };
+
     private static readonly Dictionary<Screen, string> Headings = new()
     {
         [Screen.Library] = "Library",
@@ -26,6 +36,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private bool _importing;
     private Book? _selected;
     private ReadingStatus? _filter;
+    private string SearchQueryValue { get; set; } = "";
+    private string _sort = "title-asc";
     private string _titleInput = "";
     private string _authorInput = "";
 
@@ -52,6 +64,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         KeepBookCommand = new Command(_ => ShowDetailsScreen(), _ => ShowConfirm);
         SetStatusCommand = new Command(SetStatus, _ => ShowDetails);
         FilterCommand = new Command(ApplyFilter, _ => ShowLibrary);
+        SortCommand = new Command(ApplySort, _ => ShowLibrary);
+        ClearSearchCommand = new Command(_ => SearchQuery = "", _ => SearchQuery.Length > 0);
     }
 
     /// <summary>Tells the view that a bound value changed.</summary>
@@ -111,6 +125,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Shows all books or one reading status. The parameter is all, to-read, reading, or finished.</summary>
     public ICommand FilterCommand { get; }
 
+    /// <summary>Sorts the visible books by title or author. The parameter is title-asc, title-desc, author-asc, or author-desc.</summary>
+    public ICommand SortCommand { get; }
+
+    /// <summary>Clears the library search text.</summary>
+    public ICommand ClearSearchCommand { get; }
+
     /// <summary>The name of the current screen.</summary>
     public string Heading => Headings[_screen];
 
@@ -119,6 +139,42 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>The books that match the current filter.</summary>
     public IReadOnlyList<BookRow> ShownBooks { get; private set; } = [];
+
+    /// <summary>The local title or author search text.</summary>
+    public string SearchQuery
+    {
+        get => SearchQueryValue;
+        set
+        {
+            string query = value ?? "";
+            if (string.Equals(SearchQueryValue, query, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            SearchQueryValue = query;
+            ShownBooks = Rows(Books);
+            Raise(nameof(SearchQuery));
+            Raise(nameof(ShowClearSearch));
+            Raise(nameof(ShownBooks));
+            RaiseLibraryShape();
+            ((Command)ClearSearchCommand).RaiseCanExecuteChanged();
+        }
+    }
+
+    /// <summary>True when the search field contains text that can be cleared.</summary>
+    public bool ShowClearSearch => SearchQuery.Length > 0;
+
+    /// <summary>The selected sort mode in the words shown in the control.</summary>
+    /// <exception cref="InvalidOperationException">The selected sort mode is not valid.</exception>
+    public string SortLabel => _sort switch
+    {
+        "title-asc" => "Title A–Z",
+        "title-desc" => "Title Z–A",
+        "author-asc" => "Author A–Z",
+        "author-desc" => "Author Z–A",
+        _ => throw new InvalidOperationException("The library sort value is not valid."),
+    };
 
     /// <summary>True when the library screen is open and has no books.</summary>
     public bool IsEmpty => ShowLibrary && Books.Count == 0;
@@ -129,8 +185,14 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>True when the library has books and the filter matches none.</summary>
     public bool ShowNoMatches => ShowLibrary && Books.Count > 0 && ShownBooks.Count == 0;
 
-    /// <summary>The message when the filter matches no books. Null when a book is visible or the library is empty.</summary>
-    public string? NoMatchMessage => ShowNoMatches ? "No books with this status." : null;
+    /// <summary>The message when the query and filter match no books. Null when a book is visible or the library is empty.</summary>
+    public string? NoMatchMessage => ShowNoMatches switch
+    {
+        false => null,
+        true when string.IsNullOrWhiteSpace(SearchQuery) => "No books with this status.",
+        true when _filter is null => "No books match your search.",
+        _ => "No books match your search and status.",
+    };
 
     /// <summary>The active filter in the words shown on the list. Null when the list shows every book.</summary>
     public string? FilterLabel => _filter is null ? null : StatusText(_filter.Value);
@@ -555,6 +617,24 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         RaiseLibraryShape();
     }
 
+    private void ApplySort(object? parameter)
+    {
+        if (parameter is not string sort || !SortModes.Contains(sort))
+        {
+            return;
+        }
+
+        if (string.Equals(_sort, sort, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _sort = sort;
+        ShownBooks = Rows(Books);
+        Raise(nameof(SortLabel));
+        Raise(nameof(ShownBooks));
+    }
+
     private void UseBooks(IReadOnlyList<Book> books)
     {
         Books = books;
@@ -577,16 +657,39 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private List<BookRow> Rows(IReadOnlyList<Book> books)
     {
-        List<BookRow> rows = [];
-        foreach (Book book in books)
+        string query = NormalizeSearchText(SearchQuery.Trim());
+        IEnumerable<Book> matching = books.Where(Shows);
+        if (query.Length > 0)
         {
-            if (Shows(book))
+            matching = matching.Where(book => ContainsSearchText(book.Title, query) || ContainsSearchText(book.Author, query));
+        }
+
+        Func<Book, string> key = _sort.StartsWith("title", StringComparison.Ordinal) ? book => book.Title : book => book.Author;
+        IOrderedEnumerable<Book> sorted = _sort.EndsWith("desc", StringComparison.Ordinal)
+            ? matching.OrderByDescending(key, StringComparer.OrdinalIgnoreCase).ThenBy(book => book.Id)
+            : matching.OrderBy(key, StringComparer.OrdinalIgnoreCase).ThenBy(book => book.Id);
+
+        return [.. sorted.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status)))];
+    }
+
+    private static bool ContainsSearchText(string value, string query)
+    {
+        return NormalizeSearchText(value).Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeSearchText(string value)
+    {
+        StringBuilder normalized = new();
+        foreach (Rune rune in value.Normalize(NormalizationForm.FormD).EnumerateRunes())
+        {
+            UnicodeCategory category = Rune.GetUnicodeCategory(rune);
+            if (category is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark))
             {
-                rows.Add(new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status)));
+                _ = normalized.Append(rune.ToString());
             }
         }
 
-        return rows;
+        return normalized.ToString();
     }
 
     private bool Shows(Book book)
@@ -681,7 +784,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             ShowAddCommand, SaveCommand, CancelCommand, OpenCommand, EditCommand,
             AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand, SetStatusCommand,
-            FilterCommand, ShowSearchCommand, ImportCommand,
+            FilterCommand, SortCommand, ClearSearchCommand, ShowSearchCommand, ImportCommand,
         })
         {
             if (command is Command relay)
