@@ -5,6 +5,8 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
+using Folium.Views;
 
 namespace Folium.Tests;
 
@@ -36,28 +38,34 @@ public sealed class ThemeResourceTests
     }
 
     [Fact]
-    public async Task SharedTextStyleUpdatesWhenWindowThemeChanges()
+    public async Task RealViewsUseThemeBackgroundAndTextInBothThemes()
     {
         await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
         await session.Dispatch(() =>
         {
-            TextBlock text = new() { Text = "Theme" };
-            UserControl view = new() { Content = text };
-            Window window = new()
+            foreach (UserControl view in new UserControl[] { new MainView(), new SearchView() })
             {
-                Content = view,
-                RequestedThemeVariant = ThemeVariant.Light,
-                Width = 200,
-                Height = 100,
-            };
-            window.Show();
-            window.UpdateLayout();
-            AssertBrushColor("#202922", text.Foreground);
+                Window window = new()
+                {
+                    Content = view,
+                    RequestedThemeVariant = ThemeVariant.Light,
+                    Width = 400,
+                    Height = 850,
+                };
+                window.Show();
+                window.UpdateLayout();
+                TextBlock text = view.GetVisualDescendants().OfType<TextBlock>().First();
+                AssertBrushColor(TokenColor("light", "background"), view.Background);
+                AssertBrushColor(TokenColor("light", "text"), view.Foreground);
+                AssertBrushColor(TokenColor("light", "text"), text.Foreground);
 
-            window.RequestedThemeVariant = ThemeVariant.Dark;
-            window.UpdateLayout();
-            AssertBrushColor("#F1F3EC", text.Foreground);
-            window.Close();
+                window.RequestedThemeVariant = ThemeVariant.Dark;
+                window.UpdateLayout();
+                AssertBrushColor(TokenColor("dark", "background"), view.Background);
+                AssertBrushColor(TokenColor("dark", "text"), view.Foreground);
+                AssertBrushColor(TokenColor("dark", "text"), text.Foreground);
+                window.Close();
+            }
         }, TestContext.Current.CancellationToken);
     }
 
@@ -72,9 +80,10 @@ public sealed class ThemeResourceTests
             Button filter = new() { Content = "Finished", Classes = { "folium-filter" } };
             Button disabled = new() { Content = "Unavailable", IsEnabled = false };
             TextBox field = new() { Text = "Dune" };
+            CheckBox consent = new() { Content = "Keep cover" };
             UserControl view = new()
             {
-                Content = new StackPanel { Children = { title, primary, filter, disabled, field } },
+                Content = new StackPanel { Children = { title, primary, filter, disabled, field, consent } },
             };
             Window window = new()
             {
@@ -95,6 +104,7 @@ public sealed class ThemeResourceTests
             AssertBrushColor("#536157", disabled.Foreground);
             Assert.Equal(1, disabled.Opacity);
             Assert.True(primary.Bounds.Height >= 48);
+            Assert.True(consent.Bounds.Height >= 48);
             Assert.Equal(new CornerRadius(8), primary.CornerRadius);
             Assert.True(field.Focus());
             Assert.Equal(new Thickness(2), field.BorderThickness);

@@ -71,8 +71,8 @@
     <Thickness x:Key="FoliumTopSpacingLg">0,16,0,0</Thickness>
     <Thickness x:Key="FoliumTopSpacingXl">0,24,0,0</Thickness>
     <Thickness x:Key="FoliumBottomSpacingSm">0,0,0,8</Thickness>
+    <Thickness x:Key="FoliumVerticalSpacingSm">0,8</Thickness>
     <Thickness x:Key="FoliumRightSpacingSm">0,0,8,0</Thickness>
-    <Thickness x:Key="FoliumFilterCellGap">0,0,8,8</Thickness>
     <CornerRadius x:Key="FoliumControlCornerRadius">8</CornerRadius>
     <CornerRadius x:Key="FoliumGroupCornerRadius">12</CornerRadius>
     <Thickness x:Key="FoliumFocusThickness">2</Thickness>

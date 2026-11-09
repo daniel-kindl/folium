@@ -4,7 +4,7 @@
              xmlns:search="using:Folium.Search"
              x:Class="Folium.Views.SearchView"
              x:DataType="vm:SearchViewModel">
-    <Grid Margin="{StaticResource FoliumGutterThickness}" RowDefinitions="Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
         <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
             <TextBlock Text="{Binding Heading}" Classes="folium-section" TextWrapping="Wrap" />
             <StackPanel IsVisible="{Binding ShowWorks}" Spacing="{StaticResource FoliumSpacingSm}">
@@ -12,7 +12,7 @@
                 <Button Content="Search Open Library" Click="SearchClicked" Classes="folium-primary" IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Stretch" />
             </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Row="1" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumSpacingSmThickness}">
+        <StackPanel Grid.Row="1" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumVerticalSpacingSm}">
             <TextBlock Text="{Binding Message}" Classes="folium-muted" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Height="4" />
             <Button Content="Cancel search" Click="CancelClicked" IsVisible="{Binding IsBusy}" />

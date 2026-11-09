@@ -90,6 +90,30 @@ public sealed class LibraryViewTests
         }, TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public async Task SearchContentAlignsWithTheScreenTitle()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            LibraryViewModel library = LibraryViewModel.Open(new EmptyStore());
+            MainView view = new() { DataContext = library };
+            Window window = new() { Content = view, Width = 400, Height = 850 };
+            window.Show();
+            library.ShowSearchCommand.Execute(parameter: null);
+            window.UpdateLayout();
+
+            TextBlock title = view.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "Search"));
+            TextBox query = view.GetVisualDescendants().OfType<TextBox>().Single(box => box.IsEffectivelyVisible);
+            Button back = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Back"));
+            Assert.Equal(16, BoundsIn(view, title).Left, tolerance: 0.001);
+            Assert.Equal(16, BoundsIn(view, query).Left, tolerance: 0.001);
+            Assert.Equal(16, BoundsIn(view, back).Left, tolerance: 0.001);
+            Assert.Equal(view.Bounds.Width - 16, BoundsIn(view, query).Right, tolerance: 0.001);
+            window.Close();
+        }, TestContext.Current.CancellationToken);
+    }
+
     private static void AssertLibraryLayout(int width, int height, double scale)
     {
         LibraryViewModel library = LibraryViewModel.Open(new EmptyStore());
@@ -101,13 +125,12 @@ public sealed class LibraryViewTests
         Button search = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Find a book online"));
         Button add = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Add a book"));
         TextBlock emptyMessage = view.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "No books yet."));
-        Avalonia.Controls.Shapes.Path emptyIcon = view.GetVisualDescendants()
-            .OfType<Avalonia.Controls.Shapes.Path>()
-            .Single(path => path.Width == 48 && path.Height == 48);
+        Viewbox emptyIcon = view.FindControl<Viewbox>("EmptyIcon")!;
         Assert.True(search.IsEffectivelyVisible);
         Assert.True(add.IsEffectivelyVisible);
         Assert.True(emptyMessage.IsEffectivelyVisible);
         Assert.Equal(width < height, emptyIcon.IsVisible);
+        AssertEmptyIconSize(view, emptyIcon);
         Assert.True(search.Bounds.Height >= 48);
         Assert.True(add.Bounds.Height >= 48);
         Rect emptyBounds = BoundsIn(view, emptyMessage);
@@ -115,9 +138,40 @@ public sealed class LibraryViewTests
         Assert.True(emptyBounds.Bottom <= addBounds.Top || addBounds.Bottom <= emptyBounds.Top,
             string.Create(CultureInfo.InvariantCulture, $"Empty bounds {emptyBounds}; add bounds {addBounds}; size {width}x{height}; scale {scale}."));
 
+        AssertFilterLayout(view, search, scale);
+
+        Assert.All(view.GetVisualDescendants().OfType<Button>()
+                .Where(button => button is not RepeatButton && button.IsEffectivelyVisible),
+            button => Assert.True(button.Bounds.Height >= 48));
+        window.Width = width + 1;
+        window.UpdateLayout();
+        window.Width = width;
+        window.UpdateLayout();
+        window.Close();
+    }
+
+    private static void AssertEmptyIconSize(MainView view, Viewbox emptyIcon)
+    {
+        if (!emptyIcon.IsVisible)
+        {
+            return;
+        }
+
+        Avalonia.Controls.Shapes.Path emptyPath = emptyIcon.GetVisualDescendants().OfType<Avalonia.Controls.Shapes.Path>().Single();
+        Rect drawn = new Rect(emptyPath.Bounds.Size).TransformToAABB(emptyPath.TransformToVisual(view)!.Value);
+        Assert.Equal(48, drawn.Width, tolerance: 0.001);
+        Assert.Equal(48, drawn.Height, tolerance: 0.001);
+    }
+
+    private static void AssertFilterLayout(MainView view, Button search, double scale)
+    {
         Button[] filters = [.. view.GetVisualDescendants().OfType<Button>()
             .Where(button => button.Classes.Contains("folium-filter"))];
         Assert.Equal(4, filters.Length);
+        Grid filterGrid = view.FindControl<Grid>("FilterGrid")!;
+        Assert.Equal(search.Bounds.Width, filterGrid.Bounds.Width, tolerance: 0.001);
+        Assert.Equal(BoundsIn(view, search).Left, filters.Min(filter => BoundsIn(view, filter).Left), tolerance: 0.001);
+        Assert.Equal(BoundsIn(view, search).Right, filters.Max(filter => BoundsIn(view, filter).Right), tolerance: 0.001);
         foreach (Button filter in filters)
         {
             string filterLabel = Convert.ToString(filter.Content, CultureInfo.InvariantCulture) ?? string.Empty;
@@ -130,16 +184,12 @@ public sealed class LibraryViewTests
             label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Assert.True(label.DesiredSize.Width <= filter.Bounds.Width - filter.Padding.Left - filter.Padding.Right,
                 $"The {filterLabel} filter label must fit at {scale.ToString(CultureInfo.InvariantCulture)}x.");
+            TextBlock shown = filter.GetVisualDescendants().OfType<TextBlock>().Single();
+            Rect filterBounds = BoundsIn(view, filter);
+            Rect shownBounds = BoundsIn(view, shown);
+            Assert.Equal(filterBounds.Center.Y, shownBounds.Center.Y, tolerance: 1);
+            Assert.Equal(filterBounds.Center.X, shownBounds.Center.X, tolerance: 1);
         }
-
-        Assert.All(view.GetVisualDescendants().OfType<Button>()
-                .Where(button => button is not RepeatButton && button.IsEffectivelyVisible),
-            button => Assert.True(button.Bounds.Height >= 48));
-        window.Width = width + 1;
-        window.UpdateLayout();
-        window.Width = width;
-        window.UpdateLayout();
-        window.Close();
     }
 
     private static void AssertBrushColor(string expected, IBrush? actual)

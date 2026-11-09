@@ -20,7 +20,6 @@
                                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
                                     <Path Data="{StaticResource FoliumSearchIcon}"
                                           Classes="folium-icon folium-icon-primary"
-                                          Stroke="{DynamicResource FoliumOnPrimaryBrush}"
                                           Width="{StaticResource FoliumActionIconSize}"
                                           Height="{StaticResource FoliumActionIconSize}" />
                                     <TextBlock Text="{Binding}" Classes="folium-label" />
@@ -28,47 +27,39 @@
                             </DataTemplate>
                         </Button.ContentTemplate>
                     </Button>
-                    <Grid x:Name="FilterGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                    <Grid x:Name="FilterGrid"
+                          ColumnDefinitions="*,*"
+                          RowDefinitions="Auto,Auto"
+                          ColumnSpacing="{StaticResource FoliumSpacingSm}"
+                          RowSpacing="{StaticResource FoliumSpacingSm}">
                         <Button x:Name="AllFilter"
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Content="All"
                                 Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
-                                CommandParameter="all"
-                                Margin="{StaticResource FoliumFilterCellGap}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" />
+                                CommandParameter="all" />
                         <Button x:Name="ToReadFilter"
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Content="To read"
                                 Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
-                                CommandParameter="to-read"
-                                Margin="{StaticResource FoliumFilterCellGap}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" />
+                                CommandParameter="to-read" />
                         <Button x:Name="ReadingFilter"
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Content="Reading"
                                 Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
-                                CommandParameter="reading"
-                                Margin="{StaticResource FoliumFilterCellGap}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" />
+                                CommandParameter="reading" />
                         <Button x:Name="FinishedFilter"
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Content="Finished"
                                 Classes="folium-filter"
                                 Command="{Binding FilterCommand}"
-                                CommandParameter="finished"
-                                Margin="{StaticResource FoliumFilterCellGap}"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center" />
+                                CommandParameter="finished" />
                     </Grid>
                     <TextBlock Text="{Binding FilterLabel}"
                                Classes="folium-active-filter folium-label"
@@ -85,12 +76,15 @@
                 <ScrollViewer Grid.Row="1">
                     <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                         <StackPanel Spacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding IsEmpty}">
-                            <Path x:Name="EmptyIcon"
-                                  Data="{StaticResource FoliumEmptyIcon}"
-                                  Classes="folium-icon"
-                                  Stroke="{DynamicResource FoliumPrimaryBrush}"
-                                  Width="{StaticResource FoliumEmptyIconSize}"
-                                  Height="{StaticResource FoliumEmptyIconSize}" />
+                            <Viewbox x:Name="EmptyIcon"
+                                     Width="{StaticResource FoliumEmptyIconSize}"
+                                     Height="{StaticResource FoliumEmptyIconSize}">
+                                <Path Data="{StaticResource FoliumEmptyIcon}"
+                                      Classes="folium-icon"
+                                      Stroke="{DynamicResource FoliumPrimaryBrush}"
+                                      Width="{StaticResource FoliumActionIconSize}"
+                                      Height="{StaticResource FoliumActionIconSize}" />
+                            </Viewbox>
                             <TextBlock Text="{Binding EmptyMessage}" Classes="folium-section" TextWrapping="Wrap" />
                         </StackPanel>
                         <TextBlock Text="{Binding NoMatchMessage}"
@@ -132,7 +126,6 @@
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
                                 <Path Data="{StaticResource FoliumAddIcon}"
                                       Classes="folium-icon folium-icon-primary"
-                                      Stroke="{DynamicResource FoliumOnPrimaryBrush}"
                                       Width="{StaticResource FoliumActionIconSize}"
                                       Height="{StaticResource FoliumActionIconSize}" />
                                 <TextBlock Text="{Binding}" Classes="folium-label" />
@@ -224,6 +217,7 @@
                         <TextBlock Text="{Binding SelectedStatus}" Classes="folium-label" TextWrapping="Wrap" />
                         <Button Content="To read"
                                 Command="{Binding SetStatusCommand}"
+                                AutomationProperties.Name="To read"
                                 CommandParameter="to-read"
                                 HorizontalAlignment="Stretch">
                             <Button.ContentTemplate>
@@ -237,6 +231,7 @@
                         </Button>
                         <Button Content="Reading"
                                 Command="{Binding SetStatusCommand}"
+                                AutomationProperties.Name="Reading"
                                 CommandParameter="reading"
                                 HorizontalAlignment="Stretch">
                             <Button.ContentTemplate>
@@ -250,6 +245,7 @@
                         </Button>
                         <Button Content="Finished"
                                 Command="{Binding SetStatusCommand}"
+                                AutomationProperties.Name="Finished"
                                 CommandParameter="finished"
                                 HorizontalAlignment="Stretch">
                             <Button.ContentTemplate>
@@ -303,8 +299,13 @@
             </Grid>
             <StackPanel IsVisible="{Binding ShowConfirm}" Spacing="{StaticResource FoliumSpacingMd}" VerticalAlignment="Center">
                 <TextBlock Text="{Binding SelectedTitle}" Classes="folium-section" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding ConfirmMessage}"  TextWrapping="Wrap" />
-                <TextBlock Text="{Binding SaveError}"  TextWrapping="Wrap" />
+                <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SaveError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
                 <Button Content="Remove book"
                         Command="{Binding ConfirmRemoveCommand}"
                         Classes="folium-danger"
