@@ -14,7 +14,7 @@ The repository pins .NET SDK 10.0.403 and Avalonia, Avalonia.Android, and Avalon
 
 The proposed fonts and icons are assets, not .NET packages. They have no .NET target-framework dependency. Integration with the pinned runtime still needs a device proof. Avoid an icon wrapper package or SVG renderer until a demonstrated need justifies one.
 
-[Avalonia PathIcon](https://docs.avaloniaui.net/controls/media/pathicon) renders filled stream geometry and supports recoloring. SVG files are not interchangeable with path data. Lucide uses strokes, primitives, and attributes. Convert the selected assets to filled outlines offline, preserving viewBox and stroke appearance, before creating geometry resources. Do not copy an SVG `d` attribute alone and assume equivalent rendering. Fluent and Material filled silhouettes can reduce that conversion work.
+[Avalonia PathIcon](https://docs.avaloniaui.net/controls/media/pathicon) renders filled stream geometry and supports recoloring. Avalonia Path shapes also support strokes, caps and joins. The app keeps these properties from the selected Lucide SVGs in generated geometry resources. It preserves the outline style and avoids a runtime SVG parser. The generator rejects SVG elements that it cannot convert.
 
 ## Icon comparison
 
@@ -43,15 +43,15 @@ All three are candidates for Czech, including carons and acute accents. Coverage
 
 [Avalonia supports embedded fonts](https://docs.avaloniaui.net/docs/styling/custom-fonts) through AvaloniaResource and `avares://` references. Keep licenses beside bundled assets. Bundling costs APK bytes and font memory, while system fallback varies by device. Neither cost nor shaping quality has been measured here. Do not download fonts at runtime or add analytics.
 
-## Theme and token proposal
+## Theme and token integration
 
-The [token contract](../design/README.md) records these values in
-[machine-readable JSON](../design/tokens.json) for later implementation.
-The app does not load the contract.
+The [token contract](../design/README.md) records values in
+[machine-readable JSON](../design/tokens.json). The app uses compile-time
+resources from this contract. The app does not load the JSON at runtime.
 
 [Avalonia theme variants](https://docs.avaloniaui.net/docs/styling/theme-variants) provide Light, Dark, system preference inheritance, and RequestedThemeVariant overrides. FluentTheme supports both variants. Keep Default as the initial preference; later offer explicit Light and Dark choices.
 
-Define semantic brushes once in application ResourceDictionary theme dictionaries. Reference changing brushes with DynamicResource. Keep spacing, sizes, and geometry as shared resources. Map colors into FluentTheme palettes and shared control styles, including focus, validation, selection, and popup states. Do not create a separate theme service or hardcode colors in each view. Verify the exact palette keys against pinned 12.1.5 before implementation.
+Application resources define semantic brushes in Light and Dark theme dictionaries. Shared styles use DynamicResource for changing brushes. The app keeps spacing, sizes and icon geometry in shared resources. FluentTheme remains the control foundation. Do not create a separate theme service or hardcode colors in each view. Device checks must verify rendering, focus, validation, selection and popup states.
 
 | Token | Light | Dark |
 | --- | --- | --- |

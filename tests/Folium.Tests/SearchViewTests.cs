@@ -9,6 +9,7 @@ using Folium.Views;
 
 namespace Folium.Tests;
 
+[Collection("Avalonia UI")]
 public sealed class SearchViewTests
 {
     [Fact]
@@ -35,7 +36,6 @@ public sealed class SearchViewTests
             window.Close();
         }, TestContext.Current.CancellationToken);
     }
-
 
     [Fact]
     public async Task UnavailableDecodedCoverShowsFallbackAndKeepsBookDetails()

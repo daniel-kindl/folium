@@ -5,32 +5,32 @@
              x:Class="Folium.Views.SearchView"
              x:DataType="vm:SearchViewModel">
     <Grid RowDefinitions="Auto,Auto,*,Auto">
-        <StackPanel Spacing="8">
-            <TextBlock Text="{Binding Heading}" FontSize="22" TextWrapping="Wrap" />
-            <StackPanel IsVisible="{Binding ShowWorks}" Spacing="8">
-                <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="Book title" AutomationProperties.Name="Book title" MinHeight="48" />
-                <Button Content="Search Open Library" Click="SearchClicked" IsEnabled="{Binding !IsBusy}" MinHeight="48" HorizontalAlignment="Stretch" />
+        <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+            <TextBlock Text="{Binding Heading}" Classes="folium-section" TextWrapping="Wrap" />
+            <StackPanel IsVisible="{Binding ShowWorks}" Spacing="{StaticResource FoliumSpacingSm}">
+                <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="Book title" AutomationProperties.Name="Book title" />
+                <Button Content="Search Open Library" Click="SearchClicked" Classes="folium-primary" IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Stretch" />
             </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Row="1" Spacing="8" Margin="0,8">
-            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+        <StackPanel Grid.Row="1" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumVerticalSpacingSm}">
+            <TextBlock Text="{Binding Message}" Classes="folium-muted" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Height="4" />
-            <Button Content="Cancel search" Click="CancelClicked" IsVisible="{Binding IsBusy}" MinHeight="48" />
-            <Button Content="Try again" Click="RetryClicked" IsVisible="{Binding CanRetry}" MinHeight="48" />
+            <Button Content="Cancel search" Click="CancelClicked" IsVisible="{Binding IsBusy}" />
+            <Button Content="Try again" Click="RetryClicked" IsVisible="{Binding CanRetry}" Classes="folium-primary" />
         </StackPanel>
         <ScrollViewer Grid.Row="2">
-            <StackPanel Spacing="8">
+            <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                 <ItemsControl ItemsSource="{Binding Works}" IsVisible="{Binding ShowWorks}" IsEnabled="{Binding !IsBusy}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="search:SearchWork">
-                            <Button Click="WorkClicked" Tag="{Binding}" MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,0,0,8">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Title}" FontSize="18" TextWrapping="Wrap" />
+                            <Button Click="WorkClicked" Tag="{Binding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="{StaticResource FoliumBottomSpacingSm}">
+                                <StackPanel Spacing="{StaticResource FoliumSpacingXs}">
+                                    <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding Authors}" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding FirstPublished, StringFormat='First published: {0}'}" />
-                                    <TextBlock Text="Choose an edition →" />
+                                    <TextBlock Text="{Binding FirstPublished, StringFormat='First published: {0}'}" Classes="folium-caption folium-muted" />
+                                    <TextBlock Text="Choose an edition →" Classes="folium-caption folium-muted" />
                                     <Image Name="ResultCover" MaxHeight="160" Stretch="Uniform" />
-                                    <Button Content="Preview cover" IsVisible="{Binding HasCover}" Tag="{Binding CoverId}" Click="CoverClicked" MinHeight="48" />
+                                    <Button Content="Preview cover" IsVisible="{Binding HasCover}" Tag="{Binding CoverId}" Click="CoverClicked" />
                                 </StackPanel>
                             </Button>
                         </DataTemplate>
@@ -39,25 +39,25 @@
                 <ItemsControl ItemsSource="{Binding Editions}" IsVisible="{Binding ShowEditions}" IsEnabled="{Binding !IsBusy}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="search:SearchEdition">
-                            <Button Click="EditionClicked" Tag="{Binding}" MinHeight="48" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="0,0,0,8">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Title}" FontSize="18" TextWrapping="Wrap" />
+                            <Button Click="EditionClicked" Tag="{Binding}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Margin="{StaticResource FoliumBottomSpacingSm}">
+                                <StackPanel Spacing="{StaticResource FoliumSpacingXs}">
+                                    <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding Publisher}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding PublicationDate}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding Edition}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding Language}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding Isbn, StringFormat='ISBN: {0}'}" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding Key}" />
+                                    <TextBlock Text="{Binding Key}" Classes="folium-caption folium-muted" />
                                     <Image Name="ResultCover" MaxHeight="160" Stretch="Uniform" />
-                                    <Button Content="Preview cover" IsVisible="{Binding HasCover}" Tag="{Binding CoverId}" Click="CoverClicked" MinHeight="48" />
+                                    <Button Content="Preview cover" IsVisible="{Binding HasCover}" Tag="{Binding CoverId}" Click="CoverClicked" />
                                 </StackPanel>
                             </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <StackPanel IsVisible="{Binding ShowPreview}" Spacing="8">
+                <StackPanel IsVisible="{Binding ShowPreview}" Spacing="{StaticResource FoliumSpacingSm}">
                     <Image Name="CoverImage" MaxHeight="220" Stretch="Uniform" AutomationProperties.Name="Edition cover" />
-                    <TextBlock Text="{Binding Preview.Title}" FontSize="22" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Preview.Title}" Classes="folium-section" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Authors, StringFormat='Authors: {0}'}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Publisher, StringFormat='Publisher: {0}'}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.PublicationDate, StringFormat='Published: {0}'}" TextWrapping="Wrap" />
@@ -65,19 +65,19 @@
                     <TextBlock Text="{Binding Preview.Edition, StringFormat='Edition: {0}'}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Language, StringFormat='Language: {0}'}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Description}" TextWrapping="Wrap" />
-                    <TextBlock Text="Empty fields are not supplied by Open Library." TextWrapping="Wrap" />
-                    <Button Content="Review and save" Click="ImportClicked" IsEnabled="{Binding !IsBusy}" MinHeight="48" />
-                    <Button Content="View edition on Open Library" Click="SourceClicked" MinHeight="48" />
+                    <TextBlock Text="Empty fields are not supplied by Open Library." Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+                    <Button Content="Review and save" Click="ImportClicked" IsEnabled="{Binding !IsBusy}" Classes="folium-primary" />
+                    <Button Content="View edition on Open Library" Click="SourceClicked" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <StackPanel Grid.Row="3" Spacing="8" Margin="0,8,0,0">
+        <StackPanel Grid.Row="3" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumTopSpacingSm}">
             <Grid ColumnDefinitions="*,*" IsVisible="{Binding !ShowPreview}">
-                <Button Content="Previous page" Click="PreviousClicked" IsEnabled="{Binding HasPrevious}" MinHeight="48" />
-                <Button Grid.Column="1" Content="Next page" Click="NextClicked" IsEnabled="{Binding HasNext}" MinHeight="48" />
+                <Button Content="Previous page" Click="PreviousClicked" IsEnabled="{Binding HasPrevious}" />
+                <Button Grid.Column="1" Content="Next page" Click="NextClicked" IsEnabled="{Binding HasNext}" />
             </Grid>
-            <Button Content="Back" Click="BackClicked" MinHeight="48" HorizontalAlignment="Stretch" />
-            <TextBlock Text="Metadata and covers from Open Library" FontSize="12" TextWrapping="Wrap" />
+            <Button Content="Back" Click="BackClicked" HorizontalAlignment="Stretch" />
+            <TextBlock Text="Metadata and covers from Open Library" Classes="folium-caption folium-muted" TextWrapping="Wrap" />
         </StackPanel>
     </Grid>
 </UserControl>

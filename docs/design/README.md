@@ -1,9 +1,9 @@
 # Design tokens
 
 [tokens.json](tokens.json) is the machine-readable contract for the approved
-[visual direction](../research/visual-identity.md). Version 1 records the proposed
-values. The app does not load this file. This change adds no theme, styles,
-assets, dependencies, layouts, or interactions.
+[visual direction](../research/visual-identity.md). Version 1 records the design
+values. The app defines compile-time Avalonia resources from these values. Tests
+compare the semantic colors with this file. The app does not load the JSON at runtime.
 
 The file uses a project-specific JSON format. It is not a DTCG interchange file.
 The `version` field identifies the format. Keep names stable when values change.
@@ -59,29 +59,31 @@ No shadow is specified.
 
 `icon.size` defines inline, action, and empty-state sizes. `icon.roles` maps
 semantic roles to Lucide names. These names are asset-selection guidance.
-They are not bundled geometry or accessible labels. Future implementation must
-convert the selected icons and preserve license notices.
+The app includes selected Lucide geometry for each role. The UI must still
+provide accessible names for icon-only actions.
 
 Cover frames must have consistent dimensions within each view and preserve image
 aspect ratios. Exact cover dimensions remain unspecified. Do not add invented
 cover sizes, motion durations, or responsive breakpoints to this contract.
 
-## Future Avalonia integration
+## Avalonia integration
 
-1. Define shared resources from this contract in a ResourceDictionary.
-2. Put semantic brushes in Light and Dark theme dictionaries.
-3. Reference changing brushes with `DynamicResource`.
-4. Keep the system theme preference as the initial setting.
-5. Map the resources into FluentTheme and shared styles in a separate UI change.
+1. Shared resources define the semantic colors in Light and Dark theme dictionaries.
+2. Shared styles reference changing brushes with `DynamicResource`.
+3. The system theme preference is the initial setting.
+4. FluentTheme remains the control foundation.
+
+See [bundled design assets](assets.md) for font and icon licenses, versions, hashes
+and regeneration steps.
 
 Use a `Folium` prefix for future resource keys, such as `FoliumPrimaryBrush`,
 `FoliumSpacingLg`, and `FoliumBodyFontSize`. Keep color values in the token file
 and check generated resources against it if generation is introduced.
 Do not add a theme service or a runtime JSON loader for these tokens.
 
-The [visual quality gates](../research/visual-quality-gates.md) apply when those
-resources and controls exist. Theme switching, fonts, icons, focus states,
-TalkBack, and device rendering remain unverified.
+The [visual quality gates](../research/visual-quality-gates.md) apply to these
+resources and controls. Record each unrun gate as not run. Headless checks do not
+prove Android TalkBack behavior or device rendering.
 
 ## Checks
 

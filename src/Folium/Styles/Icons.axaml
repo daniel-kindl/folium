@@ -1,0 +1,93 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <GeometryGroup x:Key="FoliumLibraryIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>m16 6 4 14</StreamGeometry>
+            <StreamGeometry>M12 6v14</StreamGeometry>
+            <StreamGeometry>M8 8v12</StreamGeometry>
+            <StreamGeometry>M4 4v16</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumBookIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M12 5v16</StreamGeometry>
+            <StreamGeometry>M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumAddIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M5 12h14</StreamGeometry>
+            <StreamGeometry>M12 5v14</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumEditIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z</StreamGeometry>
+            <StreamGeometry>m15 5 4 4</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumDeleteIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M10 11v6</StreamGeometry>
+            <StreamGeometry>M14 11v6</StreamGeometry>
+            <StreamGeometry>M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6</StreamGeometry>
+            <StreamGeometry>M3 6h18</StreamGeometry>
+            <StreamGeometry>M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumSearchIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>m21 21-4.34-4.34</StreamGeometry>
+            <EllipseGeometry Center="11,11" RadiusX="8" RadiusY="8" />
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumToReadIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumReadingIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M12 5v16</StreamGeometry>
+            <StreamGeometry>M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumReadIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20</StreamGeometry>
+            <StreamGeometry>m9 9.5 2 2 4-4</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumTimeIcon">
+        <GeometryGroup.Children>
+            <EllipseGeometry Center="12,12" RadiusX="10" RadiusY="10" />
+            <StreamGeometry>M12 6v6l4 2</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumErrorIcon">
+        <GeometryGroup.Children>
+            <EllipseGeometry Center="12,12" RadiusX="10" RadiusY="10" />
+            <LineGeometry StartPoint="12,8" EndPoint="12,12" />
+            <LineGeometry StartPoint="12,16" EndPoint="12.01,16" />
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumBackIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>m12 19-7-7 7-7</StreamGeometry>
+            <StreamGeometry>M19 12H5</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumOverflowIcon">
+        <GeometryGroup.Children>
+            <EllipseGeometry Center="12,12" RadiusX="1" RadiusY="1" />
+            <EllipseGeometry Center="19,12" RadiusX="1" RadiusY="1" />
+            <EllipseGeometry Center="5,12" RadiusX="1" RadiusY="1" />
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumEmptyIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M12 5v16</StreamGeometry>
+            <StreamGeometry>M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+</ResourceDictionary>

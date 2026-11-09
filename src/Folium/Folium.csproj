@@ -7,4 +7,9 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets/Fonts/*.ttf" />
+    <AvaloniaResource Include="Assets/Fonts/OFL.txt" />
+    <AvaloniaResource Include="Assets/Lucide/LICENSE" />
+  </ItemGroup>
 </Project>
