@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise Folium through Android accessibility. Use an isolated verification APK."""
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -31,8 +32,14 @@ class Device:
         return self.adb('shell', shlex.join(args))
 
     def tree(self):
-        self.shell('uiautomator', 'dump', '/data/local/tmp/folium-verification.xml')
-        return ET.fromstring(self.shell('cat', '/data/local/tmp/folium-verification.xml'))
+        try:
+            self.shell('rm', '-f', '/data/local/tmp/folium-verification.xml')
+            result = self.shell('uiautomator', 'dump', '/data/local/tmp/folium-verification.xml')
+            if 'ERROR:' in result:
+                raise RuntimeError('Android accessibility dump failed: ' + result)
+            return ET.fromstring(self.shell('cat', '/data/local/tmp/folium-verification.xml'))
+        except subprocess.CalledProcessError as error:
+            raise RuntimeError('Android accessibility did not produce a fresh dump.') from error
 
     def nodes(self, tree, text, cls=None):
         nodes = [n for n in tree.iter('node') if n.get('package') == PACKAGE]
@@ -173,6 +180,16 @@ class Device:
         return json.loads(self.shell('run-as', PACKAGE, 'sh', '-c',
                                      '''if [ -f files/verification-library.json ]; then cat files/verification-library.json; else printf '%s' '{"version":1,"books":[]}'; fi'''))
 
+    def saved_cover(self, book):
+        if book.get('coverFile') is None:
+            return base64.b64decode(book.get('metadata', {}).get('cover', ''))
+        reference = book['coverFile']
+        assert re.fullmatch(r'[0-9a-f]{64}', reference), 'Invalid saved cover reference.'
+        data = self.adb('exec-out', 'run-as', PACKAGE, 'cat',
+                        'files/verification-library.json.covers/' + reference, binary=True)
+        assert hashlib.sha256(data).hexdigest() == reference, 'Saved cover integrity check failed.'
+        return data
+
     def scroll(self):
         size = list(map(int, re.findall(r'\d+', self.shell('wm', 'size').splitlines()[-1])))
         w, h = size[-2:]
@@ -279,7 +296,7 @@ def main():
         d.import_save('Import without cover', False)
         book = d.library()['books'][0]
         assert book['title'] == 'Import without cover' and book['metadata']['publisher'] == 'Device publisher'
-        assert not book['metadata'].get('cover'), 'Unchecked cover was saved.'
+        assert not d.saved_cover(book), 'Unchecked cover was saved.'
         d.tap('Import without cover')
         d.wait('No saved cover', 'TextBlock')
         d.back()
@@ -288,7 +305,7 @@ def main():
         d.preview()
         d.import_save('Import with cover', True)
         book = next(b for b in d.library()['books'] if b['title'] == 'Import with cover')
-        assert book['metadata']['cover'], 'Opted-in cover was not saved.'
+        assert d.saved_cover(book), 'Opted-in cover was not saved.'
         d.tap('Import with cover')
         d.assert_saved_cover()
         d.capture('06-saved-valid-cover')
@@ -310,7 +327,7 @@ def main():
         d.tap('Save')
         d.back()
         book = next(b for b in d.library()['books'] if b['title'] == 'Import with cover')
-        assert book['author'] == 'Offline author' and book['readingStatus'] == 'reading' and book['metadata']['cover']
+        assert book['author'] == 'Offline author' and book['readingStatus'] == 'reading' and d.saved_cover(book)
         d.record('Provider offline restart retains metadata, status and cover; offline edits save')
         d.tap('Find a book online')
         d.enter('Book title', 'Offline query', replace=True)

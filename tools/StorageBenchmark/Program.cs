@@ -8,7 +8,7 @@ string directory = Path.Combine(Path.GetTempPath(), "folium-storage-benchmark-" 
 Directory.CreateDirectory(directory);
 try
 {
-    string[] columns = ["books", "cover_bytes", "library_bytes", "median_save_ms", "managed_allocated_bytes"];
+    string[] columns = ["books", "cover_bytes", "library_bytes", "median_save_ms", "managed_allocated_bytes", "cover_storage_bytes", "cover_files_rewritten"];
     Console.WriteLine(string.Join(',', columns));
     foreach (int count in new[] { 0, 100, 1000 })
     {
@@ -17,6 +17,14 @@ try
             Book[] books = CreateBooks(count, coverBytes);
             FileBookStore store = new(Path.Combine(directory, "library.json"));
             store.Replace(books);
+            string[] covers = Directory.Exists(Path.Combine(directory, "library.json.covers"))
+                ? Directory.GetFiles(Path.Combine(directory, "library.json.covers")) : [];
+            DateTime stamp = new(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            foreach (string cover in covers)
+            {
+                File.SetLastWriteTimeUtc(cover, stamp);
+            }
+
             double[] timings = new double[5];
             long[] allocations = new long[5];
             for (int sample = 0; sample < timings.Length; sample++)
@@ -37,8 +45,10 @@ try
             Array.Sort(timings);
             Array.Sort(allocations);
             long bytes = new FileInfo(Path.Combine(directory, "library.json")).Length;
+            long coverStorage = covers.Sum(cover => new FileInfo(cover).Length);
+            int rewritten = covers.Count(cover => File.GetLastWriteTimeUtc(cover) != stamp);
             Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
-                $"{count},{coverBytes},{bytes},{timings[2]:F3},{allocations[2]}"));
+                $"{count},{coverBytes},{bytes},{timings[2]:F3},{allocations[2]},{coverStorage},{rewritten}"));
             if (store.Read().Count != count)
             {
                 throw new InvalidOperationException("The saved book count differs from the fixture count.");
