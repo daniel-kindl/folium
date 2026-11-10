@@ -135,6 +135,10 @@ public sealed class LibraryViewTests
         Assert.True(add.Bounds.Height >= 48);
         Rect emptyBounds = BoundsIn(view, emptyMessage);
         Rect addBounds = BoundsIn(view, add);
+        ScrollViewer contentScroll = view.FindControl<ScrollViewer>("LibraryContentScroll")!;
+        Rect contentBounds = BoundsIn(view, contentScroll);
+        Assert.False(view.FindControl<TextBox>("LibrarySearchInput")!.IsEffectivelyVisible);
+        Assert.True(emptyBounds.Top < contentBounds.Bottom && emptyBounds.Bottom > contentBounds.Top);
         Assert.True(emptyBounds.Bottom <= addBounds.Top || addBounds.Bottom <= emptyBounds.Top,
             string.Create(CultureInfo.InvariantCulture, $"Empty bounds {emptyBounds}; add bounds {addBounds}; size {width}x{height}; scale {scale}."));
 
@@ -165,8 +169,7 @@ public sealed class LibraryViewTests
 
     private static void AssertFilterLayout(MainView view, Button search, double scale)
     {
-        Button[] filters = [.. view.GetVisualDescendants().OfType<Button>()
-            .Where(button => button.Classes.Contains("folium-filter"))];
+        Button[] filters = [.. view.FindControl<Grid>("FilterGrid")!.Children.OfType<Button>()];
         Assert.Equal(4, filters.Length);
         Grid filterGrid = view.FindControl<Grid>("FilterGrid")!;
         Assert.Equal(search.Bounds.Width, filterGrid.Bounds.Width, tolerance: 0.001);
@@ -216,4 +219,5 @@ public sealed class LibraryViewTests
             throw new InvalidOperationException("The library view test must not save books.");
         }
     }
+
 }
