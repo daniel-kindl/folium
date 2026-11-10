@@ -86,7 +86,6 @@ public partial class MainView : UserControl
         {
             Title = "Export backup",
             SuggestedFileName = name,
-            DefaultExtension = "json",
             ShowOverwritePrompt = true,
             FileTypeChoices = [BackupFileType()],
         };
