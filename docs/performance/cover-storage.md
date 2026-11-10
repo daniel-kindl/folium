@@ -19,12 +19,14 @@ The benchmark does not measure rendering or image validation.
 The command saves each fixture once before measurement.
 It then measures five saves, with a reading-status edit before each save of a nonempty library.
 The CSV reports median elapsed time and median managed allocations independently.
+The process-wide allocation counter includes the stopwatch and concurrent runtime allocations.
 The command reopens each saved library and checks its book count.
 Fixture generation and reopening are outside the timed operation.
 
 `library_bytes` is the resulting JSON size, not a device block-write counter.
 The current store writes that entire JSON document to a temporary file for each save.
-Thus the field also gives the logical bytes written for each measured metadata save.
+Thus the field gives logical bytes written for the final metadata save.
+The intermediate saves of the finished status write one additional byte.
 The OS can buffer these writes. These results do not establish power-loss durability or Android latency.
 
 With 1,000 books and 128 KiB per cover, a status edit writes 175,247,035 bytes.
@@ -34,7 +36,7 @@ An empty library writes 33 bytes.
 
 ## Target before implementation
 
-For both nonempty fixture sizes, reduce logical bytes written by at least 95% for a status edit.
+For all four nonempty fixtures, reduce logical bytes written by at least 95% for a status edit.
 After the initial save, write no unchanged cover files during metadata edits.
 Record file writes as well as resulting document sizes when verifying that target.
 The small metadata records make this target feasible without a database.
