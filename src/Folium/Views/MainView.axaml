@@ -141,6 +141,17 @@
                             </Viewbox>
                             <TextBlock Text="{Binding EmptyMessage}" Classes="folium-section" TextWrapping="Wrap" />
                         </StackPanel>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                            <Button Content="Export backup"
+                                    Click="ExportBackupClick"
+                                    AutomationProperties.Name="Export backup"
+                                    HorizontalAlignment="Stretch" />
+                            <Button Grid.Column="1"
+                                    Content="Restore backup"
+                                    Click="RestoreBackupClick"
+                                    AutomationProperties.Name="Restore backup"
+                                    HorizontalAlignment="Stretch" />
+                        </Grid>
                         <TextBlock Text="{Binding NoMatchMessage}"
                                    Classes="folium-muted"
                                    TextWrapping="Wrap"
@@ -369,6 +380,26 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" />
             </StackPanel>
+            <Grid IsVisible="{Binding ShowRestore}" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource FoliumSpacingMd}">
+                <TextBlock Text="{Binding RestoreMessage}" TextWrapping="Wrap" />
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding RestorePreview}" TextWrapping="Wrap" />
+                </ScrollViewer>
+                <TextBlock Grid.Row="2" Text="{Binding SaveError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <Button Grid.Row="3" Content="Replace library"
+                        Command="{Binding ConfirmRestoreCommand}"
+                        Classes="folium-danger"
+                        HorizontalAlignment="Stretch" />
+                <Button Grid.Row="4" Content="Keep current library"
+                        Command="{Binding KeepLibraryCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" />
+            </Grid>
             <TextBlock Text="{Binding LoadError}"
                        TextWrapping="Wrap"
                        IsVisible="{Binding ShowLoadError}" />

@@ -1,5 +1,8 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
+using Folium.ViewModels;
 
 namespace Folium.Views;
 
@@ -25,6 +28,86 @@ public partial class MainView : UserControl
             this.FindControl<Button>("FinishedFilter")!,
         ];
         SizeChanged += MainViewSizeChanged;
+    }
+
+    private async void ExportBackupClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LibraryViewModel viewModel)
+        {
+            return;
+        }
+
+        IStorageProvider? provider = TopLevel.GetTopLevel(this)?.StorageProvider;
+        if (provider?.CanSave != true)
+        {
+            viewModel.ShowBackupError("Folium could not open the document picker.");
+            return;
+        }
+
+        await BackupActions.ExportAsync(
+            viewModel,
+            async name => await OpenExportAsync(provider, name).ConfigureAwait(false)).ConfigureAwait(true);
+    }
+
+    private async void RestoreBackupClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not LibraryViewModel viewModel)
+        {
+            return;
+        }
+
+        IStorageProvider? provider = TopLevel.GetTopLevel(this)?.StorageProvider;
+        if (provider?.CanOpen != true)
+        {
+            viewModel.ShowBackupError("Folium could not open the document picker.");
+            return;
+        }
+
+        await BackupActions.RestoreAsync(
+            viewModel,
+            async () => await OpenRestoreAsync(provider).ConfigureAwait(false)).ConfigureAwait(true);
+    }
+
+    private static async Task<Stream?> OpenExportAsync(IStorageProvider provider, string name)
+    {
+        IStorageFile? file = await provider.SaveFilePickerAsync(SaveOptions(name)).ConfigureAwait(true);
+        return file is null ? null : await file.OpenWriteAsync().ConfigureAwait(true);
+    }
+
+    private static async Task<Stream?> OpenRestoreAsync(IStorageProvider provider)
+    {
+        IReadOnlyList<IStorageFile> files = await provider.OpenFilePickerAsync(OpenOptions()).ConfigureAwait(true);
+        return files.Count == 0 ? null : await files[0].OpenReadAsync().ConfigureAwait(true);
+    }
+
+    private static FilePickerSaveOptions SaveOptions(string name)
+    {
+        return new FilePickerSaveOptions
+        {
+            Title = "Export backup",
+            SuggestedFileName = name,
+            ShowOverwritePrompt = true,
+            FileTypeChoices = [BackupFileType()],
+        };
+    }
+
+    private static FilePickerOpenOptions OpenOptions()
+    {
+        return new FilePickerOpenOptions
+        {
+            Title = "Restore backup",
+            AllowMultiple = false,
+            FileTypeFilter = [BackupFileType()],
+        };
+    }
+
+    private static FilePickerFileType BackupFileType()
+    {
+        return new FilePickerFileType("Folium backup")
+        {
+            Patterns = ["*.json"],
+            MimeTypes = ["application/json"],
+        };
     }
 
     private void MainViewSizeChanged(object? sender, SizeChangedEventArgs args)

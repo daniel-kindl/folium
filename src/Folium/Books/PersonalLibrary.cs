@@ -69,6 +69,19 @@ public sealed class PersonalLibrary
         return updated;
     }
 
+    /// <summary>Replaces every saved book. A failed write leaves the current books in place.</summary>
+    /// <param name="books">The books that replace the saved list. The list must not be null.</param>
+    /// <exception cref="ArgumentNullException">The book list is null. The current books stay in place.</exception>
+    /// <exception cref="Storage.LibraryStoreException">The store cannot write the books. The current books stay in place.</exception>
+    public void ReplaceAll(IReadOnlyList<Book> books)
+    {
+        ArgumentNullException.ThrowIfNull(books);
+        Book[] next = [.. books];
+        _store.Replace(next);
+        _books.Clear();
+        _books.AddRange(next);
+    }
+
     /// <summary>Deletes the book. A second removal of the same identifier fails.</summary>
     /// <param name="id">The identifier of the saved book.</param>
     public void Remove(Guid id)

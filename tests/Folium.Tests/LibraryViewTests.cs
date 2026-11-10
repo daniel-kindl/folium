@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
@@ -87,6 +88,32 @@ public sealed class LibraryViewTests
             }
 
             app.ApplySystemFontScale(1);
+        }, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task UnavailableDocumentPickerKeepsTheLibrary()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            LibraryViewModel library = LibraryViewModel.Open(new EmptyStore());
+            MainView view = new() { DataContext = library };
+            Window window = new() { Content = view, Width = 400, Height = 850 };
+            window.Show();
+            window.UpdateLayout();
+
+            Button export = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Export backup"));
+            export.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal("Folium could not open the document picker.", library.SaveError);
+            Assert.True(library.ShowLibrary);
+            Assert.False(library.ShowRestore);
+
+            Button restore = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Restore backup"));
+            restore.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert.Equal("Folium could not open the document picker.", library.SaveError);
+            Assert.False(library.ShowRestore);
+            window.Close();
         }, TestContext.Current.CancellationToken);
     }
 

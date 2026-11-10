@@ -338,6 +338,49 @@ public sealed class PersonalLibraryTests : IDisposable
     }
 
     [Fact]
+    public void ReplaceAllKeepsDistinctBooksAcrossRestart()
+    {
+        PersonalLibrary library = Open();
+        Book dune = library.Add("Dune", "Frank Herbert");
+        Book neuromancer = new(Guid.NewGuid(), "Neuromancer", "William Gibson", ReadingStatus.Finished);
+        Book secondDune = new(Guid.NewGuid(), "Dune", "Frank Herbert", ReadingStatus.Reading);
+
+        library.ReplaceAll([neuromancer, secondDune]);
+
+        Assert.Equal([neuromancer, secondDune], library.Books);
+        Assert.Equal([neuromancer.Id, secondDune.Id], Open().Books.Select(book => book.Id));
+        Assert.DoesNotContain(Open().Books, book => book.Id == dune.Id);
+        Assert.Equal(ReadingStatus.Finished, Open().Books[0].Status);
+        Assert.Equal(ReadingStatus.Reading, Open().Books[1].Status);
+    }
+
+    [Fact]
+    public void ReplaceAllKeepsTheCurrentBooksWhenTheWriteFails()
+    {
+        FailOnSecondWriteStore store = new(new FileBookStore(LibraryPath));
+        PersonalLibrary library = new(store);
+        Book dune = library.Add("Dune", "Frank Herbert");
+        Book replacement = new(Guid.NewGuid(), "Neuromancer", "William Gibson");
+
+        _ = Assert.Throws<LibraryStoreException>(() => library.ReplaceAll([replacement]));
+
+        Assert.Equal([dune], library.Books);
+        Assert.Equal([dune.Id], new PersonalLibrary(new FileBookStore(LibraryPath)).Books.Select(book => book.Id));
+    }
+
+    [Fact]
+    public void ReplaceAllRejectsANullList()
+    {
+        PersonalLibrary library = Open();
+        _ = library.Add("Dune", "Frank Herbert");
+
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() => library.ReplaceAll(null!));
+
+        Assert.Equal("books", exception.ParamName);
+        Assert.Equal("Dune", Assert.Single(Open().Books).Title);
+    }
+
+    [Fact]
     public void FailedWriteKeepsPreviousBooks()
     {
         FailOnSecondWriteStore store = new(new FileBookStore(LibraryPath));

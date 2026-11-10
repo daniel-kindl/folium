@@ -45,3 +45,11 @@ with an imported book. Local metadata edits do not change these identifiers.
 **Saved cover**:
 A private image copy that the person confirms they have permission to save.
 A book does not require a saved cover.
+
+**Personal library backup**:
+A file of the saved books from one device, with reading status, metadata, source identifiers, and saved covers.
+Version 1 uses the kind `personal-library-backup`.
+The file is separate from the private library file.
+Folium reads version 1 up to 32 MiB and does not upload the file.
+Restore replaces the saved books after confirmation.
+_Avoid_: Library file, sync, cloud backup

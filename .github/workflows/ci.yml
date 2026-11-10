@@ -54,6 +54,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+      - name: Restore pinned workload set
+        run: dotnet workload restore tests/Folium.Tests/Folium.Tests.csproj
       - name: Restore locked dependencies
         run: dotnet restore tests/Folium.Tests/Folium.Tests.csproj --locked-mode
       - name: Install pinned Stryker.NET
@@ -73,6 +75,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+      - name: Restore pinned workload set
+        run: dotnet workload restore tests/Folium.Tests/Folium.Tests.csproj
       - name: Restore locked dependencies
         run: dotnet restore tests/Folium.Tests/Folium.Tests.csproj --locked-mode
       - name: Fetch pinned crap4csharp

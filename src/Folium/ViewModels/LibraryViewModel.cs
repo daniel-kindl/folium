@@ -27,6 +27,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         [Screen.Edit] = "Edit book",
         [Screen.Details] = "Book",
         [Screen.ConfirmRemove] = "Remove this book?",
+        [Screen.ConfirmRestore] = "Replace your library?",
         [Screen.Search] = "Search",
     };
     private static readonly IBookSearch SearchProvider = new OpenLibrary(new HttpClient());
@@ -39,6 +40,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private string SearchQueryValue { get; set; } = "";
     private string _sort = "title-asc";
     private string _titleInput = "";
+    private IReadOnlyList<Book>? _pendingRestore;
     private string _authorInput = "";
 
     private LibraryViewModel(PersonalLibrary? library, IBookSearch? search)
@@ -63,6 +65,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         ConfirmRemoveCommand = new Command(_ => ConfirmRemove(), _ => ShowConfirm);
         KeepBookCommand = new Command(_ => ShowDetailsScreen(), _ => ShowConfirm);
         SetStatusCommand = new Command(SetStatus, _ => ShowDetails);
+        ConfirmRestoreCommand = new Command(_ => ConfirmRestore(), _ => ShowRestore);
+        KeepLibraryCommand = new Command(_ => CancelRestore(), _ => ShowRestore);
         FilterCommand = new Command(ApplyFilter, _ => ShowLibrary);
         SortCommand = new Command(ApplySort, _ => ShowLibrary);
         ClearSearchCommand = new Command(_ => SearchQuery = "", _ => SearchQuery.Length > 0);
@@ -121,6 +125,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>Sets the reading status of the selected book. The parameter is to-read, reading, or finished.</summary>
     public ICommand SetStatusCommand { get; }
+
+    /// <summary>Replaces the personal library with the prepared backup.</summary>
+    public ICommand ConfirmRestoreCommand { get; }
+
+    /// <summary>Leaves the restore confirmation and keeps the current books.</summary>
+    public ICommand KeepLibraryCommand { get; }
 
     /// <summary>Shows all books or one reading status. The parameter is all, to-read, reading, or finished.</summary>
     public ICommand FilterCommand { get; }
@@ -230,6 +240,25 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>True when the library is open and the remove confirmation is current.</summary>
     public bool ShowConfirm => _library is not null && _screen == Screen.ConfirmRemove;
 
+    /// <summary>True when a backup is waiting for replace confirmation.</summary>
+    public bool ShowRestore => _library is not null && _screen == Screen.ConfirmRestore;
+
+    /// <summary>The number of books in the prepared backup. Zero when no backup is waiting.</summary>
+    public int RestoreCount => _pendingRestore?.Count ?? 0;
+
+    /// <summary>The titles in the prepared backup. Empty when no backup is waiting.</summary>
+    public IReadOnlyList<string> RestoreTitles => _pendingRestore is null ? [] : [.. _pendingRestore.Select(book => book.Title)];
+
+    /// <summary>The backup titles on separate lines. Empty when no backup is waiting.</summary>
+    public string RestorePreview => _pendingRestore is null ? "" : string.Join(Environment.NewLine, RestoreTitles);
+
+    /// <summary>The replace warning. Empty when no backup is waiting.</summary>
+    public string RestoreMessage => _pendingRestore is null
+        ? ""
+        : string.Create(
+            CultureInfo.InvariantCulture,
+            $"The backup has {RestoreCount} {(RestoreCount == 1 ? "book" : "books")}. Replacing the library removes the books on this device.");
+
     /// <summary>True when the library file did not open.</summary>
     public bool ShowLoadError => _library is null;
 
@@ -270,6 +299,54 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         set => SetInput(ref _authorInput, value, nameof(AuthorInput));
     }
 
+    /// <summary>Writes a backup of the open library. Returns null when the library is closed.</summary>
+    /// <returns>The backup text, or null when the library is closed.</returns>
+    /// <exception cref="LibraryBackupException">The open library cannot be exported.</exception>
+    public string? CreateBackup()
+    {
+        return _library is null ? null : LibraryBackup.Export(_library.Books);
+    }
+
+    /// <summary>Prepares a backup for replace confirmation. An invalid backup leaves the saved books unchanged.</summary>
+    /// <param name="json">The backup text.</param>
+    /// <exception cref="ArgumentNullException">The text is null. The saved books stay unchanged.</exception>
+    public void PrepareRestore(string json)
+    {
+        if (_library is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _pendingRestore = LibraryBackup.Read(json);
+            ClearErrors();
+            SetScreen(Screen.ConfirmRestore);
+        }
+        catch (LibraryBackupException exception)
+        {
+            Trace.TraceError(exception.ToString());
+            _pendingRestore = null;
+            SaveError = exception.Message;
+            Raise(nameof(SaveError));
+            RaiseRestore();
+        }
+    }
+
+    /// <summary>Shows a backup failure on the current screen. The saved books stay unchanged.</summary>
+    /// <param name="message">The failure text. The text must not be blank.</param>
+    /// <exception cref="ArgumentException">The message is blank.</exception>
+    public void ShowBackupError(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            throw new ArgumentException("A backup failure needs a message.", nameof(message));
+        }
+
+        SaveError = message;
+        Raise(nameof(SaveError));
+    }
+
     /// <summary>Opens the library from the store. A store failure leaves the library closed and the file unchanged.</summary>
     /// <param name="store">The store that holds the saved books. Must not be null.</param>
     /// <param name="search">The metadata provider. Null uses Open Library.</param>
@@ -303,6 +380,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         if (ShowEditor)
         {
             CancelEditor();
+            return true;
+        }
+
+        if (ShowRestore)
+        {
+            CancelRestore();
             return true;
         }
 
@@ -563,6 +646,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowEditor));
         Raise(nameof(ShowDetails));
         Raise(nameof(ShowConfirm));
+        Raise(nameof(ShowRestore));
+        RaiseRestore();
         Raise(nameof(ShowSearch));
         Raise(nameof(SelectedTitle));
         Raise(nameof(SelectedAuthor));
@@ -845,6 +930,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             ShowAddCommand, SaveCommand, CancelCommand, OpenCommand, EditCommand,
             AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand, SetStatusCommand,
+            ConfirmRestoreCommand, KeepLibraryCommand,
             FilterCommand, SortCommand, ClearSearchCommand, ShowSearchCommand, ImportCommand,
         })
         {
@@ -881,6 +967,43 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Details = 3,
         ConfirmRemove = 4,
         Search = 5,
+        ConfirmRestore = 6,
+    }
+
+    private void ConfirmRestore()
+    {
+        if (_library is not PersonalLibrary library || _pendingRestore is null)
+        {
+            return;
+        }
+
+        try
+        {
+            library.ReplaceAll(_pendingRestore);
+            _pendingRestore = null;
+            UseBooks(library.Books);
+            ShowLibraryScreen();
+        }
+        catch (LibraryStoreException exception)
+        {
+            Trace.TraceError(exception.ToString());
+            SaveError = "Folium could not replace your library. The current books are unchanged.";
+            Raise(nameof(SaveError));
+        }
+    }
+
+    private void CancelRestore()
+    {
+        _pendingRestore = null;
+        ShowLibraryScreen();
+    }
+
+    private void RaiseRestore()
+    {
+        Raise(nameof(RestoreCount));
+        Raise(nameof(RestoreTitles));
+        Raise(nameof(RestorePreview));
+        Raise(nameof(RestoreMessage));
     }
 
     private sealed class Command(Action<object?> execute, Func<object?, bool> canExecute) : ICommand
