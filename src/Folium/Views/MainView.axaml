@@ -380,24 +380,26 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" />
             </StackPanel>
-            <StackPanel IsVisible="{Binding ShowRestore}" Spacing="{StaticResource FoliumSpacingMd}" VerticalAlignment="Center">
+            <Grid IsVisible="{Binding ShowRestore}" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource FoliumSpacingMd}">
                 <TextBlock Text="{Binding RestoreMessage}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding RestorePreview}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding SaveError}"
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding RestorePreview}" TextWrapping="Wrap" />
+                </ScrollViewer>
+                <TextBlock Grid.Row="2" Text="{Binding SaveError}"
                            Classes="folium-error"
                            TextWrapping="Wrap"
                            IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                            AutomationProperties.Name="{Binding SaveError}"
                            AutomationProperties.LiveSetting="Assertive" />
-                <Button Content="Replace library"
+                <Button Grid.Row="3" Content="Replace library"
                         Command="{Binding ConfirmRestoreCommand}"
                         Classes="folium-danger"
                         HorizontalAlignment="Stretch" />
-                <Button Content="Keep current library"
+                <Button Grid.Row="4" Content="Keep current library"
                         Command="{Binding KeepLibraryCommand}"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" />
-            </StackPanel>
+            </Grid>
             <TextBlock Text="{Binding LoadError}"
                        TextWrapping="Wrap"
                        IsVisible="{Binding ShowLoadError}" />

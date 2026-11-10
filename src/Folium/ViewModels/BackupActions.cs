@@ -89,7 +89,7 @@ public static class BackupActions
 
     private static bool IsStorageFailure(Exception exception)
     {
-        return exception is IOException or UnauthorizedAccessException;
+        return exception is IOException or UnauthorizedAccessException or InvalidOperationException;
     }
 
     private static async Task<string?> WriteBackupAsync(string json, Func<string, Task<Stream?>> openWrite)

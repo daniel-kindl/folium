@@ -80,7 +80,14 @@ public static class LibraryBackup
             copy.Write(buffer, 0, read);
         }
 
-        return Encoding.UTF8.GetString(copy.ToArray());
+        try
+        {
+            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(copy.ToArray());
+        }
+        catch (DecoderFallbackException exception)
+        {
+            throw Incomplete(exception);
+        }
     }
 
     private static BackupDocument Parse(string json)

@@ -128,6 +128,35 @@ public sealed class BackupActionsTests : IDisposable
     }
 
     [Fact]
+    public async Task CorruptUtf8RestoreKeepsTheLibrary()
+    {
+        (LibraryViewModel viewModel, string path) = OpenWithBook();
+        byte[] before = await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken);
+        byte[] bytes = Encoding.UTF8.GetBytes(LibraryBackup.Export([new Book(Guid.NewGuid(), "Corrupt", "Author")]));
+        bytes[Array.IndexOf(bytes, (byte)'C')] = 0xFF;
+
+        await BackupActions.RestoreAsync(viewModel, () => Task.FromResult<Stream?>(new MemoryStream(bytes)));
+
+        Assert.Equal("This backup is incomplete.", viewModel.SaveError);
+        Assert.False(viewModel.ShowRestore);
+        Assert.Equal(before, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task MissingProviderStreamShowsAnError()
+    {
+        (LibraryViewModel viewModel, string path) = OpenWithBook();
+        byte[] before = await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken);
+
+        await BackupActions.ExportAsync(viewModel, _ => throw new InvalidOperationException("Failed to open content stream"));
+        Assert.Equal("Folium could not write the backup. The library is unchanged.", viewModel.SaveError);
+        await BackupActions.RestoreAsync(viewModel, () => throw new InvalidOperationException("Failed to open content stream"));
+        Assert.Equal("Folium could not read the backup. The library is unchanged.", viewModel.SaveError);
+        Assert.False(viewModel.ShowRestore);
+        Assert.Equal(before, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public void StreamOverTheByteLimitIsRejected()
     {
         using MemoryStream stream = new([1, 2, 3, 4, 5]);
