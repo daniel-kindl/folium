@@ -249,6 +249,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>The titles in the prepared backup. Empty when no backup is waiting.</summary>
     public IReadOnlyList<string> RestoreTitles => _pendingRestore is null ? [] : [.. _pendingRestore.Select(book => book.Title)];
 
+    /// <summary>The backup titles on separate lines. Empty when no backup is waiting.</summary>
+    public string RestorePreview => _pendingRestore is null ? "" : string.Join(Environment.NewLine, RestoreTitles);
+
     /// <summary>The replace warning. Empty when no backup is waiting.</summary>
     public string RestoreMessage => _pendingRestore is null
         ? ""
@@ -328,6 +331,20 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             Raise(nameof(SaveError));
             RaiseRestore();
         }
+    }
+
+    /// <summary>Shows a backup failure on the current screen. The saved books stay unchanged.</summary>
+    /// <param name="message">The failure text. The text must not be blank.</param>
+    /// <exception cref="ArgumentException">The message is blank.</exception>
+    public void ShowBackupError(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            throw new ArgumentException("A backup failure needs a message.", nameof(message));
+        }
+
+        SaveError = message;
+        Raise(nameof(SaveError));
     }
 
     /// <summary>Opens the library from the store. A store failure leaves the library closed and the file unchanged.</summary>
@@ -985,6 +1002,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     {
         Raise(nameof(RestoreCount));
         Raise(nameof(RestoreTitles));
+        Raise(nameof(RestorePreview));
         Raise(nameof(RestoreMessage));
     }
 

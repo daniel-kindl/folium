@@ -141,6 +141,17 @@
                             </Viewbox>
                             <TextBlock Text="{Binding EmptyMessage}" Classes="folium-section" TextWrapping="Wrap" />
                         </StackPanel>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                            <Button Content="Export backup"
+                                    Click="ExportBackupClick"
+                                    AutomationProperties.Name="Export backup"
+                                    HorizontalAlignment="Stretch" />
+                            <Button Grid.Column="1"
+                                    Content="Restore backup"
+                                    Click="RestoreBackupClick"
+                                    AutomationProperties.Name="Restore backup"
+                                    HorizontalAlignment="Stretch" />
+                        </Grid>
                         <TextBlock Text="{Binding NoMatchMessage}"
                                    Classes="folium-muted"
                                    TextWrapping="Wrap"
@@ -366,6 +377,24 @@
                         HorizontalAlignment="Stretch" />
                 <Button Content="Keep book"
                         Command="{Binding KeepBookCommand}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding ShowRestore}" Spacing="{StaticResource FoliumSpacingMd}" VerticalAlignment="Center">
+                <TextBlock Text="{Binding RestoreMessage}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding RestorePreview}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SaveError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <Button Content="Replace library"
+                        Command="{Binding ConfirmRestoreCommand}"
+                        Classes="folium-danger"
+                        HorizontalAlignment="Stretch" />
+                <Button Content="Keep current library"
+                        Command="{Binding KeepLibraryCommand}"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" />
             </StackPanel>

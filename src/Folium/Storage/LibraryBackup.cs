@@ -58,6 +58,31 @@ public static class LibraryBackup
             : ToBooks(Parse(json));
     }
 
+    /// <summary>Reads backup text from a stream and stops when the byte limit is passed.</summary>
+    /// <param name="stream">The backup bytes. The stream must not be null.</param>
+    /// <param name="maximumBytes">The maximum number of bytes to accept. The default is 32 MiB.</param>
+    /// <returns>The backup text.</returns>
+    /// <exception cref="ArgumentNullException">The stream is null.</exception>
+    /// <exception cref="LibraryBackupException">The stream is larger than the limit.</exception>
+    public static string ReadText(Stream stream, int maximumBytes = MAXIMUM_BYTES)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        using MemoryStream copy = new();
+        byte[] buffer = new byte[81920];
+        int read;
+        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            if (copy.Length + read > maximumBytes)
+            {
+                throw new LibraryBackupException("This backup is too large to restore.");
+            }
+
+            copy.Write(buffer, 0, read);
+        }
+
+        return Encoding.UTF8.GetString(copy.ToArray());
+    }
+
     private static BackupDocument Parse(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
