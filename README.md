@@ -138,17 +138,20 @@ Identical cover bytes share one file. Intact files that cannot be decoded show *
 Version 1 libraries remain readable. The first successful save migrates them.
 Before migration, Folium keeps an exact copy at `library.json.v1.bak`.
 It writes and flushes covers before atomically replacing the metadata document.
-An interrupted save leaves the previous document available. Uncommitted cover files
-and temporary cover files are removed after a later successful save.
+An interrupted save leaves the previous document available. After that replacement,
+Folium flushes the library directory and then removes unused cover files.
+When that directory flush is not available, unused files stay until a later save.
 Deleting or replacing a cover removes files that the committed library no longer references.
-Cleanup failures leave unused files for a later save to remove.
+Cleanup failures also leave unused files for a later save to remove.
 
 A missing cover file or a SHA-256 mismatch prevents opening the library.
 Folium keeps the saved files unchanged and shows **Restore backup**.
 Choose a valid personal backup, review the titles, then confirm **Replace library**.
 Canceling the confirmation keeps the current files unchanged.
 Restoring a backup replaces the library, including any edits made after that backup.
-The recovery action does not repair malformed JSON or an unsupported live version.
+A confirmed replace also overwrites malformed JSON, an unsupported live version,
+or a version 1 library that Folium cannot read. Folium keeps `library.json.v1.bak`
+only when the current file is a valid version 1 library.
 
 Older app versions cannot read live storage version 2.
 Before downgrading, export a personal backup with the current app.

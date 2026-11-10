@@ -405,7 +405,12 @@
                 <TextBlock Text="{Binding LoadError}" TextWrapping="Wrap" />
                 <Button Content="Restore backup" Click="RestoreBackupClick"
                         AutomationProperties.Name="Restore backup" HorizontalAlignment="Stretch" />
-                <TextBlock Text="{Binding SaveError}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SaveError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
             </StackPanel>
         </Grid>
     </Grid>

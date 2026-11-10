@@ -83,7 +83,9 @@ Covers use lowercase SHA-256 filenames. The reader rejects other references befo
 The writer compares existing bytes before reuse and can repair damaged files from a valid backup.
 It flushes each temporary cover before renaming it, then flushes and replaces the metadata document.
 Only the metadata rename commits the new book list.
-Cleanup starts afterward. The application ignores cleanup errors and reports the committed save as successful.
+Folium then flushes the library directory. Cleanup starts after that flush.
+When the flush is not available, cleanup waits for a later save.
+The application ignores cleanup errors and reports the committed save as successful.
 
 Version 1 migrates on the first save. Reads alone do not modify it.
 The exact `library.json.v1.bak` is retained before any migration commit.
@@ -94,7 +96,11 @@ The README gives the exact pre-migration rollback procedure and downgrade limits
 
 A missing file or hash mismatch stops the library from opening without changing the saved files.
 The load-error screen offers explicit backup restore with the existing preview and replace confirmation.
-A cancel or a failed save leaves the current metadata document unchanged.
+A cancel leaves the current files unchanged.
+A confirmed replace overwrites a document that Folium cannot read, including malformed JSON,
+an unsupported version, and a version 1 library with a status Folium cannot use.
+Folium writes `library.json.v1.bak` only for a valid version 1 library.
+A failed save leaves the current metadata document unchanged.
 The reader does not confuse intact but undecodable images with changed file bytes.
 Intact undecodable images still use the existing UI fallback.
 

@@ -17,18 +17,26 @@ public sealed class FileBookStore : IBookStore
 
     private readonly string _path;
     private readonly CoverFiles _covers;
+    private readonly Func<string, bool> _flushDirectory;
 
     /// <summary>Opens the library file at the given path. The path must contain text.</summary>
     /// <param name="path">The library file location. The text must not be blank.</param>
     public FileBookStore(string path)
+        : this(path, DirectoryFlush.TryFlush)
+    {
+    }
+
+    internal FileBookStore(string path, Func<string, bool> flushDirectory)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
             throw new ArgumentException("The library file needs a path.", nameof(path));
         }
 
+        ArgumentNullException.ThrowIfNull(flushDirectory);
         _path = path;
         _covers = new CoverFiles(path + ".covers");
+        _flushDirectory = flushDirectory;
     }
 
     /// <summary>Returns the saved books. Returns an empty list when the file is absent.</summary>
@@ -60,7 +68,8 @@ public sealed class FileBookStore : IBookStore
 
         try
         {
-            _ = Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_path))!);
+            string directory = Path.GetDirectoryName(Path.GetFullPath(_path))!;
+            _ = Directory.CreateDirectory(directory);
             KeepLegacyCopy();
             HashSet<string> retained = new(StringComparer.Ordinal);
             foreach (StoredBook? book in stored)
@@ -75,7 +84,10 @@ public sealed class FileBookStore : IBookStore
 
             LibraryDocument document = new() { Version = 2, Books = stored };
             AtomicFile.Write(_path, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(document, JsonOptions)));
-            _covers.Collect(retained);
+            if (_flushDirectory(directory))
+            {
+                _covers.Collect(retained);
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -85,14 +97,31 @@ public sealed class FileBookStore : IBookStore
 
     private void KeepLegacyCopy()
     {
-        if (File.Exists(_path))
+        if (File.Exists(_path) && !File.Exists(_path + ".v1.bak") && TryReadValidLegacy(out byte[] legacy))
+        {
+            AtomicFile.Write(_path + ".v1.bak", legacy);
+        }
+    }
+
+    private bool TryReadValidLegacy(out byte[] legacy)
+    {
+        legacy = [];
+        try
         {
             LibraryDocument previous = ReadDocument();
-            if (previous.Version == 1 && !File.Exists(_path + ".v1.bak"))
+            if (previous.Version != 1)
             {
-                _ = ToBooks(previous);
-                AtomicFile.Write(_path + ".v1.bak", File.ReadAllBytes(_path));
+                return false;
             }
+
+            _ = ToBooks(previous);
+            legacy = File.ReadAllBytes(_path);
+            return true;
+        }
+        catch (LibraryStoreException exception) when (exception.InnerException is not (IOException or UnauthorizedAccessException))
+        {
+            // Only a valid version 1 library can be a rollback copy. A later replace can still overwrite this file.
+            return false;
         }
     }
 

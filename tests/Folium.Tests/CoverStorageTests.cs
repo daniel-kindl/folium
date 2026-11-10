@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Folium.Books;
@@ -129,8 +130,7 @@ public sealed class CoverStorageTests : IDisposable
 
         _ = Assert.Throws<LibraryStoreException>(store.Read);
         Assert.Equal(document, File.ReadAllBytes(LibraryPath));
-        File.WriteAllBytes(cover, Fixture.Metadata!.Cover.ToArray());
-        Assert.Equal(Fixture.Id, Assert.Single(store.Read()).Id);
+        AssertCoverUnchanged(cover, missing);
     }
 
     [Fact]
@@ -212,9 +212,11 @@ public sealed class CoverStorageTests : IDisposable
         viewModel.PrepareRestore(backup);
         Assert.True(viewModel.ShowRestore);
         Assert.Equal(document, File.ReadAllBytes(LibraryPath));
+        AssertCoverUnchanged(cover, missing);
         viewModel.KeepLibraryCommand.Execute(parameter: null);
         Assert.True(viewModel.ShowLoadError);
         Assert.Equal(document, File.ReadAllBytes(LibraryPath));
+        AssertCoverUnchanged(cover, missing);
         viewModel.PrepareRestore(backup);
         viewModel.ConfirmRestoreCommand.Execute(parameter: null);
         Assert.True(viewModel.ShowLibrary);
@@ -274,13 +276,121 @@ public sealed class CoverStorageTests : IDisposable
         Assert.Equal("The library contains an invalid saved cover reference.", error.Message);
     }
 
-    private void WriteLegacy(Book book)
+    [Fact]
+    public void CleanupWaitsWhenTheLibraryDirectoryCannotBeFlushed()
+    {
+        FileBookStore store = new(LibraryPath, _ => false);
+        store.Replace([Fixture]);
+        string orphan = Path.Combine(Covers, new string('a', 64));
+        File.WriteAllBytes(orphan, [9]);
+        store.Replace([Fixture]);
+        Assert.True(File.Exists(orphan));
+        Assert.Equal(Fixture.Metadata!.Cover.ToArray(), Assert.Single(store.Read()).Metadata!.Cover.ToArray());
+    }
+
+    [Fact]
+    public void UnreadableVersion1StaysInPlace()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Unix file modes are required.");
+        }
+
+        WriteLegacy(Fixture with { Metadata = null });
+        byte[] previous = File.ReadAllBytes(LibraryPath);
+        if (OperatingSystem.IsLinux())
+        {
+            DenyRead(LibraryPath);
+        }
+
+        try
+        {
+            FileBookStore store = new(LibraryPath);
+            _ = Assert.Throws<LibraryStoreException>(() => store.Replace([]));
+        }
+        finally
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                AllowRead(LibraryPath);
+            }
+        }
+
+        Assert.Equal(previous, File.ReadAllBytes(LibraryPath));
+        Assert.False(File.Exists(LibraryPath + ".v1.bak"));
+    }
+
+    [SupportedOSPlatform("linux")]
+    private static void DenyRead(string path)
+    {
+        File.SetUnixFileMode(path, UnixFileMode.UserWrite);
+    }
+
+    [SupportedOSPlatform("linux")]
+    private static void AllowRead(string path)
+    {
+        File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+    }
+
+    [Fact]
+    public void ConfirmedBackupReplacesVersion1WithAnUnusableStatus()
+    {
+        WriteLegacy(Fixture with { Metadata = null }, "later");
+        byte[] previous = File.ReadAllBytes(LibraryPath);
+        string backup = LibraryBackup.Export([Fixture with { Metadata = null }]);
+        LibraryViewModel viewModel = LibraryViewModel.Open(new FileBookStore(LibraryPath));
+
+        Assert.True(viewModel.ShowLoadError);
+        viewModel.PrepareRestore(backup);
+        Assert.Equal(previous, File.ReadAllBytes(LibraryPath));
+        viewModel.ConfirmRestoreCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowLibrary);
+        Assert.Equal(FixtureId, Assert.Single(viewModel.Books).Id);
+        Assert.False(File.Exists(LibraryPath + ".v1.bak"));
+        Assert.Equal(FixtureId, Assert.Single(new FileBookStore(LibraryPath).Read()).Id);
+    }
+
+    [Fact]
+    public void ConfirmedBackupReplacesJsonThatDoesNotDescribeALibrary()
+    {
+        _ = Directory.CreateDirectory(_directory);
+        File.WriteAllText(LibraryPath, "null");
+        byte[] previous = File.ReadAllBytes(LibraryPath);
+        string backup = LibraryBackup.Export([Fixture with { Metadata = null }]);
+        LibraryViewModel viewModel = LibraryViewModel.Open(new FileBookStore(LibraryPath));
+
+        Assert.True(viewModel.ShowLoadError);
+        viewModel.PrepareRestore(backup);
+        Assert.Equal(previous, File.ReadAllBytes(LibraryPath));
+        viewModel.KeepLibraryCommand.Execute(parameter: null);
+        Assert.Equal(previous, File.ReadAllBytes(LibraryPath));
+        viewModel.PrepareRestore(backup);
+        viewModel.ConfirmRestoreCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowLibrary);
+        Assert.False(File.Exists(LibraryPath + ".v1.bak"));
+        Assert.Equal(FixtureId, Assert.Single(new FileBookStore(LibraryPath).Read()).Id);
+    }
+
+    private static void AssertCoverUnchanged(string cover, bool missing)
+    {
+        if (missing)
+        {
+            Assert.False(File.Exists(cover));
+            return;
+        }
+
+        Assert.Equal([9], File.ReadAllBytes(cover));
+    }
+
+    private void WriteLegacy(Book book, string readingStatus = "reading")
     {
         _ = Directory.CreateDirectory(_directory);
         File.WriteAllText(LibraryPath, JsonSerializer.Serialize(new
         {
             version = 1,
-            books = new[] { new { book.Id, book.Title, book.Author, readingStatus = "reading", book.Metadata } },
+            books = new[] { new { book.Id, book.Title, book.Author, readingStatus, book.Metadata } },
         }, JsonOptions));
     }
 }
