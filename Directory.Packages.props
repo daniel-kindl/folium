@@ -10,6 +10,6 @@
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.320" />
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
   </ItemGroup>
 </Project>
