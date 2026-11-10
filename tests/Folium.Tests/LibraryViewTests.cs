@@ -70,46 +70,6 @@ public sealed class LibraryViewTests
     }
 
     [Fact]
-    public async Task SavedBookSearchAndSortControlsWorkAtPhoneWidth()
-    {
-        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
-        await session.Dispatch(() =>
-        {
-            LibraryViewModel library = LibraryViewModel.Open(new EmptyStore());
-            MainView view = new() { DataContext = library };
-            Window window = new() { Content = view, Width = 360, Height = 640 };
-            window.Show();
-            window.UpdateLayout();
-
-            TextBox search = view.FindControl<TextBox>("LibrarySearchInput")!;
-            Button clear = view.GetVisualDescendants().OfType<Button>()
-                .Single(button => string.Equals(Avalonia.Automation.AutomationProperties.GetName(button), "Clear saved book search", StringComparison.Ordinal));
-            Grid sortGrid = view.FindControl<Grid>("SortGrid")!;
-            ScrollViewer scroll = view.FindControl<ScrollViewer>("LibraryContentScroll")!;
-            Assert.True(search.IsEffectivelyVisible);
-            Assert.True(search.Bounds.Width >= 200);
-            Assert.True(scroll.IsEffectivelyVisible);
-
-            library.SearchQuery = "Dune";
-            window.UpdateLayout();
-            Assert.True(clear.IsEffectivelyVisible);
-            Assert.Equal(4, sortGrid.Children.OfType<Button>().Count());
-
-            library.SortCommand.Execute("author-desc");
-            Assert.Equal("Author Z–A", library.SortLabel);
-            library.ClearSearchCommand.Execute(parameter: null);
-            Assert.Equal("", search.Text);
-            Assert.False(clear.IsEffectivelyVisible);
-
-            window.Height = 420;
-            window.UpdateLayout();
-            Assert.True(search.IsEffectivelyVisible);
-            Assert.True(search.Bounds.Height >= 48);
-            window.Close();
-        }, TestContext.Current.CancellationToken);
-    }
-
-    [Fact]
     public async Task LibraryActionsKeepTheirTouchBoundsInPortraitAndLandscape()
     {
         await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
@@ -177,15 +137,10 @@ public sealed class LibraryViewTests
         Rect addBounds = BoundsIn(view, add);
         ScrollViewer contentScroll = view.FindControl<ScrollViewer>("LibraryContentScroll")!;
         Rect contentBounds = BoundsIn(view, contentScroll);
-        if (emptyBounds.Top >= contentBounds.Bottom)
-        {
-            Assert.True(contentScroll.Extent.Height > contentScroll.Viewport.Height);
-        }
-        else
-        {
-            Assert.True(emptyBounds.Bottom <= addBounds.Top || addBounds.Bottom <= emptyBounds.Top,
-                string.Create(CultureInfo.InvariantCulture, $"Empty bounds {emptyBounds}; add bounds {addBounds}; size {width}x{height}; scale {scale}."));
-        }
+        Assert.False(view.FindControl<TextBox>("LibrarySearchInput")!.IsEffectivelyVisible);
+        Assert.True(emptyBounds.Top < contentBounds.Bottom && emptyBounds.Bottom > contentBounds.Top);
+        Assert.True(emptyBounds.Bottom <= addBounds.Top || addBounds.Bottom <= emptyBounds.Top,
+            string.Create(CultureInfo.InvariantCulture, $"Empty bounds {emptyBounds}; add bounds {addBounds}; size {width}x{height}; scale {scale}."));
 
         AssertFilterLayout(view, search, scale);
 

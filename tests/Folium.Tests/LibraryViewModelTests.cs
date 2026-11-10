@@ -736,6 +736,106 @@ public sealed class LibraryViewModelTests : IDisposable
         _ = Assert.Single(viewModel.Books);
     }
 
+    [Fact]
+    public void SortFoldsDiacriticsThenUsesOriginalTextAndLocalId()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Zola", "Ann");
+        Add(viewModel, "Émile", "Émile");
+        Add(viewModel, "dune", "Frank Herbert");
+        Add(viewModel, "Dune", "Isaac Asimov");
+        Add(viewModel, "Čapek", "Karel");
+
+        Assert.Equal(["Čapek", "Dune", "dune", "Émile", "Zola"], Titles(viewModel));
+
+        viewModel.SortCommand.Execute("title-desc");
+
+        Assert.Equal(["Zola", "Émile", "Dune", "dune", "Čapek"], Titles(viewModel));
+
+        viewModel.SortCommand.Execute("author-asc");
+
+        Assert.Equal(["Ann", "Émile", "Frank Herbert", "Isaac Asimov", "Karel"], Authors(viewModel));
+
+        Guid[] duneIds = [.. viewModel.Books.Where(book => string.Equals(book.Title, "Dune", StringComparison.Ordinal)).Select(book => book.Id).Order()];
+        viewModel.SortCommand.Execute("title-asc");
+        Assert.Equal(duneIds, viewModel.ShownBooks.Where(row => string.Equals(row.Title, "Dune", StringComparison.Ordinal)).Select(row => row.Id));
+    }
+
+    [Fact]
+    public void StatusFilterAndSearchKeepTheSelectedSort()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Zola", "Émile");
+        Add(viewModel, "Čapek", "Karel");
+        Add(viewModel, "Cesta", "Ann");
+        Add(viewModel, "Émile", "Zed");
+        foreach (string title in new[] { "Zola", "Čapek", "Cesta" })
+        {
+            viewModel.OpenCommand.Execute(viewModel.Books.Single(book => string.Equals(book.Title, title, StringComparison.Ordinal)).Id);
+            viewModel.SetStatusCommand.Execute("reading");
+            Assert.True(viewModel.GoBack());
+        }
+
+        viewModel.FilterCommand.Execute("reading");
+        viewModel.SearchQuery = "";
+        viewModel.SortCommand.Execute("author-asc");
+
+        Assert.Equal(["Cesta", "Zola", "Čapek"], Titles(viewModel));
+    }
+
+    [Fact]
+    public void InvalidSearchTextDoesNotThrowAndDoesNotHideBooks()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.SearchQuery = "\uD800dune";
+
+        Assert.Equal("Dune", Assert.Single(viewModel.ShownBooks).Title);
+
+        viewModel.SearchQuery = "\uD800";
+
+        Assert.Equal("Dune", Assert.Single(viewModel.ShownBooks).Title);
+    }
+
+    [Fact]
+    public void SearchRemovesSpacingAndEnclosingMarks()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "ka\u093e", "o\u20DDn");
+
+        viewModel.SearchQuery = "ka";
+
+        Assert.Equal("ka\u093e", Assert.Single(viewModel.ShownBooks).Title);
+
+        viewModel.SearchQuery = "on";
+
+        Assert.Equal("o\u20DDn", Assert.Single(viewModel.ShownBooks).Author);
+    }
+
+    [Fact]
+    public void MarkOnlyQueryUsesTheStatusEmptyMessage()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        viewModel.FilterCommand.Execute("reading");
+
+        viewModel.SearchQuery = "\u0301";
+
+        Assert.Equal("No books with this status.", viewModel.NoMatchMessage);
+        Assert.Empty(viewModel.ShownBooks);
+    }
+
+    private static string[] Titles(LibraryViewModel viewModel)
+    {
+        return [.. viewModel.ShownBooks.Select(row => row.Title)];
+    }
+
+    private static string[] Authors(LibraryViewModel viewModel)
+    {
+        return [.. viewModel.ShownBooks.Select(row => row.Author)];
+    }
+
     private LibraryViewModel Open()
     {
         return OpenAtPath().ViewModel;

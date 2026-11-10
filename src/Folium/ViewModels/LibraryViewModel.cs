@@ -179,6 +179,21 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>True when the library screen is open and has no books.</summary>
     public bool IsEmpty => ShowLibrary && Books.Count == 0;
 
+    /// <summary>True when saved-book search and sort can apply to at least one book.</summary>
+    public bool ShowSavedBookControls => ShowLibrary && Books.Count > 0;
+
+    /// <summary>True when the library is sorted by title from A to Z.</summary>
+    public bool IsTitleAscending => string.Equals(_sort, "title-asc", StringComparison.Ordinal);
+
+    /// <summary>True when the library is sorted by title from Z to A.</summary>
+    public bool IsTitleDescending => string.Equals(_sort, "title-desc", StringComparison.Ordinal);
+
+    /// <summary>True when the library is sorted by author from A to Z.</summary>
+    public bool IsAuthorAscending => string.Equals(_sort, "author-asc", StringComparison.Ordinal);
+
+    /// <summary>True when the library is sorted by author from Z to A.</summary>
+    public bool IsAuthorDescending => string.Equals(_sort, "author-desc", StringComparison.Ordinal);
+
     /// <summary>True when the library screen shows at least one book.</summary>
     public bool ShowBooks => ShowLibrary && ShownBooks.Count > 0;
 
@@ -189,7 +204,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public string? NoMatchMessage => ShowNoMatches switch
     {
         false => null,
-        true when string.IsNullOrWhiteSpace(SearchQuery) => "No books with this status.",
+        true when NormalizeSearchText(SearchQuery.Trim()).Length == 0 => "No books with this status.",
         true when _filter is null => "No books match your search.",
         _ => "No books match your search and status.",
     };
@@ -632,6 +647,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         _sort = sort;
         ShownBooks = Rows(Books);
         Raise(nameof(SortLabel));
+        Raise(nameof(IsTitleAscending));
+        Raise(nameof(IsTitleDescending));
+        Raise(nameof(IsAuthorAscending));
+        Raise(nameof(IsAuthorDescending));
         Raise(nameof(ShownBooks));
     }
 
@@ -647,6 +666,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private void RaiseLibraryShape()
     {
         Raise(nameof(IsEmpty));
+        Raise(nameof(ShowSavedBookControls));
         Raise(nameof(ShowBooks));
         Raise(nameof(EmptyMessage));
         Raise(nameof(ShowNoMatches));
@@ -664,12 +684,27 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             matching = matching.Where(book => ContainsSearchText(book.Title, query) || ContainsSearchText(book.Author, query));
         }
 
-        Func<Book, string> key = _sort.StartsWith("title", StringComparison.Ordinal) ? book => book.Title : book => book.Author;
-        IOrderedEnumerable<Book> sorted = _sort.EndsWith("desc", StringComparison.Ordinal)
-            ? matching.OrderByDescending(key, StringComparer.OrdinalIgnoreCase).ThenBy(book => book.Id)
-            : matching.OrderBy(key, StringComparer.OrdinalIgnoreCase).ThenBy(book => book.Id);
+        bool byTitle = _sort.StartsWith("title", StringComparison.Ordinal);
+        bool descending = _sort.EndsWith("desc", StringComparison.Ordinal);
+        IOrderedEnumerable<Book> sorted = descending
+            ? matching.OrderByDescending(book => FoldedSortKey(book, byTitle), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(book => SortText(book, byTitle), StringComparer.Ordinal)
+                .ThenBy(book => book.Id)
+            : matching.OrderBy(book => FoldedSortKey(book, byTitle), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(book => SortText(book, byTitle), StringComparer.Ordinal)
+                .ThenBy(book => book.Id);
 
         return [.. sorted.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status)))];
+    }
+
+    private static string FoldedSortKey(Book book, bool byTitle)
+    {
+        return NormalizeSearchText(SortText(book, byTitle));
+    }
+
+    private static string SortText(Book book, bool byTitle)
+    {
+        return byTitle ? book.Title : book.Author;
     }
 
     private static bool ContainsSearchText(string value, string query)
@@ -680,7 +715,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private static string NormalizeSearchText(string value)
     {
         StringBuilder normalized = new();
-        foreach (Rune rune in value.Normalize(NormalizationForm.FormD).EnumerateRunes())
+        foreach (Rune rune in WithoutUnpairedSurrogates(value).Normalize(NormalizationForm.FormD).EnumerateRunes())
         {
             UnicodeCategory category = Rune.GetUnicodeCategory(rune);
             if (category is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark))
@@ -690,6 +725,32 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         return normalized.ToString();
+    }
+
+    private static string WithoutUnpairedSurrogates(string value)
+    {
+        StringBuilder builder = new(value.Length);
+        for (int index = 0; index < value.Length; index++)
+        {
+            char unit = value[index];
+            if (char.IsHighSurrogate(unit))
+            {
+                if (index + 1 < value.Length && char.IsLowSurrogate(value[index + 1]))
+                {
+                    _ = builder.Append(unit).Append(value[index + 1]);
+                    index++;
+                }
+
+                continue;
+            }
+
+            if (!char.IsLowSurrogate(unit))
+            {
+                builder.Append(unit);
+            }
+        }
+
+        return builder.ToString();
     }
 
     private bool Shows(Book book)
