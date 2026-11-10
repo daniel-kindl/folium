@@ -104,6 +104,19 @@ public sealed class BackupActionsTests : IDisposable
     }
 
     [Fact]
+    public async Task UnreadableRestoreShowsAnErrorAndKeepsTheLibrary()
+    {
+        (LibraryViewModel viewModel, string path) = OpenWithBook();
+        byte[] before = await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken);
+
+        await BackupActions.RestoreAsync(viewModel, () => Task.FromResult<Stream?>(new BrokenReadStream()));
+
+        Assert.Equal("Folium could not read the backup. The library is unchanged.", viewModel.SaveError);
+        Assert.False(viewModel.ShowRestore);
+        Assert.Equal(before, await File.ReadAllBytesAsync(path, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task InvalidRestoreFileShowsTheBackupError()
     {
         (LibraryViewModel viewModel, string path) = OpenWithBook();
@@ -171,5 +184,13 @@ public sealed class BackupActionsTests : IDisposable
         }
 
         throw new InvalidOperationException("The repository root is not above the test directory.");
+    }
+
+    private sealed class BrokenReadStream : MemoryStream
+    {
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new IOException("The backup stream cannot be read.");
+        }
     }
 }

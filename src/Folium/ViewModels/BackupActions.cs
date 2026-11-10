@@ -53,6 +53,45 @@ public static class BackupActions
         }
     }
 
+    private static async Task<(string? Json, string? Error)> ReadBackupAsync(Func<Task<Stream?>> openRead)
+    {
+        try
+        {
+            return await ReadOpenBackupAsync(openRead).ConfigureAwait(false);
+        }
+        catch (LibraryBackupException exception)
+        {
+            return (null, exception.Message);
+        }
+        catch (Exception exception) when (IsStorageFailure(exception))
+        {
+            return (null, "Folium could not read the backup. The library is unchanged.");
+        }
+    }
+
+    private static async Task<(string? Json, string? Error)> ReadOpenBackupAsync(Func<Task<Stream?>> openRead)
+    {
+        Stream? stream = await openRead().ConfigureAwait(false);
+        if (stream is null)
+        {
+            return (null, null);
+        }
+
+        try
+        {
+            return (LibraryBackup.ReadText(stream), null);
+        }
+        finally
+        {
+            await stream.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    private static bool IsStorageFailure(Exception exception)
+    {
+        return exception is IOException or UnauthorizedAccessException;
+    }
+
     private static async Task<string?> WriteBackupAsync(string json, Func<string, Task<Stream?>> openWrite)
     {
         try
@@ -75,34 +114,9 @@ public static class BackupActions
 
             return null;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (IsStorageFailure(exception))
         {
             return "Folium could not write the backup. The library is unchanged.";
-        }
-    }
-
-    private static async Task<(string? Json, string? Error)> ReadBackupAsync(Func<Task<Stream?>> openRead)
-    {
-        Stream? stream = null;
-        try
-        {
-            stream = await openRead().ConfigureAwait(false);
-            return stream is null ? (null, null) : (LibraryBackup.ReadText(stream), null);
-        }
-        catch (LibraryBackupException exception)
-        {
-            return (null, exception.Message);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return (null, "Folium could not read the backup. The library is unchanged.");
-        }
-        finally
-        {
-            if (stream is not null)
-            {
-                await stream.DisposeAsync().ConfigureAwait(false);
-            }
         }
     }
 
