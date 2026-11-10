@@ -138,4 +138,31 @@ but rewrites grow with the number and size of covers.
 
 Existing version-1 files without metadata remain readable. The previous app version
 ignores these fields and discards them when it next saves the library.
-Keep a private backup before returning to an older app version.
+Export a personal library backup before you install an older app version.
+That older version cannot restore the backup file.
+The backup still keeps the metadata and covers for this version.
+
+### Personal library backup
+
+On the Library screen, **Export backup** writes the saved books to a file you choose.
+The picker suggests `Folium backup.json`.
+The live library stays in the private `library.json` file.
+
+The backup kind is `personal-library-backup` and the version is 1.
+The file holds each book's reading status, metadata, source identifiers, and saved cover.
+Folium does not upload the backup.
+
+This app reads version 1 backups of 32 MiB or less.
+A larger library cannot be exported or restored in this version.
+Folium rejects a file that is not a version 1 backup.
+A raw `library.json` file is one of those files.
+
+**Restore backup** shows the book count and the titles.
+**Replace library** then replaces the books on this device.
+**Keep current library** leaves the saved books in place.
+A bad file, a denied permission, a cancellation, or a failed write leaves the saved books unchanged.
+A failed export can leave the selected file incomplete.
+The library on the device stays unchanged.
+
+The backup contains the reading history and any saved covers.
+Store the file in a place that stays private.

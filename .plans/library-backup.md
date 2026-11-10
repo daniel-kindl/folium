@@ -51,34 +51,34 @@ A person can export the personal library to a file they choose and restore that 
 ## Commit plan
 
 ### C01: Read and export a backup document
-Status: PENDING
+Status: COMPLETED
 Depends on: none
 Proposed commit: feat(storage): add library backup
-Actual commit: none
+Actual commit: 871bebf609e03f49ad3ba115f809ce3f301395ef
 Objective: A backup round-trips books, statuses, metadata, source identifiers, and covers. Bad files do not produce books.
 Work: Add `LibraryBackup` and tests for a valid file, duplicate identifiers, covers, malformed JSON, the wrong kind, an unsupported version, a truncated file, and the 32 MiB limit.
 Verification: `dotnet test` for `LibraryBackupTests`. The test must fail before the production type exists.
-Evidence: not yet run
+Evidence: LibraryBackup tests passed. Full suite passed with 193 tests. Format verify passed for the backup files. Mutation and CRAP were not run on this commit.
 
 ### C02: Replace the library only after confirmation
-Status: PENDING
+Status: COMPLETED
 Depends on: C01
 Proposed commit: feat(library): restore a backup
-Actual commit: none
+Actual commit: 2bf0532
 Objective: The library screen can preview a backup and replace the saved books. Cancel, invalid text, and a failed write leave the stored books in place.
 Work: Add replace-all on the personal library and preview, confirm, and cancel on the view model.
 Verification: View-model tests for confirm, cancel, invalid text, and a failed write.
-Evidence: not yet run
+Evidence: Restore tests and LibraryViewModel tests passed. Full suite passed with 202 tests. Format verify passed for the four C02 files.
 
 ### C03: Choose the backup file on Android
-Status: PENDING
+Status: COMPLETED
 Depends on: C02
 Proposed commit: feat(android): pick a backup file
-Actual commit: none
+Actual commit: 7f7c8679633d945eb7f3c43e9e97a1dbc39b41d0
 Objective: Export and restore use the document picker. The screen shows the book count and titles before replace. The manifest stays limited to INTERNET.
 Work: Add the library actions, the confirmation screen, and the picker. Keep picker failures off the live file.
 Verification: Headless or markup checks for the actions and confirmation. Android picker check on a device when one is connected.
-Evidence: not yet run
+Evidence: BackupActions tests passed. Headless layout tests passed. A headless click reports that the document picker is unavailable and leaves the library in place. Full suite passed with 213 tests. Format verify passed for the C03 C# files. Device picker check is still open.
 
 ### C04: Document backup privacy and limits
 Status: PENDING
@@ -101,6 +101,6 @@ Evidence: not yet run
 
 ## Handoff
 
-Next action: Write the failing backup round-trip test.
+Next action: Document the backup, then run the quality gates.
 Blockers: none
 Risks: The Android document picker still needs a device check. A personal library larger than 32 MiB cannot be backed up in this version.
