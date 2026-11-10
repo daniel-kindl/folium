@@ -44,6 +44,43 @@ public sealed class RestoreViewTests
         }, TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    public async Task LoadErrorProvidesAVisibleRestoreAction()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            LibraryViewModel library = LibraryViewModel.Open(new UnreadableStore());
+            MainView view = new() { DataContext = library };
+            Window window = new() { Content = view, Width = 400, Height = 850 };
+            window.Show();
+            window.UpdateLayout();
+            Button button = view.GetVisualDescendants().OfType<Button>()
+                .Single(item => Equals(item.Content, "Restore backup") && item.IsEffectivelyVisible);
+            Assert.True(button.Bounds.Height >= 48);
+            Rect bounds = BoundsIn(view, button);
+            Assert.True(bounds.Top >= 0 && bounds.Bottom <= view.Bounds.Height);
+            library.PrepareRestore(LibraryBackup.Export([]));
+            window.UpdateLayout();
+            Assert.False(button.IsEffectivelyVisible);
+            Assert.True(library.ShowRestore);
+            window.Close();
+        }, TestContext.Current.CancellationToken);
+    }
+
+    private sealed class UnreadableStore : IBookStore
+    {
+        public IReadOnlyList<Book> Read()
+        {
+            throw new LibraryStoreException();
+        }
+
+        public void Replace(IReadOnlyList<Book> books)
+        {
+            throw new LibraryStoreException();
+        }
+    }
+
     private static Rect BoundsIn(MainView view, Control control)
     {
         Point origin = control.TranslatePoint(default, view)!.Value;

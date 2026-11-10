@@ -31,7 +31,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         [Screen.Search] = "Search",
     };
     private static readonly IBookSearch SearchProvider = new OpenLibrary(new HttpClient());
-    private readonly PersonalLibrary? _library;
+    private PersonalLibrary? _library;
+    private readonly IBookStore _store;
     private Screen _screen = Screen.Library;
     private bool _editing;
     private bool _importing;
@@ -43,9 +44,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private IReadOnlyList<Book>? _pendingRestore;
     private string _authorInput = "";
 
-    private LibraryViewModel(PersonalLibrary? library, IBookSearch? search)
+    private LibraryViewModel(PersonalLibrary? library, IBookSearch? search, IBookStore store)
     {
         _library = library;
+        _store = store;
         Search = new SearchViewModel(search ?? SearchProvider);
         if (library is not null)
         {
@@ -241,7 +243,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public bool ShowConfirm => _library is not null && _screen == Screen.ConfirmRemove;
 
     /// <summary>True when a backup is waiting for replace confirmation.</summary>
-    public bool ShowRestore => _library is not null && _screen == Screen.ConfirmRestore;
+    public bool ShowRestore => _screen == Screen.ConfirmRestore;
 
     /// <summary>The number of books in the prepared backup. Zero when no backup is waiting.</summary>
     public int RestoreCount => _pendingRestore?.Count ?? 0;
@@ -260,7 +262,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             $"The backup has {RestoreCount} {(RestoreCount == 1 ? "book" : "books")}. Replacing the library removes the books on this device.");
 
     /// <summary>True when the library file did not open.</summary>
-    public bool ShowLoadError => _library is null;
+    public bool ShowLoadError => _library is null && !ShowRestore;
 
     /// <summary>The message when the library file did not open. Null when the library is open.</summary>
     public string? LoadError => ShowLoadError
@@ -312,11 +314,6 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <exception cref="ArgumentNullException">The text is null. The saved books stay unchanged.</exception>
     public void PrepareRestore(string json)
     {
-        if (_library is null)
-        {
-            return;
-        }
-
         try
         {
             _pendingRestore = LibraryBackup.Read(json);
@@ -355,12 +352,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(store);
         try
         {
-            return new LibraryViewModel(new PersonalLibrary(store), search);
+            return new LibraryViewModel(new PersonalLibrary(store), search, store);
         }
         catch (LibraryStoreException exception)
         {
             Trace.TraceError(exception.ToString());
-            return new LibraryViewModel(library: null, search);
+            return new LibraryViewModel(library: null, search, store);
         }
     }
 
@@ -646,6 +643,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowEditor));
         Raise(nameof(ShowDetails));
         Raise(nameof(ShowConfirm));
+        Raise(nameof(ShowLoadError));
+        Raise(nameof(LoadError));
         Raise(nameof(ShowRestore));
         RaiseRestore();
         Raise(nameof(ShowSearch));
@@ -972,16 +971,24 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void ConfirmRestore()
     {
-        if (_library is not PersonalLibrary library || _pendingRestore is null)
+        if (_pendingRestore is null)
         {
             return;
         }
 
         try
         {
-            library.ReplaceAll(_pendingRestore);
+            if (_library is null)
+            {
+                _library = PersonalLibrary.Restore(_store, _pendingRestore);
+            }
+            else
+            {
+                _library.ReplaceAll(_pendingRestore);
+            }
+
             _pendingRestore = null;
-            UseBooks(library.Books);
+            UseBooks(_library.Books);
             ShowLibraryScreen();
         }
         catch (LibraryStoreException exception)

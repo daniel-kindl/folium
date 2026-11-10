@@ -15,6 +15,19 @@ public sealed class PersonalLibrary
         _books = [.. store.Read()];
     }
 
+    private PersonalLibrary(IBookStore store, IReadOnlyList<Book> books)
+    {
+        _store = store;
+        _books = [.. books];
+    }
+
+    internal static PersonalLibrary Restore(IBookStore store, IReadOnlyList<Book> books)
+    {
+        PersonalLibrary restored = new(store, books);
+        store.Replace(restored._books);
+        return restored;
+    }
+
     /// <summary>A copy of the saved books.</summary>
     public IReadOnlyList<Book> Books => [.. _books];
 

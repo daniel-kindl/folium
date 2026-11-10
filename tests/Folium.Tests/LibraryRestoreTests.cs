@@ -105,7 +105,7 @@ public sealed class LibraryRestoreTests : IDisposable
     }
 
     [Fact]
-    public void ClosedLibraryDoesNotExportOrRestore()
+    public void ClosedLibraryCannotExportAndRestoreNeedsConfirmation()
     {
         string path = NewPath();
         File.WriteAllText(path, "null");
@@ -114,6 +114,9 @@ public sealed class LibraryRestoreTests : IDisposable
         Assert.Null(viewModel.CreateBackup());
         viewModel.PrepareRestore(LibraryBackup.Export([]));
 
+        Assert.True(viewModel.ShowRestore);
+        Assert.Equal("null", File.ReadAllText(path));
+        viewModel.KeepLibraryCommand.Execute(parameter: null);
         Assert.True(viewModel.ShowLoadError);
         Assert.False(viewModel.ShowRestore);
         Assert.Equal("null", File.ReadAllText(path));

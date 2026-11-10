@@ -109,7 +109,7 @@ public sealed class LibraryViewTests
             Assert.True(library.ShowLibrary);
             Assert.False(library.ShowRestore);
 
-            Button restore = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Restore backup"));
+            Button restore = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Restore backup") && button.IsEffectivelyVisible);
             restore.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert.Equal("Folium could not open the document picker.", library.SaveError);
             Assert.False(library.ShowRestore);

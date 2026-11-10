@@ -400,9 +400,13 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" />
             </Grid>
-            <TextBlock Text="{Binding LoadError}"
-                       TextWrapping="Wrap"
-                       IsVisible="{Binding ShowLoadError}" />
+            <StackPanel IsVisible="{Binding ShowLoadError}"
+                        Spacing="{StaticResource FoliumSpacingSm}">
+                <TextBlock Text="{Binding LoadError}" TextWrapping="Wrap" />
+                <Button Content="Restore backup" Click="RestoreBackupClick"
+                        AutomationProperties.Name="Restore backup" HorizontalAlignment="Stretch" />
+                <TextBlock Text="{Binding SaveError}" TextWrapping="Wrap" />
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>

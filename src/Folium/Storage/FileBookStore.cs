@@ -1,10 +1,11 @@
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using Folium.Books;
 
 namespace Folium.Storage;
 
-/// <summary>Stores the book list in one JSON file.</summary>
+/// <summary>Stores book metadata in JSON and saved covers in private files.</summary>
 public sealed class FileBookStore : IBookStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -15,6 +16,7 @@ public sealed class FileBookStore : IBookStore
     };
 
     private readonly string _path;
+    private readonly CoverFiles _covers;
 
     /// <summary>Opens the library file at the given path. The path must contain text.</summary>
     /// <param name="path">The library file location. The text must not be blank.</param>
@@ -26,13 +28,21 @@ public sealed class FileBookStore : IBookStore
         }
 
         _path = path;
+        _covers = new CoverFiles(path + ".covers");
     }
 
     /// <summary>Returns the saved books. Returns an empty list when the file is absent.</summary>
     /// <exception cref="LibraryStoreException">The file cannot be read. The file stays unchanged.</exception>
     public IReadOnlyList<Book> Read()
     {
-        return File.Exists(_path) ? ToBooks(ReadDocument()) : [];
+        try
+        {
+            return File.Exists(_path) ? ToBooks(ReadDocument()) : [];
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            throw Unreadable(exception);
+        }
     }
 
     /// <summary>Replaces the saved books. A failed write leaves the previous file unchanged.</summary>
@@ -48,30 +58,40 @@ public sealed class FileBookStore : IBookStore
             stored.Add(ToStored(book, ids));
         }
 
-        LibraryDocument document = new() { Version = 1, Books = stored };
-        string json = JsonSerializer.Serialize(document, JsonOptions);
-        string? directory = Path.GetDirectoryName(Path.GetFullPath(_path));
-        if (string.IsNullOrEmpty(directory))
-        {
-            throw new LibraryStoreException($"Folium could not write the library file at {_path}.");
-        }
-
-        string temporary = _path + ".tmp";
         try
         {
-            _ = Directory.CreateDirectory(directory);
-            File.WriteAllText(temporary, json);
-            File.Move(temporary, _path, overwrite: true);
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_path))!);
+            KeepLegacyCopy();
+            HashSet<string> retained = new(StringComparer.Ordinal);
+            foreach (StoredBook? book in stored)
+            {
+                if (book!.Metadata is { Cover.IsEmpty: false } metadata)
+                {
+                    book.CoverFile = _covers.Save(metadata.Cover.Span);
+                    _ = retained.Add(book.CoverFile);
+                    book.Metadata = metadata with { Cover = default };
+                }
+            }
+
+            LibraryDocument document = new() { Version = 2, Books = stored };
+            AtomicFile.Write(_path, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(document, JsonOptions)));
+            _covers.Collect(retained);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             throw new LibraryStoreException($"Folium could not write the library file at {_path}.", exception);
         }
-        finally
+    }
+
+    private void KeepLegacyCopy()
+    {
+        if (File.Exists(_path))
         {
-            if (File.Exists(temporary))
+            LibraryDocument previous = ReadDocument();
+            if (previous.Version == 1 && !File.Exists(_path + ".v1.bak"))
             {
-                File.Delete(temporary);
+                _ = ToBooks(previous);
+                AtomicFile.Write(_path + ".v1.bak", File.ReadAllBytes(_path));
             }
         }
     }
@@ -91,10 +111,10 @@ public sealed class FileBookStore : IBookStore
 
     private LibraryDocument RequireVersion(LibraryDocument document)
     {
-        return document.Version == 1
+        return document.Version is 1 or 2
             ? document
             : throw new LibraryStoreException(
-                string.Create(CultureInfo.InvariantCulture, $"The library file at {_path} uses version {document.Version}. Folium reads version 1."));
+                string.Create(CultureInfo.InvariantCulture, $"The library file at {_path} uses version {document.Version}. Folium reads versions 1 and 2."));
     }
 
     private LibraryDocument? Deserialize()
@@ -134,7 +154,17 @@ public sealed class FileBookStore : IBookStore
         {
             (true, _) => throw new LibraryStoreException($"The library file at {_path} contains a book id that Folium cannot use."),
             (_, true) => throw new LibraryStoreException($"The library file at {_path} contains a book without a title or an author."),
-            _ => new Book(stored.Id, stored.Title!, stored.Author!, RequireStatus(stored.ReadingStatus), stored.Metadata),
+            _ => new Book(stored.Id, stored.Title!, stored.Author!, RequireStatus(stored.ReadingStatus), ReadMetadata(stored)),
+        };
+    }
+
+    private BookMetadata? ReadMetadata(StoredBook stored)
+    {
+        return (stored.CoverFile, stored.Metadata) switch
+        {
+            (null, _) => stored.Metadata,
+            (_, { Cover.IsEmpty: true } metadata) => metadata with { Cover = _covers.Read(stored.CoverFile) },
+            _ => throw Unreadable(),
         };
     }
 
@@ -202,5 +232,7 @@ public sealed class FileBookStore : IBookStore
         public string? ReadingStatus { get; set; }
 
         public BookMetadata? Metadata { get; set; }
+
+        public string? CoverFile { get; set; }
     }
 }
