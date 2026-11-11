@@ -81,13 +81,6 @@
                                         IsVisible="{Binding ShowClearSearch}"
                                         AutomationProperties.Name="Clear saved book search" />
                             </Grid>
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingXs}">
-                                <TextBlock Text="Sort by:" Classes="folium-label" />
-                                <TextBlock Text="{Binding SortLabel}"
-                                           Classes="folium-label"
-                                           AutomationProperties.Name="Current sort order"
-                                           AutomationProperties.LiveSetting="Polite" />
-                            </StackPanel>
                             <TextBlock Text="{Binding SearchNote}" Classes="folium-caption folium-muted" TextWrapping="Wrap" IsVisible="{Binding ShowSavedSearch}" />
                             <Grid x:Name="SortGrid" IsVisible="{Binding ShowSortMenu}"
                                   ColumnDefinitions="*,*"
@@ -250,13 +243,23 @@
                         </ItemsControl>
                     </StackPanel>
                 </ScrollViewer>
-                <Button Grid.Row="2"
-                        Content="Add book"
+                <StackPanel Grid.Row="2" Spacing="{StaticResource FoliumSpacingSm}">
+                    <Border IsVisible="{Binding ShowSnackbar}"
+                            Margin="{StaticResource FoliumTopSpacingLg}"
+                            Background="{DynamicResource FoliumInverseSurfaceBrush}"
+                            CornerRadius="{StaticResource FoliumControlCornerRadius}"
+                            Padding="{StaticResource FoliumSpacingMdThickness}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding SnackbarMessage}" Foreground="{DynamicResource FoliumOnInverseBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Open" Command="{Binding OpenSnackbarCommand}" Foreground="{DynamicResource FoliumInversePrimaryBrush}" Background="Transparent" />
+                        </Grid>
+                    </Border>
+                <Button Content="Add book"
                         Command="{Binding ShowAddSheetCommand}"
                         Classes="folium-primary folium-add"
                         IsVisible="{Binding ShowSavedBookControls}"
                         AutomationProperties.Name="Add book"
-                        Margin="{StaticResource FoliumTopSpacingLg}">
+                        HorizontalAlignment="Right">
                     <Button.ContentTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
@@ -269,6 +272,7 @@
                         </DataTemplate>
                     </Button.ContentTemplate>
                 </Button>
+                </StackPanel>
             </Grid>
             <Grid IsVisible="{Binding ShowSearch}">
                 <views:SearchView DataContext="{Binding Search}" />
@@ -503,17 +507,6 @@
                     <Button Content="Find a book online" Command="{Binding ShowSearchCommand}" Classes="folium-primary" HorizontalAlignment="Stretch" />
                     <Button Content="Add a book by hand" Command="{Binding AddByHandCommand}" HorizontalAlignment="Stretch" />
                 </StackPanel>
-            </Border>
-            <Border IsVisible="{Binding ShowSnackbar}"
-                    VerticalAlignment="Bottom"
-                    Margin="{StaticResource FoliumSpacingLgThickness}"
-                    Background="{DynamicResource FoliumInverseSurfaceBrush}"
-                    CornerRadius="{StaticResource FoliumControlCornerRadius}"
-                    Padding="{StaticResource FoliumSpacingMdThickness}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="{Binding SnackbarMessage}" Foreground="{DynamicResource FoliumOnInverseBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
-                    <Button Grid.Column="1" Content="Open" Command="{Binding OpenSnackbarCommand}" Foreground="{DynamicResource FoliumInversePrimaryBrush}" Background="Transparent" />
-                </Grid>
             </Border>
             <StackPanel IsVisible="{Binding ShowLoadError}"
                         Spacing="{StaticResource FoliumSpacingSm}">

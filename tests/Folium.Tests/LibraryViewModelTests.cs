@@ -857,6 +857,19 @@ public sealed class LibraryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void BackFromBackupReturnsToTheLibrary()
+    {
+        LibraryViewModel viewModel = Open();
+
+        viewModel.ShowBackupCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowBackup);
+        Assert.True(viewModel.GoBack());
+        Assert.False(viewModel.ShowBackup);
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
     public void OpenSnackbarOpensTheSavedBook()
     {
         LibraryViewModel viewModel = Open();

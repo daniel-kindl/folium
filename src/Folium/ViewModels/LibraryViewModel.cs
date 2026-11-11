@@ -568,6 +568,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return true;
         }
 
+        if (ShowBackup)
+        {
+            ShowLibraryScreen();
+            return true;
+        }
+
         if (ShowConfirm)
         {
             ShowDetailsScreen();
@@ -837,6 +843,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowBack));
         RaiseChrome();
         Raise(nameof(SelectedTitle));
+        Raise(nameof(ConfirmMessage));
         Raise(nameof(SelectedAuthor));
         Raise(nameof(SelectedStatus));
         Raise(nameof(MetadataEditor));
