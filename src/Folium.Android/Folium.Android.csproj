@@ -6,12 +6,24 @@
     <Nullable>enable</Nullable>
     <ApplicationId>dev.danielkindl.folium</ApplicationId>
     <ApplicationTitle>Folium</ApplicationTitle>
-    <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>$(FoliumVersion)</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
     <EmbedAssembliesIntoApk Condition="'$(FoliumVerification)' == 'true'">true</EmbedAssembliesIntoApk>
+    <_FoliumVersionIsStrict>$([System.Text.RegularExpressions.Regex]::IsMatch('$(FoliumVersion)', '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'))</_FoliumVersionIsStrict>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(_FoliumVersionIsStrict)' == 'true'">
+    <_FoliumMajor>$([System.Version]::Parse('$(FoliumVersion)').Major)</_FoliumMajor>
+    <_FoliumMinor>$([System.Version]::Parse('$(FoliumVersion)').Minor)</_FoliumMinor>
+    <_FoliumPatch>$([System.Version]::Parse('$(FoliumVersion)').Build)</_FoliumPatch>
+    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(_FoliumMajor), 10000)), $([MSBuild]::Multiply($(_FoliumMinor), 100)))), $(_FoliumPatch)))</ApplicationVersion>
+  </PropertyGroup>
+  <Target Name="ValidateFoliumVersion" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(_FoliumVersionIsStrict)' != 'true'" Text="FoliumVersion must be strict SemVer X.Y.Z with no prefix or suffix. The value was '$(FoliumVersion)'." />
+    <Error Condition="'$(_FoliumMinor)' != '' AND $(_FoliumMinor) &gt;= 100" Text="FoliumVersion minor must be below 100 so the Android version code stays strictly increasing. The value was '$(FoliumVersion)'." />
+    <Error Condition="'$(_FoliumPatch)' != '' AND $(_FoliumPatch) &gt;= 100" Text="FoliumVersion patch must be below 100 so the Android version code stays strictly increasing. The value was '$(FoliumVersion)'." />
+    <Error Condition="'$(_FoliumMajor)' != '' AND $(_FoliumMajor) &gt;= 210000" Text="FoliumVersion major must be at most 209999 so the Android version code fits in a 32-bit integer. The value was '$(FoliumVersion)'." />
+  </Target>
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
     <ProjectReference Include="../Folium/Folium.csproj" />

@@ -4,6 +4,8 @@ Notable changes are recorded here. Versions follow [Semantic Versioning](https:/
 
 ## Unreleased
 
+- Build a signed release APK and publish it to a GitHub release as `folium-X.Y.Z.apk`. The Android version code is derived from one SemVer value.
+
 - Search saved books by title or author, and sort the library offline. The default order is title A-Z, with the local book ID as the tie-break.
 
 - Apply the approved Folium visual design with light and dark themes, bundled Noto Sans and Lucide icons, and system text scaling on Android.

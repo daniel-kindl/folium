@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Folium\Folium.csproj" />
+    <ProjectReference Include="..\..\tools\Folium.Versioning\Folium.Versioning.csproj" />
   </ItemGroup>
 
   <ItemGroup>

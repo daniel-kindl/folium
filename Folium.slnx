@@ -6,4 +6,8 @@
   <Folder Name="/tests/">
     <Project Path="tests/Folium.Tests/Folium.Tests.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Folium.Versioning/Folium.Versioning.csproj" />
+    <Project Path="tools/CheckReleaseVersion/CheckReleaseVersion.csproj" />
+  </Folder>
 </Solution>
