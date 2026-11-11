@@ -32,7 +32,8 @@ public sealed class LibraryRestoreTests : IDisposable
         Assert.Equal("Replace your library?", viewModel.Heading);
         Assert.Equal(1, viewModel.RestoreCount);
         Assert.Equal("Dune", Assert.Single(viewModel.RestoreTitles));
-        Assert.Equal("The backup has 1 book. Replacing the library removes the books on this device.", viewModel.RestoreMessage);
+        Assert.Equal("The 2 books on this device change to the 1 book in this backup. Edits made after this backup are lost.", viewModel.RestoreMessage);
+        Assert.Equal("Backup file · 1 book", viewModel.RestoreSummary);
         Assert.Equal(2, LibraryViewModel.Open(new FileBookStore(path)).Books.Count);
 
         viewModel.ConfirmRestoreCommand.Execute(parameter: null);
@@ -51,8 +52,10 @@ public sealed class LibraryRestoreTests : IDisposable
         Add(viewModel, "Dune", "Frank Herbert");
         string backup = LibraryBackup.Export([]);
 
+        Assert.Equal("", viewModel.RestoreSummary);
         viewModel.PrepareRestore(backup);
-        Assert.Equal("The backup has 0 books. Replacing the library removes the books on this device.", viewModel.RestoreMessage);
+        Assert.Equal("The 1 book on this device changes to the 0 books in this backup. Edits made after this backup are lost.", viewModel.RestoreMessage);
+        Assert.Equal("Backup file · 0 books", viewModel.RestoreSummary);
         Assert.True(viewModel.GoBack());
 
         Assert.True(viewModel.ShowLibrary);

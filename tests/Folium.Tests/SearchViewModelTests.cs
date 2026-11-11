@@ -45,9 +45,12 @@ public sealed class SearchViewModelTests
         SearchViewModel model = new(provider) { Query = "Dune" };
         await model.SearchAsync();
         Assert.Equal("Connection failed.", model.Message);
+        Assert.True(model.IsOffline);
+        Assert.False(model.ShowRetry);
         provider.Fail = false;
         await model.SearchAsync();
         _ = Assert.Single(model.Works);
+        Assert.False(model.IsOffline);
     }
 
     [Fact]

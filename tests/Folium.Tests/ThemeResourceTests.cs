@@ -101,7 +101,7 @@ public sealed class ThemeResourceTests
             Assert.Equal(16, filter.FontSize);
             AssertBrushColor("#315C43", primary.Background);
             AssertBrushColor("#FFFFFF", primary.Foreground);
-            AssertBrushColor("#536157", disabled.Foreground);
+            AssertBrushColor("#747D75", disabled.Foreground);
             Assert.Equal(1, disabled.Opacity);
             Assert.True(primary.Bounds.Height >= 48);
             Assert.True(consent.Bounds.Height >= 48);
@@ -118,7 +118,7 @@ public sealed class ThemeResourceTests
             window.UpdateLayout();
             AssertBrushColor("#AED4B3", primary.Background);
             AssertBrushColor("#173823", primary.Foreground);
-            AssertBrushColor("#B8C4B8", disabled.Foreground);
+            AssertBrushColor("#8C978E", disabled.Foreground);
             window.Close();
         }, TestContext.Current.CancellationToken);
     }
@@ -173,7 +173,7 @@ public sealed class ThemeResourceTests
 
     private static string[] Roles()
     {
-        return ["background", "surface", "raised", "text", "muted", "primary", "onPrimary", "secondary", "accent", "border", "success", "warning", "error", "info"];
+        return ["background", "surface", "raised", "text", "muted", "primary", "onPrimary", "secondary", "accent", "border", "success", "warning", "error", "info", "statusToRead", "statusReading", "statusFinished", "selectedContainer", "focus", "divider", "disabledText", "inverseSurface", "onInverse", "inversePrimary", "scrim"];
     }
 
     private static string TokenColor(string theme, string role)
@@ -210,6 +210,8 @@ public sealed class ThemeResourceTests
             ("FoliumSectionLineHeight", ["typography", "styles", "section", "lineHeight"]),
             ("FoliumTitleFontSize", ["typography", "styles", "title", "fontSize"]),
             ("FoliumTitleLineHeight", ["typography", "styles", "title", "lineHeight"]),
+            ("FoliumLabelSmallFontSize", ["typography", "styles", "labelSmall", "fontSize"]),
+            ("FoliumLabelSmallLineHeight", ["typography", "styles", "labelSmall", "lineHeight"]),
             ("FoliumSpacingXs", ["spacing", "xs"]),
             ("FoliumSpacingSm", ["spacing", "sm"]),
             ("FoliumSpacingMd", ["spacing", "md"]),
@@ -222,7 +224,21 @@ public sealed class ThemeResourceTests
             ("FoliumInteractiveGapMin", ["layout", "interactiveGapMin"]),
             ("FoliumControlRadius", ["radius", "control"]),
             ("FoliumGroupRadius", ["radius", "group"]),
+            ("FoliumCoverRadius", ["radius", "cover"]),
             ("FoliumFocusWidth", ["border", "focusWidth"]),
+            ("FoliumFocusGap", ["border", "focusGap"]),
+            ("FoliumCoverLibraryRowWidth", ["cover", "libraryRow", "width"]),
+            ("FoliumCoverLibraryRowHeight", ["cover", "libraryRow", "height"]),
+            ("FoliumCoverLibraryGridWidth", ["cover", "libraryGrid", "width"]),
+            ("FoliumCoverLibraryGridHeight", ["cover", "libraryGrid", "height"]),
+            ("FoliumCoverBookDetailsWidth", ["cover", "bookDetails", "width"]),
+            ("FoliumCoverBookDetailsHeight", ["cover", "bookDetails", "height"]),
+            ("FoliumCoverEditionPreviewWidth", ["cover", "editionPreview", "width"]),
+            ("FoliumCoverEditionPreviewHeight", ["cover", "editionPreview", "height"]),
+            ("FoliumCoverImportDraftWidth", ["cover", "importDraft", "width"]),
+            ("FoliumCoverImportDraftHeight", ["cover", "importDraft", "height"]),
+            ("FoliumCoverRestoreRowWidth", ["cover", "restoreRow", "width"]),
+            ("FoliumCoverRestoreRowHeight", ["cover", "restoreRow", "height"]),
             ("FoliumInlineIconSize", ["icon", "size", "inline"]),
             ("FoliumActionIconSize", ["icon", "size", "action"]),
             ("FoliumEmptyIconSize", ["icon", "size", "empty"]),

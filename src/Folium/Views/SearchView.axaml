@@ -8,7 +8,7 @@
         <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
             <TextBlock Text="{Binding Heading}" Classes="folium-section" TextWrapping="Wrap" />
             <StackPanel IsVisible="{Binding ShowWorks}" Spacing="{StaticResource FoliumSpacingSm}">
-                <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="Book title" AutomationProperties.Name="Book title" />
+                <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="For example, Middlemarch" AutomationProperties.Name="Title" />
                 <Button Content="Search Open Library" Click="SearchClicked" Classes="folium-primary" IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Stretch" />
             </StackPanel>
         </StackPanel>
@@ -16,7 +16,13 @@
             <TextBlock Text="{Binding Message}" Classes="folium-muted" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
             <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Height="4" />
             <Button Content="Cancel search" Click="CancelClicked" IsVisible="{Binding IsBusy}" />
-            <Button Content="Try again" Click="RetryClicked" IsVisible="{Binding CanRetry}" Classes="folium-primary" />
+            <Button Content="Try again" Click="RetryClicked" IsVisible="{Binding ShowRetry}" Classes="folium-primary" />
+            <StackPanel IsVisible="{Binding IsOffline}" Spacing="{StaticResource FoliumSpacingSm}">
+                <TextBlock Text="No connection" Classes="folium-section" TextWrapping="Wrap" />
+                <TextBlock Text="Open Library search needs a network connection. Your saved books are still on this device." TextWrapping="Wrap" />
+                <Button Content="Try again" Click="RetryClicked" Classes="folium-primary" HorizontalAlignment="Stretch" />
+                <Button Content="Go to Library" Click="BackClicked" HorizontalAlignment="Stretch" />
+            </StackPanel>
         </StackPanel>
         <ScrollViewer Grid.Row="2">
             <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
@@ -56,7 +62,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <StackPanel IsVisible="{Binding ShowPreview}" Spacing="{StaticResource FoliumSpacingSm}">
-                    <Image Name="CoverImage" MaxHeight="220" Stretch="Uniform" AutomationProperties.Name="Edition cover" />
+                    <Image Name="CoverImage" Width="{StaticResource FoliumCoverEditionPreviewWidth}" Height="{StaticResource FoliumCoverEditionPreviewHeight}" Stretch="Uniform" AutomationProperties.Name="Edition cover" />
                     <TextBlock Text="{Binding Preview.Title}" Classes="folium-section" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Authors, StringFormat='Authors: {0}'}" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Preview.Publisher, StringFormat='Publisher: {0}'}" TextWrapping="Wrap" />

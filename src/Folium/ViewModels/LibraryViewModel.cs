@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Folium.Books;
 using Folium.Search;
 using Folium.Storage;
+using Folium.Views;
 
 namespace Folium.ViewModels;
 
@@ -26,9 +27,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         [Screen.Add] = "Add a book",
         [Screen.Edit] = "Edit book",
         [Screen.Details] = "Book",
-        [Screen.ConfirmRemove] = "Remove this book?",
+        [Screen.ConfirmRemove] = "Delete this book?",
         [Screen.ConfirmRestore] = "Replace your library?",
-        [Screen.Search] = "Search",
+        [Screen.Search] = "Find online",
+        [Screen.Backup] = "Backup and restore",
     };
     private static readonly IBookSearch SearchProvider = new OpenLibrary(new HttpClient());
     private PersonalLibrary? _library;
@@ -43,6 +45,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private string _titleInput = "";
     private IReadOnlyList<Book>? _pendingRestore;
     private string _authorInput = "";
+    private readonly string? _viewPath;
+    private bool AddSheetOpen { get; set; }
+    private bool _showLibraryMenu;
+    private bool _showSortMenu;
+    private bool _showSavedSearch;
+    private Guid? _snackbarBookId;
+    private string SnackbarTitle { get; set; } = "";
 
     private LibraryViewModel(PersonalLibrary? library, IBookSearch? search, IBookStore store)
     {
@@ -56,7 +65,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         ImportCommand = new Command(_ => BeginImport(), _ => ShowSearch && Search.ShowPreview && Search.Preview is not null && !Search.IsBusy);
-        Search.PropertyChanged += (_, _) => ((Command)ImportCommand).RaiseCanExecuteChanged();
+        Search.PropertyChanged += (_, _) =>
+        {
+            ((Command)ImportCommand).RaiseCanExecuteChanged();
+            Raise(nameof(Heading));
+            Raise(nameof(ShowTabBar));
+            Raise(nameof(ShowBack));
+        };
         ShowSearchCommand = new Command(_ => SetScreen(Screen.Search), _ => ShowLibrary);
         ShowAddCommand = new Command(_ => ShowAdd(), _ => ShowLibrary);
         SaveCommand = new Command(_ => Save(), _ => ShowEditor);
@@ -72,6 +87,28 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         FilterCommand = new Command(ApplyFilter, _ => ShowLibrary);
         SortCommand = new Command(ApplySort, _ => ShowLibrary);
         ClearSearchCommand = new Command(_ => SearchQuery = "", _ => SearchQuery.Length > 0);
+        AssignChromeCommands();
+        if (store is FileBookStore files)
+        {
+            _viewPath = files.LibraryPath + ".view";
+            ShowGrid = ReadGridChoice(_viewPath);
+        }
+    }
+
+    private void AssignChromeCommands()
+    {
+        ShowAddSheetCommand = new Command(_ => OpenAddSheet(), _ => ShowLibrary && !ShowAddSheet);
+        AddByHandCommand = new Command(_ => AddByHand(), _ => ShowLibrary);
+        DismissAddSheetCommand = new Command(_ => CloseAddSheet(), _ => ShowAddSheet);
+        ShowLibraryMenuCommand = new Command(_ => ToggleLibraryMenu(), _ => ShowLibrary);
+        ShowBackupCommand = new Command(_ => ShowBackupScreen(), _ => ShowLibrary);
+        ToggleSortMenuCommand = new Command(_ => ToggleSortMenu(), _ => ShowSavedBookControls);
+        ToggleSavedSearchCommand = new Command(_ => ToggleSavedSearch(), _ => ShowSavedBookControls);
+        ToggleGridCommand = new Command(_ => ToggleGrid(), _ => ShowSavedBookControls);
+        DismissSnackbarCommand = new Command(_ => DismissSnackbar(), _ => ShowSnackbar);
+        OpenSnackbarCommand = new Command(_ => OpenSnackbar(), _ => ShowSnackbar);
+        SelectLibraryCommand = new Command(_ => ShowLibraryScreen(), _ => _library is not null);
+        BackCommand = new Command(_ => GoBack(), _ => true);
     }
 
     /// <summary>Tells the view that a bound value changed.</summary>
@@ -143,8 +180,44 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Clears the library search text.</summary>
     public ICommand ClearSearchCommand { get; }
 
+    /// <summary>Opens the add-book sheet.</summary>
+    public ICommand ShowAddSheetCommand { get; private set; } = null!;
+
+    /// <summary>Opens the form that adds a book by hand.</summary>
+    public ICommand AddByHandCommand { get; private set; } = null!;
+
+    /// <summary>Closes the add-book sheet.</summary>
+    public ICommand DismissAddSheetCommand { get; private set; } = null!;
+
+    /// <summary>Opens or closes the library menu.</summary>
+    public ICommand ShowLibraryMenuCommand { get; private set; } = null!;
+
+    /// <summary>Opens backup and restore.</summary>
+    public ICommand ShowBackupCommand { get; private set; } = null!;
+
+    /// <summary>Opens or closes the sort menu.</summary>
+    public ICommand ToggleSortMenuCommand { get; private set; } = null!;
+
+    /// <summary>Opens or closes saved-book search.</summary>
+    public ICommand ToggleSavedSearchCommand { get; private set; } = null!;
+
+    /// <summary>Switches the library between the list and the grid.</summary>
+    public ICommand ToggleGridCommand { get; private set; } = null!;
+
+    /// <summary>Closes the save snackbar.</summary>
+    public ICommand DismissSnackbarCommand { get; private set; } = null!;
+
+    /// <summary>Opens the book named by the save snackbar.</summary>
+    public ICommand OpenSnackbarCommand { get; private set; } = null!;
+
+    /// <summary>Shows the library tab.</summary>
+    public ICommand SelectLibraryCommand { get; private set; } = null!;
+
+    /// <summary>Closes the top layer, then the current screen.</summary>
+    public ICommand BackCommand { get; private set; } = null!;
+
     /// <summary>The name of the current screen.</summary>
-    public string Heading => Headings[_screen];
+    public string Heading => _screen == Screen.Search && !Search.ShowWorks ? Search.Heading : Headings[_screen];
 
     /// <summary>The books on the library screen.</summary>
     public IReadOnlyList<Book> Books { get; private set; } = [];
@@ -177,6 +250,58 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>True when the search field contains text that can be cleared.</summary>
     public bool ShowClearSearch => SearchQuery.Length > 0;
 
+    /// <summary>True when the add-book sheet is open.</summary>
+    public bool ShowAddSheet => ShowLibrary && AddSheetOpen;
+
+    /// <summary>True when the library menu is open.</summary>
+    public bool ShowLibraryMenu => ShowLibrary && _showLibraryMenu;
+
+    /// <summary>True when the sort menu is open.</summary>
+    public bool ShowSortMenu => ShowSavedBookControls && _showSortMenu;
+
+    /// <summary>True when saved-book search is open.</summary>
+    public bool ShowSavedSearch => ShowSavedBookControls && _showSavedSearch;
+
+    /// <summary>True when the library uses the grid.</summary>
+    public bool ShowGrid { get; private set; }
+
+    /// <summary>The label for the view switch.</summary>
+    public string ViewLabel => ShowGrid ? "Show list" : "Show covers";
+
+    /// <summary>True when the bottom tabs are visible.</summary>
+    public bool ShowTabBar => ShowLibrary || (ShowSearch && Search.ShowWorks);
+
+    /// <summary>True when the app bar shows Back.</summary>
+    public bool ShowBack => _library is not null && !ShowLibrary && !ShowSearch && !ShowLoadError;
+
+    /// <summary>True when backup and restore is open.</summary>
+    public bool ShowBackup => _library is not null && _screen == Screen.Backup;
+
+    /// <summary>True when the save snackbar is visible.</summary>
+    public bool ShowSnackbar => ShowLibrary && _snackbarBookId is not null;
+
+    /// <summary>The save snackbar text. Empty when the snackbar is closed.</summary>
+    public string SnackbarMessage => _snackbarBookId is null ? "" : $"{SnackbarTitle} is saved in your library.";
+
+    /// <summary>The visible book count.</summary>
+    public string CountLabel
+    {
+        get
+        {
+            int count = ShownBooks.Count;
+            string noun = count == 1 ? "book" : "books";
+            return NormalizeSearchText(SearchQuery.Trim()).Length == 0
+                ? $"{count.ToString(CultureInfo.InvariantCulture)} {noun}"
+                : $"{count.ToString(CultureInfo.InvariantCulture)} {noun} {(count == 1 ? "matches" : "match")}";
+        }
+    }
+
+    /// <summary>The empty-library explanation.</summary>
+    public static string EmptyDetail => "Find a book on Open Library or enter the details yourself. Your library stays on this device.";
+
+    /// <summary>The note under saved-book search.</summary>
+    public static string SearchNote => "Search checks titles and authors of saved books on this device. Accents do not matter.";
+
     /// <summary>The selected sort mode in the words shown in the control.</summary>
     /// <exception cref="InvalidOperationException">The selected sort mode is not valid.</exception>
     public string SortLabel => _sort switch
@@ -194,6 +319,18 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>True when saved-book search and sort can apply to at least one book.</summary>
     public bool ShowSavedBookControls => ShowLibrary && Books.Count > 0;
 
+    /// <summary>True when the library shows every reading status.</summary>
+    public bool IsAllSelected => _filter is null;
+
+    /// <summary>True when the library shows books to read.</summary>
+    public bool IsToReadSelected => _filter == ReadingStatus.ToRead;
+
+    /// <summary>True when the library shows books being read.</summary>
+    public bool IsReadingSelected => _filter == ReadingStatus.Reading;
+
+    /// <summary>True when the library shows finished books.</summary>
+    public bool IsFinishedSelected => _filter == ReadingStatus.Finished;
+
     /// <summary>True when the library is sorted by title from A to Z.</summary>
     public bool IsTitleAscending => string.Equals(_sort, "title-asc", StringComparison.Ordinal);
 
@@ -208,6 +345,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>True when the library screen shows at least one book.</summary>
     public bool ShowBooks => ShowLibrary && ShownBooks.Count > 0;
+
+    /// <summary>True when the library shows books in a list.</summary>
+    public bool ShowBookList => ShowBooks && !ShowGrid;
+
+    /// <summary>True when the library shows books as a cover grid.</summary>
+    public bool ShowBookGrid => ShowBooks && ShowGrid;
 
     /// <summary>True when the library has books and the filter matches none.</summary>
     public bool ShowNoMatches => ShowLibrary && Books.Count > 0 && ShownBooks.Count == 0;
@@ -228,7 +371,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public bool ShowFilterLabel => ShowLibrary && _filter is not null;
 
     /// <summary>The empty-library message. Null when the library has a book or another screen is open.</summary>
-    public string? EmptyMessage => IsEmpty ? "No books yet." : null;
+    public string? EmptyMessage => IsEmpty ? "No books yet" : null;
 
     /// <summary>True when the library is open and the library screen is current.</summary>
     public bool ShowLibrary => _library is not null && _screen == Screen.Library;
@@ -255,11 +398,17 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public string RestorePreview => _pendingRestore is null ? "" : string.Join(Environment.NewLine, RestoreTitles);
 
     /// <summary>The replace warning. Empty when no backup is waiting.</summary>
+    public string RestoreFileName { get; private set; } = "Backup file";
+
+    /// <summary>The backup file and book count.</summary>
+    public string RestoreSummary => _pendingRestore is null
+        ? ""
+        : $"{RestoreFileName} · {RestoreCount.ToString(CultureInfo.InvariantCulture)} {(RestoreCount == 1 ? "book" : "books")}";
+
+    /// <summary>The replace warning. Empty when no backup is waiting.</summary>
     public string RestoreMessage => _pendingRestore is null
         ? ""
-        : string.Create(
-            CultureInfo.InvariantCulture,
-            $"The backup has {RestoreCount} {(RestoreCount == 1 ? "book" : "books")}. Replacing the library removes the books on this device.");
+        : $"The {CountNoun(Books.Count)} on this device {(Books.Count == 1 ? "changes" : "change")} to the {CountNoun(RestoreCount)} in this backup. Edits made after this backup are lost.";
 
     /// <summary>True when the library file did not open.</summary>
     public bool ShowLoadError => _library is null && !ShowRestore;
@@ -278,8 +427,16 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>The reading status of the selected book. Empty when no book is selected.</summary>
     public string SelectedStatus => _selected is null ? "" : StatusText(_selected.Status);
 
-    /// <summary>The confirm view binds to this member on the view-model instance.</summary>
-    public string ConfirmMessage { get; } = "Folium deletes this book from your library.";
+    /// <summary>The delete confirmation body.</summary>
+    public string ConfirmMessage
+    {
+        get
+        {
+            bool hasCover = _selected?.Metadata?.Cover.IsEmpty == false;
+            string cover = hasCover ? " and its saved cover" : "";
+            return $"Folium deletes {SelectedTitle}{cover} from this device. You cannot undo this.";
+        }
+    }
 
     /// <summary>The message for invalid title or author text. Null when the text is valid.</summary>
     public string? InputError { get; private set; }
@@ -364,6 +521,31 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Moves to the previous screen. Returns false on the library screen so the host can leave the app.</summary>
     public bool GoBack()
     {
+        return CloseTransientLayer() || CloseScreen();
+    }
+
+    private bool CloseTransientLayer()
+    {
+        if (ShowAddSheet || ShowLibraryMenu || ShowSortMenu)
+        {
+            CloseLayers();
+            RaiseChrome();
+            return true;
+        }
+
+        if (!ShowSavedSearch)
+        {
+            return false;
+        }
+
+        _showSavedSearch = false;
+        SearchQuery = "";
+        RaiseChrome();
+        return true;
+    }
+
+    private bool CloseScreen()
+    {
         if (ShowSearch)
         {
             if (!Search.GoBack())
@@ -392,13 +574,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return true;
         }
 
-        if (ShowDetails)
+        if (!ShowDetails)
         {
-            ShowLibraryScreen();
-            return true;
+            return false;
         }
 
-        return false;
+        ShowLibraryScreen();
+        return true;
     }
 
     private void CancelEditor()
@@ -539,6 +721,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
         _importing = false;
         MetadataEditor = null;
+        _snackbarBookId = saved.Id;
+        SnackbarTitle = saved.Title;
         ShowLibraryScreen();
     }
 
@@ -648,6 +832,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowRestore));
         RaiseRestore();
         Raise(nameof(ShowSearch));
+        Raise(nameof(ShowBackup));
+        Raise(nameof(ShowTabBar));
+        Raise(nameof(ShowBack));
+        RaiseChrome();
         Raise(nameof(SelectedTitle));
         Raise(nameof(SelectedAuthor));
         Raise(nameof(SelectedStatus));
@@ -757,6 +945,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(NoMatchMessage));
         Raise(nameof(FilterLabel));
         Raise(nameof(ShowFilterLabel));
+        Raise(nameof(ShowBookList));
+        Raise(nameof(ShowBookGrid));
+        Raise(nameof(IsAllSelected));
+        Raise(nameof(IsToReadSelected));
+        Raise(nameof(IsReadingSelected));
+        Raise(nameof(IsFinishedSelected));
+        Raise(nameof(CountLabel));
     }
 
     private List<BookRow> Rows(IReadOnlyList<Book> books)
@@ -778,7 +973,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
                 .ThenBy(book => SortText(book, byTitle), StringComparer.Ordinal)
                 .ThenBy(book => book.Id);
 
-        return [.. sorted.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status)))];
+        return [.. sorted.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status))
+        {
+            Tone = CoverPlaceholder.Tone(book.Id),
+            Initial = CoverPlaceholder.Initial(book.Title),
+            HasCover = book.Metadata?.Cover.IsEmpty == false,
+            Cover = book.Metadata?.Cover ?? ReadOnlyMemory<byte>.Empty,
+        })];
     }
 
     private static string FoldedSortKey(Book book, bool byTitle)
@@ -931,6 +1132,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             AskRemoveCommand, ConfirmRemoveCommand, KeepBookCommand, SetStatusCommand,
             ConfirmRestoreCommand, KeepLibraryCommand,
             FilterCommand, SortCommand, ClearSearchCommand, ShowSearchCommand, ImportCommand,
+            ShowAddSheetCommand, AddByHandCommand, DismissAddSheetCommand, ShowLibraryMenuCommand,
+            ShowBackupCommand, ToggleSortMenuCommand, ToggleSavedSearchCommand, ToggleGridCommand,
+            DismissSnackbarCommand, OpenSnackbarCommand, SelectLibraryCommand,
         })
         {
             if (command is Command relay)
@@ -967,6 +1171,127 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         ConfirmRemove = 4,
         Search = 5,
         ConfirmRestore = 6,
+        Backup = 7,
+    }
+
+    private void OpenAddSheet()
+    {
+        CloseLayers();
+        AddSheetOpen = true;
+        RaiseChrome();
+    }
+
+    private void AddByHand()
+    {
+        CloseLayers();
+        ShowAdd();
+    }
+
+    private void CloseAddSheet()
+    {
+        AddSheetOpen = false;
+        RaiseChrome();
+    }
+
+    private void ToggleLibraryMenu()
+    {
+        _showLibraryMenu = !_showLibraryMenu;
+        _showSortMenu = false;
+        RaiseChrome();
+    }
+
+    private void ShowBackupScreen()
+    {
+        CloseLayers();
+        SetScreen(Screen.Backup);
+    }
+
+    private void ToggleSortMenu()
+    {
+        _showSortMenu = !_showSortMenu;
+        _showLibraryMenu = false;
+        RaiseChrome();
+    }
+
+    private void ToggleSavedSearch()
+    {
+        _showSavedSearch = !_showSavedSearch;
+        if (!_showSavedSearch)
+        {
+            SearchQuery = "";
+        }
+
+        RaiseChrome();
+    }
+
+    private void ToggleGrid()
+    {
+        ShowGrid = !ShowGrid;
+        if (_viewPath is not null)
+        {
+            File.WriteAllText(_viewPath, ShowGrid ? "grid" : "list");
+        }
+
+        Raise(nameof(ShowGrid));
+        Raise(nameof(ViewLabel));
+        Raise(nameof(ShowBookList));
+        Raise(nameof(ShowBookGrid));
+    }
+
+    private void DismissSnackbar()
+    {
+        _snackbarBookId = null;
+        SnackbarTitle = "";
+        Raise(nameof(ShowSnackbar));
+        Raise(nameof(SnackbarMessage));
+    }
+
+    private void OpenSnackbar()
+    {
+        Guid id = _snackbarBookId!.Value;
+        DismissSnackbar();
+        Open(id);
+    }
+
+    private void CloseLayers()
+    {
+        AddSheetOpen = false;
+        _showLibraryMenu = false;
+        _showSortMenu = false;
+    }
+
+    private void RaiseChrome()
+    {
+        Raise(nameof(ShowAddSheet));
+        Raise(nameof(ShowLibraryMenu));
+        Raise(nameof(ShowSortMenu));
+        Raise(nameof(ShowSavedSearch));
+        Raise(nameof(ShowSnackbar));
+        Raise(nameof(SnackbarMessage));
+        Raise(nameof(ShowTabBar));
+        ((Command)ShowAddSheetCommand).RaiseCanExecuteChanged();
+        ((Command)DismissAddSheetCommand).RaiseCanExecuteChanged();
+        ((Command)DismissSnackbarCommand).RaiseCanExecuteChanged();
+        ((Command)OpenSnackbarCommand).RaiseCanExecuteChanged();
+    }
+
+    /// <summary>Records the backup file name shown before replace.</summary>
+    /// <param name="name">The file name. A blank name uses "Backup file".</param>
+    public void SetRestoreFileName(string name)
+    {
+        RestoreFileName = string.IsNullOrWhiteSpace(name) ? "Backup file" : name.Trim();
+        Raise(nameof(RestoreFileName));
+        Raise(nameof(RestoreSummary));
+    }
+
+    private static bool ReadGridChoice(string path)
+    {
+        return File.Exists(path) && string.Equals(File.ReadAllText(path).Trim(), "grid", StringComparison.Ordinal);
+    }
+
+    private static string CountNoun(int count)
+    {
+        return $"{count.ToString(CultureInfo.InvariantCulture)} {(count == 1 ? "book" : "books")}";
     }
 
     private void ConfirmRestore()

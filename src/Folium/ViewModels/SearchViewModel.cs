@@ -73,6 +73,12 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     /// <summary>True when a request is available to retry.</summary>
     public bool CanRetry => !IsBusy && _searchedTitle.Length > 0;
 
+    /// <summary>True when the retry button is shown. The offline panel has its own retry button.</summary>
+    public bool ShowRetry => CanRetry && !IsOffline;
+
+    /// <summary>True when the last failure was a lost connection.</summary>
+    public bool IsOffline { get; private set; }
+
     /// <summary>The selected edition's provider page.</summary>
     public Uri? Source => Preview is null ? null : new Uri("https://openlibrary.org" + Preview.Key);
 
@@ -243,6 +249,7 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
         using CancellationTokenSource pending = new();
         _pending = pending;
         Message = "Searching Open Library…";
+        IsOffline = false;
         Changed();
         try
         {
@@ -258,6 +265,7 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
             if (generation == _generation)
             {
                 Message = exception.Message;
+                IsOffline = exception.Message.Contains("connection", StringComparison.OrdinalIgnoreCase);
             }
         }
         finally

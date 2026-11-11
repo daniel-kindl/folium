@@ -185,6 +185,27 @@ public sealed class BackupActionsTests : IDisposable
         Assert.DoesNotContain("MANAGE_EXTERNAL_STORAGE", manifest, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ManifestUsesTheOpenLeafLauncherIcon()
+    {
+        string root = FindRepositoryRoot();
+        string manifest = File.ReadAllText(Path.Combine(root, "src", "Folium.Android", "Properties", "AndroidManifest.xml"));
+        string foreground = File.ReadAllText(Path.Combine(root, "src", "Folium.Android", "Resources", "drawable", "ic_launcher_foreground.xml"));
+        string monochrome = File.ReadAllText(Path.Combine(root, "src", "Folium.Android", "Resources", "drawable", "ic_launcher_monochrome.xml"));
+        string background = File.ReadAllText(Path.Combine(root, "src", "Folium.Android", "Resources", "values", "colors.xml"));
+        string adaptive = File.ReadAllText(Path.Combine(root, "src", "Folium.Android", "Resources", "mipmap-anydpi-v26", "ic_launcher.xml"));
+
+        Assert.Contains("android:icon=\"@mipmap/ic_launcher\"", manifest, StringComparison.Ordinal);
+        Assert.Contains("android:scaleX=\"0.6\"", foreground, StringComparison.Ordinal);
+        Assert.Contains("#FAF8F3", foreground, StringComparison.Ordinal);
+        Assert.Contains("#AED4B3", foreground, StringComparison.Ordinal);
+        Assert.Contains("#315C43", foreground, StringComparison.Ordinal);
+        Assert.Contains("#315C43", background, StringComparison.Ordinal);
+        Assert.Contains("#202922", monochrome, StringComparison.Ordinal);
+        Assert.Contains("@drawable/ic_launcher_foreground", adaptive, StringComparison.Ordinal);
+        Assert.Contains("@drawable/ic_launcher_monochrome", adaptive, StringComparison.Ordinal);
+    }
+
     private (LibraryViewModel ViewModel, string Path) OpenWithBook()
     {
         string directory = Path.Combine(Path.GetTempPath(), "folium-picker-" + Guid.NewGuid().ToString("N"));

@@ -1,3 +1,5 @@
+using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
@@ -12,7 +14,6 @@ public partial class MainView : UserControl
     private readonly Button[] _filterButtons;
     private readonly Control _emptyIcon;
     private readonly Grid _filterGrid;
-    private bool? _isLandscape;
 
     /// <summary>Loads the view markup. The mutation compile does not run the Avalonia source generator.</summary>
     public MainView()
@@ -112,16 +113,77 @@ public partial class MainView : UserControl
 
     private void MainViewSizeChanged(object? sender, SizeChangedEventArgs args)
     {
-        bool isLandscape = args.NewSize.Width > args.NewSize.Height;
-        if (_isLandscape == isLandscape)
+        _emptyIcon.IsVisible = args.NewSize.Width <= args.NewSize.Height;
+        bool compact = IsCompactStatus();
+        SetStatusMode(compact);
+        if (!compact)
         {
-            return;
+            ApplyFilterColumns(PreferredColumns(args.NewSize.Width));
+        }
+    }
+
+    private bool IsCompactStatus()
+    {
+        return ScaledBody() >= 32;
+    }
+
+    private void SetStatusMode(bool compact)
+    {
+        if (this.FindControl<Button>("StatusFilter") is Button status)
+        {
+            status.IsVisible = compact;
         }
 
-        _isLandscape = isLandscape;
-        _emptyIcon.IsVisible = !isLandscape;
-        int columns = isLandscape ? _filterButtons.Length : 2;
-        int rows = isLandscape ? 1 : 2;
+        _filterGrid.IsVisible = !compact;
+    }
+
+    private int PreferredColumns(double width)
+    {
+        if (ScaledBody() >= 24)
+        {
+            return 2;
+        }
+
+        double grid = Math.Max(0, width - Margin.Left - Margin.Right);
+        return WidestFilterLabel() <= ContentWidth(grid, columns: 4) ? 4 : 2;
+    }
+
+    private double ScaledBody()
+    {
+        return Application.Current?.TryGetResource("FoliumBodyFontSize", ActualThemeVariant, out object? metric) == true
+            && metric is double body
+            ? body
+            : 0;
+    }
+
+    private double ContentWidth(double grid, int columns)
+    {
+        Thickness padding = _filterButtons[0].Padding;
+        double gaps = _filterGrid.ColumnSpacing * (columns - 1);
+        return ((grid - gaps) / columns) - padding.Left - padding.Right;
+    }
+
+    private double WidestFilterLabel()
+    {
+        double widest = 0;
+        foreach (Button filter in _filterButtons)
+        {
+            TextBlock probe = new()
+            {
+                Text = Convert.ToString(filter.Content, CultureInfo.InvariantCulture) ?? string.Empty,
+                FontFamily = filter.FontFamily,
+                FontSize = filter.FontSize,
+            };
+            probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            widest = Math.Max(widest, probe.DesiredSize.Width);
+        }
+
+        return widest;
+    }
+
+    private void ApplyFilterColumns(int columns)
+    {
+        int rows = _filterButtons.Length / columns;
         _filterGrid.ColumnDefinitions.Clear();
         _filterGrid.RowDefinitions.Clear();
         for (int column = 0; column < columns; column++)

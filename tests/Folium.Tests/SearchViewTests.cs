@@ -86,7 +86,7 @@ public sealed class SearchViewTests
             TextBox publisher = view.FindControl<TextBox>("PublisherInput")!;
             publisher.Text = "My publisher";
             view.FindControl<CheckBox>("KeepCoverInput")!.IsChecked = true;
-            Click(view, "Save");
+            Click(view, "Save book");
             window.UpdateLayout();
             Book saved = Assert.Single(library.Books);
             Assert.Equal("My publisher", saved.Metadata!.Publisher);
@@ -183,6 +183,34 @@ public sealed class SearchViewTests
         return work.GetVisualDescendants().OfType<Image>().Single();
     }
 
+    [Fact]
+    public async Task ConnectionFailureShowsTheOfflinePanel()
+    {
+        await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
+        await session.Dispatch(() =>
+        {
+            LibraryViewModel library = LibraryViewModel.Open(new EmptyStore(), new OfflineProvider());
+            MainView view = new() { DataContext = library };
+            Window window = new() { Content = view, Width = 400, Height = 850 };
+            window.Show();
+            window.UpdateLayout();
+            Click(view, "Find a book online");
+            SearchView search = view.GetVisualDescendants().OfType<SearchView>().Single();
+            library.Search.Query = "Dune";
+            Click(search, "Search Open Library");
+            window.UpdateLayout();
+
+            Assert.Contains(search.GetVisualDescendants().OfType<TextBlock>(), text =>
+                Equals(text.Text, "No connection") && text.IsEffectivelyVisible);
+            Assert.Contains(search.GetVisualDescendants().OfType<TextBlock>(), text =>
+                Equals(text.Text, "Open Library search needs a network connection. Your saved books are still on this device.")
+                && text.IsEffectivelyVisible);
+            Click(search, "Go to Library");
+            Assert.True(library.ShowLibrary);
+            window.Close();
+        }, TestContext.Current.CancellationToken);
+    }
+
     private static void ReturnToLibrary(SearchView search, LibraryViewModel library)
     {
         Click(search, "Try again");
@@ -266,6 +294,29 @@ public sealed class SearchViewTests
         private static SearchEdition Edition()
         {
             return new("/books/OL1M", "Dune", "Frank Herbert", "Ace", "1990", "123", "Paperback", "eng", "Desert planet.", 12);
+        }
+    }
+
+    private sealed class OfflineProvider : IBookSearch
+    {
+        public Task<SearchPage<SearchWork>> SearchAsync(string title, int page, CancellationToken cancellationToken)
+        {
+            throw new SearchException("Connection failed.");
+        }
+
+        public Task<SearchPage<SearchEdition>> EditionsAsync(string workKey, int page, CancellationToken cancellationToken)
+        {
+            throw new SearchException("Connection failed.");
+        }
+
+        public Task<SearchEdition> PreviewAsync(string editionKey, CancellationToken cancellationToken)
+        {
+            throw new SearchException("Connection failed.");
+        }
+
+        public Task<byte[]?> CoverAsync(int coverId, CancellationToken cancellationToken)
+        {
+            throw new SearchException("Connection failed.");
         }
     }
 
