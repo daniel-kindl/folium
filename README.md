@@ -2,79 +2,59 @@
 
 Folium is an offline-first Android app for a personal book library. A person can add, browse, edit, and remove books on the device, and can mark a book as to read, reading, or finished. A person can also search Open Library by title and preview editions online.
 
-## Prerequisites
+Built with .NET 10 and Avalonia.
 
-- [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0), as specified by `global.json`.
-- Android SDK and a supported JDK. Install Android Studio and its SDK components, or follow the [.NET for Android setup instructions](https://learn.microsoft.com/dotnet/android/getting-started/installation/). The Android SDK command-line tools and `adb` should be available on your path. Set `ANDROID_HOME` and `JAVA_HOME` if the tooling cannot locate them.
-- An Android 12 (API 31) or later emulator or device with USB debugging enabled for deployment.
+[![CI](https://github.com/daniel-kindl/folium/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/daniel-kindl/folium/actions/workflows/ci.yml)
+[![Release](https://github.com/daniel-kindl/folium/actions/workflows/release.yml/badge.svg)](https://github.com/daniel-kindl/folium/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/daniel-kindl/folium?label=latest)](https://github.com/daniel-kindl/folium/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![API 31+](https://img.shields.io/badge/API-31%2B-brightgreen)](https://developer.android.com/)
+[![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 
-From the repository root, install the required .NET workload and restore dependencies:
+Download the [latest GitHub release](https://github.com/daniel-kindl/folium/releases/latest) APK. Folium is not distributed on Google Play.
 
-```sh
-dotnet workload restore
-dotnet restore --locked-mode
-```
+---
 
-## Build and test
+## Features
 
-```sh
-dotnet format --verify-no-changes --no-restore
-dotnet build Folium.slnx --configuration Release --no-restore
-dotnet test Folium.slnx --configuration Release --no-build --no-restore
-```
+| Feature | Detail |
+|---------|--------|
+| Personal library | Add, browse, edit, and remove books on the device. |
+| Reading status | Mark a book as to read, reading, or finished. |
+| Offline use | The library stays on the device. Saved details and covers work offline after restart. |
+| Library search | Search saved titles and authors on the device. |
+| Library sort | The default order is title A-Z. You can also sort by title or author in either direction. |
+| Open Library search | Search by title, browse editions, and preview edition metadata and covers. |
+| Import | Review an edition, edit its metadata, and save it as a book. A cover is optional. |
+| Backup | Export and restore a personal library backup on the device. Folium does not upload the backup. |
+| Appearance | Light and dark themes, bundled Noto Sans and Lucide icons, and system text scaling on Android. |
 
-The solution build includes the Android application. CI also checks the complete dependency graph for high and critical NuGet advisories.
+---
 
-## Deploy to Android
+## Install
 
-Start an emulator, or connect a device and authorize USB debugging. Confirm that `adb devices` lists it, then run:
+Folium is distributed as a signed APK from GitHub releases.
 
-```sh
-dotnet run --project src/Folium.Android
-```
+### GitHub APK
 
-The development build uses a debug signing key. See [Avalonia Android deployment](https://docs.avaloniaui.net/docs/deployment/android) for device setup. See [docs/releasing.md](docs/releasing.md) for release signing, version numbers, and GitHub releases.
+Download the [latest GitHub release](https://github.com/daniel-kindl/folium/releases/latest).
+The release has one asset named `folium-X.Y.Z.apk`. Install the APK manually. Android can require permission to install an app from an unknown source.
 
-### Physical device verification
+Folium requires Android 12 (API 31) or later.
 
-On 2026-11-03, a USB-connected Pixel 9a ran the debug application with identity
-`dev.danielkindl.folium`. The centered Folium placeholder rendered after launch
-and after returning from the Home screen. The Android build passed with no
-warnings or errors, and the existing automated test passed.
+A debug build uses a different signing key. The first release install over a debug build requires uninstalling the debug app first. Export a personal library backup before you uninstall if you want to keep the library. Later releases install over earlier release builds.
 
-The initial launch crashed because the activity used a platform Material theme.
-Avalonia's activity requires an AppCompat theme. `Theme.AppCompat.NoActionBar`
-fixed that crash. Orientation behavior was not checked in this smoke test.
+---
 
-To repeat the device check, enable USB debugging and authorize the computer.
-Build the Android project, then install and launch the signed debug APK:
+## Usage
 
-```sh
-dotnet build src/Folium.Android
-adb -s DEVICE_SERIAL install -r src/Folium.Android/bin/Debug/net10.0-android/dev.danielkindl.folium-Signed.apk
-adb -s DEVICE_SERIAL shell monkey -p dev.danielkindl.folium -c android.intent.category.LAUNCHER 1
-```
-
-Replace `DEVICE_SERIAL` with the serial from `adb devices`. Check the placeholder,
-press Home, and open Folium again to check resume.
-
-## Structure
-
-- `src/Folium`: shared Avalonia UI, book rules, and the private library file.
-- `src/Folium.Android`: Android application host.
-- `tests/Folium.Tests`: automated tests.
+### Personal library
 
 A book has a title, an author, and a reading status. Folium stores the personal library in a private JSON file. On Android, that file is `library.json` in the app files directory. See [CONTEXT.md](CONTEXT.md) for the domain terms. Search and preview do not save books. Choose **Review and save** to import an edition into the personal library.
 
 In the Library screen, search checks saved titles and authors. It trims the query, uses Unicode Form D normalization, removes combining marks, and compares without case. An empty query leaves the status filter in effect. A query that contains only combining marks is also empty. The default order is title A-Z. Sort uses that same folded text, then the original text, then the local book ID in ascending order. You can also sort by title or author in either direction. Letters that do not decompose stay distinct. Examples are ß, ø, Æ, Ł, and the ﬁ ligature. Search and sorting run on the device and do not change saved records. The search and sort controls stay hidden when the library has no books.
 
-See [AGENTS.md](AGENTS.md) for development instructions. Use [Conventional Commits and short-lived branches](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/version-control/index.md). Versions follow [Semantic Versioning](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/versioning/index.md). Changes require independent pull-request review.
-
-## License
-
-[MIT](LICENSE)
-
-## Search Open Library
+### Search Open Library
 
 Choose **Find a book online**, enter a title, then select **Search Open Library**.
 Select a work to browse its editions. Publisher, date, language, ISBN and edition
@@ -93,7 +73,7 @@ URL. Successful responses stay in a bounded session cache. The client honors
 Retry-After and does not retry automatically. Result pages contain at most 20
 works or editions. No API key or backend is required.
 
-## Import a book
+### Import a book
 
 Open an edition preview and choose **Review and save**. Review the title, author,
 publisher, publication date, ISBN, edition statement, language, and description. You can
@@ -191,3 +171,62 @@ The library on the device stays unchanged.
 
 The backup contains the reading history and any saved covers.
 Store the file in a place that stays private.
+
+---
+
+## Build from source
+
+### Prerequisites
+
+- [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0), as specified by `global.json`.
+- Android SDK and a supported JDK. Install Android Studio and its SDK components, or follow the [.NET for Android setup instructions](https://learn.microsoft.com/dotnet/android/getting-started/installation/). The Android SDK command-line tools and `adb` should be available on your path. Set `ANDROID_HOME` and `JAVA_HOME` if the tooling cannot locate them.
+- An Android 12 (API 31) or later emulator or device with USB debugging enabled for deployment.
+
+From the repository root, install the required .NET workload and restore dependencies:
+
+```sh
+dotnet workload restore
+dotnet restore --locked-mode
+```
+
+### Build and test
+
+```sh
+dotnet format --verify-no-changes --no-restore
+dotnet build Folium.slnx --configuration Release --no-restore
+dotnet test Folium.slnx --configuration Release --no-build --no-restore
+```
+
+The solution build includes the Android application. CI also checks the complete dependency graph for high and critical NuGet advisories.
+
+### Deploy to Android
+
+Start an emulator, or connect a device and authorize USB debugging. Confirm that `adb devices` lists it, then run:
+
+```sh
+dotnet run --project src/Folium.Android
+```
+
+The development build uses a debug signing key. See [Avalonia Android deployment](https://docs.avaloniaui.net/docs/deployment/android) for device setup. See [docs/releasing.md](docs/releasing.md) for release signing, version numbers, and GitHub releases. See [docs/device-verification.md](docs/device-verification.md) for the early physical device check and the commands to repeat it.
+
+### Structure
+
+- `src/Folium`: shared Avalonia UI, book rules, and the private library file.
+- `src/Folium.Android`: Android application host.
+- `tests/Folium.Tests`: automated tests.
+
+---
+
+## Contributing
+
+See [AGENTS.md](AGENTS.md) for development instructions. Use [Conventional Commits and short-lived branches](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/version-control/index.md). Versions follow [Semantic Versioning](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/versioning/index.md). Changes require independent pull-request review.
+
+---
+
+## License
+
+Folium is licensed under the [MIT License](LICENSE).
+
+Copyright © 2026 Daniel Kindl.
+
+Bundled Noto Sans fonts use the [SIL Open Font License 1.1](src/Folium/Assets/Fonts/OFL.txt). Lucide icons use the ISC license, plus the MIT license for inherited Feather icons. See [src/Folium/Assets/Lucide/LICENSE](src/Folium/Assets/Lucide/LICENSE).
