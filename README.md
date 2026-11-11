@@ -10,6 +10,7 @@ Built with .NET 10 and Avalonia.
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![API 31+](https://img.shields.io/badge/API-31%2B-brightgreen)](https://developer.android.com/)
 [![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![Avalonia](https://img.shields.io/badge/Avalonia-12.1.6-8B44AC)](https://avaloniaui.net)
 
 Download the [latest GitHub release](https://github.com/daniel-kindl/folium/releases/latest) APK. Folium is not distributed on Google Play.
 
