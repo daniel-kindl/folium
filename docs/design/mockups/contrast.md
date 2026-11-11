@@ -1,0 +1,124 @@
+# Contrast checks
+
+Computed with `src/contrast.mjs` using the WCAG 2.2 contrast formula.
+All 116 pairs pass. The formula check (black on white 21 : 1, same color 1 : 1) passes first.
+Disabled text is exempt from the 4.5 : 1 text rule.
+
+| Mode | Foreground | Background | Foreground hex | Background hex | Ratio | Need | Kind |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| light | `text` | `background` | `#202922` | `#FAF8F3` | 14.12 | 4.5 | text |
+| light | `text` | `surface` | `#202922` | `#FFFFFF` | 14.98 | 4.5 | text |
+| light | `text` | `raised` | `#202922` | `#F1EFE8` | 13.02 | 4.5 | text |
+| light | `muted` | `background` | `#536157` | `#FAF8F3` | 6.15 | 4.5 | text |
+| light | `muted` | `surface` | `#536157` | `#FFFFFF` | 6.53 | 4.5 | text |
+| light | `muted` | `raised` | `#536157` | `#F1EFE8` | 5.68 | 4.5 | text |
+| light | `primary` | `background` | `#315C43` | `#FAF8F3` | 7.21 | 4.5 | text |
+| light | `primary` | `surface` | `#315C43` | `#FFFFFF` | 7.66 | 4.5 | text |
+| light | `primary` | `raised` | `#315C43` | `#F1EFE8` | 6.66 | 4.5 | text |
+| light | `secondary` | `background` | `#5B5269` | `#FAF8F3` | 6.93 | 4.5 | text |
+| light | `secondary` | `surface` | `#5B5269` | `#FFFFFF` | 7.35 | 4.5 | text |
+| light | `secondary` | `raised` | `#5B5269` | `#F1EFE8` | 6.39 | 4.5 | text |
+| light | `accent` | `background` | `#835A27` | `#FAF8F3` | 5.72 | 4.5 | text |
+| light | `accent` | `surface` | `#835A27` | `#FFFFFF` | 6.07 | 4.5 | text |
+| light | `accent` | `raised` | `#835A27` | `#F1EFE8` | 5.28 | 4.5 | text |
+| light | `success` | `background` | `#28613C` | `#FAF8F3` | 6.91 | 4.5 | text |
+| light | `success` | `surface` | `#28613C` | `#FFFFFF` | 7.33 | 4.5 | text |
+| light | `success` | `raised` | `#28613C` | `#F1EFE8` | 6.37 | 4.5 | text |
+| light | `warning` | `background` | `#805600` | `#FAF8F3` | 6.09 | 4.5 | text |
+| light | `warning` | `surface` | `#805600` | `#FFFFFF` | 6.46 | 4.5 | text |
+| light | `warning` | `raised` | `#805600` | `#F1EFE8` | 5.62 | 4.5 | text |
+| light | `error` | `background` | `#A52F35` | `#FAF8F3` | 6.47 | 4.5 | text |
+| light | `error` | `surface` | `#A52F35` | `#FFFFFF` | 6.87 | 4.5 | text |
+| light | `error` | `raised` | `#A52F35` | `#F1EFE8` | 5.97 | 4.5 | text |
+| light | `info` | `background` | `#285E86` | `#FAF8F3` | 6.52 | 4.5 | text |
+| light | `info` | `surface` | `#285E86` | `#FFFFFF` | 6.92 | 4.5 | text |
+| light | `info` | `raised` | `#285E86` | `#F1EFE8` | 6.01 | 4.5 | text |
+| light | `statusToRead` | `background` | `#835A27` | `#FAF8F3` | 5.72 | 4.5 | text |
+| light | `statusToRead` | `surface` | `#835A27` | `#FFFFFF` | 6.07 | 4.5 | text |
+| light | `statusToRead` | `raised` | `#835A27` | `#F1EFE8` | 5.28 | 4.5 | text |
+| light | `statusReading` | `background` | `#285E86` | `#FAF8F3` | 6.52 | 4.5 | text |
+| light | `statusReading` | `surface` | `#285E86` | `#FFFFFF` | 6.92 | 4.5 | text |
+| light | `statusReading` | `raised` | `#285E86` | `#F1EFE8` | 6.01 | 4.5 | text |
+| light | `statusFinished` | `background` | `#28613C` | `#FAF8F3` | 6.91 | 4.5 | text |
+| light | `statusFinished` | `surface` | `#28613C` | `#FFFFFF` | 7.33 | 4.5 | text |
+| light | `statusFinished` | `raised` | `#28613C` | `#F1EFE8` | 6.37 | 4.5 | text |
+| light | `border` | `background` | `#6B786E` | `#FAF8F3` | 4.36 | 3 | non-text |
+| light | `border` | `surface` | `#6B786E` | `#FFFFFF` | 4.63 | 3 | non-text |
+| light | `border` | `raised` | `#6B786E` | `#F1EFE8` | 4.02 | 3 | non-text |
+| light | `focus` | `background` | `#315C43` | `#FAF8F3` | 7.21 | 3 | non-text |
+| light | `focus` | `surface` | `#315C43` | `#FFFFFF` | 7.66 | 3 | non-text |
+| light | `focus` | `raised` | `#315C43` | `#F1EFE8` | 6.66 | 3 | non-text |
+| light | `disabledText` | `background` | `#747D75` | `#FAF8F3` | 4.01 | 3 | disabled (exempt |
+| light | `disabledText` | `surface` | `#747D75` | `#FFFFFF` | 4.26 | 3 | disabled (exempt |
+| light | `disabledText` | `raised` | `#747D75` | `#F1EFE8` | 3.7 | 3 | disabled (exempt |
+| light | `onPrimary` | `primary` | `#FFFFFF` | `#315C43` | 7.66 | 4.5 | text |
+| light | `primary` | `selectedContainer` | `#315C43` | `#DCE8DE` | 6.07 | 4.5 | text/icon |
+| light | `text` | `selectedContainer` | `#202922` | `#DCE8DE` | 11.87 | 4.5 | text |
+| light | `onInverse` | `inverseSurface` | `#F1F3EC` | `#202922` | 13.39 | 4.5 | text |
+| light | `inversePrimary` | `inverseSurface` | `#AED4B3` | `#202922` | 9.18 | 4.5 | text |
+| light | `disabledText` | `raised` | `#747D75` | `#F1EFE8` | 3.7 | 3 | disabled (exempt |
+| light | `coverInk.sage` | `coverTone.sage` | `#24402F` | `#DCE5D9` | 8.79 | 4.5 | placeholder text |
+| light | `coverInk.sand` | `coverTone.sand` | `#5A3D17` | `#EADFC8` | 7.51 | 4.5 | placeholder text |
+| light | `coverInk.clay` | `coverTone.clay` | `#6A2E25` | `#EBD6CE` | 7.41 | 4.5 | placeholder text |
+| light | `coverInk.mist` | `coverTone.mist` | `#1F4560` | `#D6E0E8` | 7.55 | 4.5 | placeholder text |
+| light | `coverInk.heather` | `coverTone.heather` | `#45395A` | `#DFD8E7` | 7.61 | 4.5 | placeholder text |
+| light | `coverInk.stone` | `coverTone.stone` | `#343A30` | `#E3E1D9` | 8.94 | 4.5 | placeholder text |
+| light | `raised (dialog edge)` | `background+scrim48%` | `#F1EFE8` | `#82817E` | 3.39 | 3 | non-text (dialog edge) |
+| dark | `text` | `background` | `#F1F3EC` | `#171C18` | 15.44 | 4.5 | text |
+| dark | `text` | `surface` | `#F1F3EC` | `#202922` | 13.39 | 4.5 | text |
+| dark | `text` | `raised` | `#F1F3EC` | `#29352D` | 11.44 | 4.5 | text |
+| dark | `muted` | `background` | `#B8C4B8` | `#171C18` | 9.56 | 4.5 | text |
+| dark | `muted` | `surface` | `#B8C4B8` | `#202922` | 8.29 | 4.5 | text |
+| dark | `muted` | `raised` | `#B8C4B8` | `#29352D` | 7.08 | 4.5 | text |
+| dark | `primary` | `background` | `#AED4B3` | `#171C18` | 10.58 | 4.5 | text |
+| dark | `primary` | `surface` | `#AED4B3` | `#202922` | 9.18 | 4.5 | text |
+| dark | `primary` | `raised` | `#AED4B3` | `#29352D` | 7.84 | 4.5 | text |
+| dark | `secondary` | `background` | `#CEC0DF` | `#171C18` | 10.06 | 4.5 | text |
+| dark | `secondary` | `surface` | `#CEC0DF` | `#202922` | 8.73 | 4.5 | text |
+| dark | `secondary` | `raised` | `#CEC0DF` | `#29352D` | 7.45 | 4.5 | text |
+| dark | `accent` | `background` | `#E8BE82` | `#171C18` | 9.97 | 4.5 | text |
+| dark | `accent` | `surface` | `#E8BE82` | `#202922` | 8.65 | 4.5 | text |
+| dark | `accent` | `raised` | `#E8BE82` | `#29352D` | 7.38 | 4.5 | text |
+| dark | `success` | `background` | `#A2D5AF` | `#171C18` | 10.42 | 4.5 | text |
+| dark | `success` | `surface` | `#A2D5AF` | `#202922` | 9.04 | 4.5 | text |
+| dark | `success` | `raised` | `#A2D5AF` | `#29352D` | 7.72 | 4.5 | text |
+| dark | `warning` | `background` | `#E8C36B` | `#171C18` | 10.24 | 4.5 | text |
+| dark | `warning` | `surface` | `#E8C36B` | `#202922` | 8.88 | 4.5 | text |
+| dark | `warning` | `raised` | `#E8C36B` | `#29352D` | 7.58 | 4.5 | text |
+| dark | `error` | `background` | `#FFB3B6` | `#171C18` | 10.18 | 4.5 | text |
+| dark | `error` | `surface` | `#FFB3B6` | `#202922` | 8.83 | 4.5 | text |
+| dark | `error` | `raised` | `#FFB3B6` | `#29352D` | 7.54 | 4.5 | text |
+| dark | `info` | `background` | `#A9CEE9` | `#171C18` | 10.44 | 4.5 | text |
+| dark | `info` | `surface` | `#A9CEE9` | `#202922` | 9.05 | 4.5 | text |
+| dark | `info` | `raised` | `#A9CEE9` | `#29352D` | 7.73 | 4.5 | text |
+| dark | `statusToRead` | `background` | `#E8BE82` | `#171C18` | 9.97 | 4.5 | text |
+| dark | `statusToRead` | `surface` | `#E8BE82` | `#202922` | 8.65 | 4.5 | text |
+| dark | `statusToRead` | `raised` | `#E8BE82` | `#29352D` | 7.38 | 4.5 | text |
+| dark | `statusReading` | `background` | `#A9CEE9` | `#171C18` | 10.44 | 4.5 | text |
+| dark | `statusReading` | `surface` | `#A9CEE9` | `#202922` | 9.05 | 4.5 | text |
+| dark | `statusReading` | `raised` | `#A9CEE9` | `#29352D` | 7.73 | 4.5 | text |
+| dark | `statusFinished` | `background` | `#A2D5AF` | `#171C18` | 10.42 | 4.5 | text |
+| dark | `statusFinished` | `surface` | `#A2D5AF` | `#202922` | 9.04 | 4.5 | text |
+| dark | `statusFinished` | `raised` | `#A2D5AF` | `#29352D` | 7.72 | 4.5 | text |
+| dark | `border` | `background` | `#87998A` | `#171C18` | 5.72 | 3 | non-text |
+| dark | `border` | `surface` | `#87998A` | `#202922` | 4.96 | 3 | non-text |
+| dark | `border` | `raised` | `#87998A` | `#29352D` | 4.24 | 3 | non-text |
+| dark | `focus` | `background` | `#AED4B3` | `#171C18` | 10.58 | 3 | non-text |
+| dark | `focus` | `surface` | `#AED4B3` | `#202922` | 9.18 | 3 | non-text |
+| dark | `focus` | `raised` | `#AED4B3` | `#29352D` | 7.84 | 3 | non-text |
+| dark | `disabledText` | `background` | `#8C978E` | `#171C18` | 5.7 | 3 | disabled (exempt |
+| dark | `disabledText` | `surface` | `#8C978E` | `#202922` | 4.95 | 3 | disabled (exempt |
+| dark | `disabledText` | `raised` | `#8C978E` | `#29352D` | 4.22 | 3 | disabled (exempt |
+| dark | `onPrimary` | `primary` | `#173823` | `#AED4B3` | 7.91 | 4.5 | text |
+| dark | `primary` | `selectedContainer` | `#AED4B3` | `#2F4A39` | 5.96 | 4.5 | text/icon |
+| dark | `text` | `selectedContainer` | `#F1F3EC` | `#2F4A39` | 8.69 | 4.5 | text |
+| dark | `onInverse` | `inverseSurface` | `#202922` | `#F1EFE8` | 13.02 | 4.5 | text |
+| dark | `inversePrimary` | `inverseSurface` | `#315C43` | `#F1EFE8` | 6.66 | 4.5 | text |
+| dark | `disabledText` | `raised` | `#8C978E` | `#29352D` | 4.22 | 3 | disabled (exempt |
+| dark | `coverInk.sage` | `coverTone.sage` | `#CFE3D2` | `#2C3D31` | 8.56 | 4.5 | placeholder text |
+| dark | `coverInk.sand` | `coverTone.sand` | `#EBD5AE` | `#3D3426` | 8.54 | 4.5 | placeholder text |
+| dark | `coverInk.clay` | `coverTone.clay` | `#F0C9BE` | `#43302B` | 8.14 | 4.5 | placeholder text |
+| dark | `coverInk.mist` | `coverTone.mist` | `#C7DCEC` | `#273642` | 8.79 | 4.5 | placeholder text |
+| dark | `coverInk.heather` | `coverTone.heather` | `#DCD0EC` | `#352F40` | 8.75 | 4.5 | placeholder text |
+| dark | `coverInk.stone` | `coverTone.stone` | `#DDDCD2` | `#33352F` | 9.01 | 4.5 | placeholder text |
+| dark | `border (dialog edge)` | `background+scrim48%` | `#87998A` | `#0C0F0C` | 6.38 | 3 | non-text (dialog edge) |

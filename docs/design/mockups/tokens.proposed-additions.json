@@ -1,0 +1,109 @@
+{
+  "note": "Proposed additions to docs/design/tokens.json. Approved values are unchanged.",
+  "color": {
+    "light": {
+      "statusToRead": "#835A27",
+      "statusReading": "#285E86",
+      "statusFinished": "#28613C",
+      "selectedContainer": "#DCE8DE",
+      "focus": "#315C43",
+      "divider": "#E3E0D7",
+      "disabledText": "#747D75",
+      "inverseSurface": "#202922",
+      "onInverse": "#F1F3EC",
+      "inversePrimary": "#AED4B3",
+      "scrim": "#000000"
+    },
+    "dark": {
+      "statusToRead": "#E8BE82",
+      "statusReading": "#A9CEE9",
+      "statusFinished": "#A2D5AF",
+      "selectedContainer": "#2F4A39",
+      "focus": "#AED4B3",
+      "divider": "#2E3A31",
+      "disabledText": "#8C978E",
+      "inverseSurface": "#F1EFE8",
+      "onInverse": "#202922",
+      "inversePrimary": "#315C43",
+      "scrim": "#000000"
+    }
+  },
+  "coverTones": {
+    "light": {
+      "sage": [
+        "#DCE5D9",
+        "#24402F"
+      ],
+      "sand": [
+        "#EADFC8",
+        "#5A3D17"
+      ],
+      "clay": [
+        "#EBD6CE",
+        "#6A2E25"
+      ],
+      "mist": [
+        "#D6E0E8",
+        "#1F4560"
+      ],
+      "heather": [
+        "#DFD8E7",
+        "#45395A"
+      ],
+      "stone": [
+        "#E3E1D9",
+        "#343A30"
+      ]
+    },
+    "dark": {
+      "sage": [
+        "#2C3D31",
+        "#CFE3D2"
+      ],
+      "sand": [
+        "#3D3426",
+        "#EBD5AE"
+      ],
+      "clay": [
+        "#43302B",
+        "#F0C9BE"
+      ],
+      "mist": [
+        "#273642",
+        "#C7DCEC"
+      ],
+      "heather": [
+        "#352F40",
+        "#DCD0EC"
+      ],
+      "stone": [
+        "#33352F",
+        "#DDDCD2"
+      ]
+    }
+  },
+  "typography": {
+    "labelSmall": {
+      "fontSize": 14,
+      "lineHeight": 20,
+      "fontWeight": 500
+    }
+  },
+  "radius": {
+    "cover": 4
+  },
+  "icon": {
+    "roles": {
+      "overflow": "ellipsis-vertical",
+      "online": "globe",
+      "offline": "wifi-off",
+      "retry": "refresh-cw",
+      "exportBackup": "file-down",
+      "restoreBackup": "file-up",
+      "viewGrid": "layout-grid",
+      "viewList": "list",
+      "sort": "arrow-up-down",
+      "clear": "x"
+    }
+  }
+}
