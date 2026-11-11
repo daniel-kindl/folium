@@ -15,9 +15,10 @@ Minor and patch must be below 100. Major must be at most 209999, so the version 
 1. Set `FoliumVersion` in `Directory.Build.props` to the new `X.Y.Z` value.
 2. Move the notes under `## Unreleased` in `CHANGELOG.md` to a new `## X.Y.Z` section. The release fails if that section is missing or empty.
 3. Merge the change to `main`.
-4. Start the `Release` workflow with the `version` input set to `X.Y.Z`, or push the tag `vX.Y.Z` on the merged commit. Only Daniel starts a release. The input or tag must match `FoliumVersion`.
-5. The workflow runs the same restore, format, build, and test commands as CI, then checks that the version code is higher than earlier `vX.Y.Z` release tags, builds a signed APK, and creates a normal GitHub release (not a draft and not a prerelease) with tag `vX.Y.Z` and exactly one asset named `folium-X.Y.Z.apk`.
-6. Check the asset on a device before you tell users to install it.
+4. On `main`, start the `Release` workflow and set the `version` input to `X.Y.Z`. Only Daniel starts a release, and only from `main`. The input must match `FoliumVersion`. A tag push does not start a release.
+5. The `validate` job first checks that the run is on `main`. It then runs the same restore, format, build, and test commands as CI, and checks that the version code is higher than earlier `vX.Y.Z` release tags.
+6. Approve the deployment to the `release` environment. The `sign` job then builds the signed APK. The `release` job creates a normal GitHub release (not a draft and not a prerelease). The tag `vX.Y.Z` is created on the commit that was built. The release has exactly one asset named `folium-X.Y.Z.apk`.
+7. Check the asset on a device before you tell users to install it.
 
 ## Check the asset
 
@@ -32,7 +33,12 @@ adb install -r folium-X.Y.Z.apk
 
 ## One-time signing setup
 
-Daniel creates the release key and the GitHub Actions secrets. No agent creates, reads, or prints them. The keystore file must not enter git.
+Daniel creates the protected `release` environment, the release key, and the environment secrets. No agent creates or changes GitHub environments, rulesets, or repository settings. No agent creates, reads, or prints the key or the secrets. The keystore file must not enter git.
+
+In the GitHub repository settings, create an environment named `release` with these protection rules:
+
+- Required reviewers: Daniel Kindl
+- Deployment branches: `main` only
 
 Create a PKCS12 keystore on a private computer. Choose a strong password. Example:
 
@@ -52,14 +58,14 @@ Encode the keystore as one line of Base64:
 base64 -w0 folium-release.keystore
 ```
 
-In the GitHub repository settings, add these secrets:
+Add these secrets to the `release` environment. Do not add them as repository secrets:
 
 - `ANDROID_RELEASE_KEYSTORE_BASE64`: the Base64 text of the keystore file
 - `ANDROID_RELEASE_KEYSTORE_PASSWORD`: the keystore password
 - `ANDROID_RELEASE_KEY_ALIAS`: the key alias, for example `folium`
 - `ANDROID_RELEASE_KEY_PASSWORD`: the key password
 
-Keep a private backup of the keystore and the passwords. The workflow decodes the keystore to a temporary file, signs the APK, and deletes the file. Secret values must not appear in logs.
+Keep a private backup of the keystore and the passwords. The workflow decodes the keystore to a temporary file, signs the APK, and deletes the file. Secret values must not appear in logs. The key alias is passed as the signing property value. The key and store passwords are passed with the `env:` prefix, which the .NET Android documentation allows only for those two password properties.
 
 ## If the key is lost
 
