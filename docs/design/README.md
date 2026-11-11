@@ -75,6 +75,20 @@ image aspect ratio. Do not add motion durations or responsive breakpoints to
 this contract. A cover without a saved image uses one `coverTones` pair. The
 tone is the first color and the ink is the second.
 
+Daniel accepted the `cover` sizes on 2026-11-11 in
+[pull request 49](https://github.com/daniel-kindl/folium/pull/49).
+
+## Open Leaf decisions
+
+Daniel decided these open items from
+[issue 39](https://github.com/daniel-kindl/folium/issues/39) on 2026-11-11:
+
+- The second tab is "Find online".
+- The Library opens in the list view. The app remembers the last list or grid choice.
+- The delete action is "Delete book".
+- A cover without a saved image shows a cover tone with the title and the author.
+  A cover narrower than 80 units shows the first letter of the title.
+
 ## Avalonia integration
 
 1. Shared resources define the semantic colors in Light and Dark theme dictionaries.
