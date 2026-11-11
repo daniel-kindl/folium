@@ -20,7 +20,25 @@ Daniel starts the `Release` workflow on `main` and does nothing else to the repo
 4. Only after signing succeeds, the `release` job pushes one commit `chore(release): X.Y.Z` to `main`, tags that exact commit `vX.Y.Z`, and creates a normal GitHub release (not a draft and not a prerelease). The release has exactly one asset named `folium-X.Y.Z.apk`. The notes come from the new CHANGELOG section.
 5. Check the asset on a device before you tell users to install it.
 
-If the run fails or the environment approval is rejected, the repository stays unchanged. Nothing is pushed to `main`, and no tag is created. If `main` moves during the run, the workflow fails and it does not force-push.
+If the run fails or the environment approval is rejected before the push, the repository stays unchanged. The release job pushes the commit and the tag together with `git push --atomic`. If `main` moved, that atomic push is rejected, and neither ref is updated. The repository stays unchanged unless the run fails after the atomic push succeeds.
+
+If the atomic push succeeds and `gh release create` then fails, `main` already has the release commit and the tag `vX.Y.Z`, but there is no GitHub release. Recover as follows:
+
+1. Download the `folium-release-apk` artifact from the failed run. Artifacts are kept for 7 days.
+2. Copy the CHANGELOG section for `X.Y.Z` from that release commit into a notes file. The section is already on `main`.
+3. Create the GitHub release from the existing tag:
+
+```sh
+gh release create vX.Y.Z \
+  --verify-tag \
+  --title vX.Y.Z \
+  --notes-file release-notes.md \
+  folium-X.Y.Z.apk
+```
+
+`--verify-tag` requires the tag to exist already.
+
+A push made with `GITHUB_TOKEN` does not start CI, so the `chore(release): X.Y.Z` commit on `main` gets no CI run of its own. The same tree was already built and tested in the `prepare` job. If `main` moves during the run, the workflow fails and it does not force-push.
 
 The APK is built from the same files that the release commit contains.
 
