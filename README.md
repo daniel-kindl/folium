@@ -33,7 +33,7 @@ Start an emulator, or connect a device and authorize USB debugging. Confirm that
 dotnet run --project src/Folium.Android
 ```
 
-The development build uses a debug signing key. See [Avalonia Android deployment](https://docs.avaloniaui.net/docs/deployment/android) for device setup and release signing.
+The development build uses a debug signing key. See [Avalonia Android deployment](https://docs.avaloniaui.net/docs/deployment/android) for device setup. See [docs/releasing.md](docs/releasing.md) for release signing, version numbers, and GitHub releases.
 
 ### Physical device verification
 
