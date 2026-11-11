@@ -48,6 +48,14 @@
         "sha256": "1d5023760db81f21c3b5a63f012ef540acc01932731c733e4645012a876d39f4"
       },
       {
+        "path": "docs/design/assets/lucide/source/check.svg",
+        "sha256": "7f33acc9a77a61659531044525fc008edebe215bf4dcf1c789c8674ad3277db0"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/chevron-down.svg",
+        "sha256": "66ea878e72ed3488bb3b464c39dfdccee8d1f78e560dccea40e5e12da0e87e87"
+      },
+      {
         "path": "docs/design/assets/lucide/source/circle-alert.svg",
         "sha256": "ce3e98b7a03b78c0071131df42466e4e1ff5187fccad30e739ec9ce951cf685a"
       },

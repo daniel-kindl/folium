@@ -36,6 +36,8 @@ ICONS = {
     "FoliumViewListIcon": "list",
     "FoliumSortIcon": "arrow-up-down",
     "FoliumClearIcon": "x",
+    "FoliumCheckIcon": "check",
+    "FoliumExpandIcon": "chevron-down",
 }
 SVG_NAMESPACE = "{http://www.w3.org/2000/svg}"
 

@@ -164,4 +164,14 @@
             <StreamGeometry>m6 6 12 12</StreamGeometry>
         </GeometryGroup.Children>
     </GeometryGroup>
+    <GeometryGroup x:Key="FoliumCheckIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>M20 6 9 17l-5-5</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
+    <GeometryGroup x:Key="FoliumExpandIcon">
+        <GeometryGroup.Children>
+            <StreamGeometry>m6 9 6 6 6-6</StreamGeometry>
+        </GeometryGroup.Children>
+    </GeometryGroup>
 </ResourceDictionary>

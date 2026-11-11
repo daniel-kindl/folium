@@ -13,7 +13,7 @@ namespace Folium.Tests;
 public sealed class DesignAssetTests
 {
     private static readonly string[] FontFaces = ["Regular", "Medium", "SemiBold"];
-    private static readonly string[] Icons = ["FoliumLibraryIcon", "FoliumBookIcon", "FoliumAddIcon", "FoliumEditIcon", "FoliumDeleteIcon", "FoliumSearchIcon", "FoliumToReadIcon", "FoliumReadingIcon", "FoliumReadIcon", "FoliumTimeIcon", "FoliumErrorIcon", "FoliumBackIcon", "FoliumOverflowIcon", "FoliumEmptyIcon", "FoliumOnlineIcon", "FoliumOfflineIcon", "FoliumRetryIcon", "FoliumExportBackupIcon", "FoliumRestoreBackupIcon", "FoliumViewGridIcon", "FoliumViewListIcon", "FoliumSortIcon", "FoliumClearIcon"];
+    private static readonly string[] Icons = ["FoliumLibraryIcon", "FoliumBookIcon", "FoliumAddIcon", "FoliumEditIcon", "FoliumDeleteIcon", "FoliumSearchIcon", "FoliumToReadIcon", "FoliumReadingIcon", "FoliumReadIcon", "FoliumTimeIcon", "FoliumErrorIcon", "FoliumBackIcon", "FoliumOverflowIcon", "FoliumEmptyIcon", "FoliumOnlineIcon", "FoliumOfflineIcon", "FoliumRetryIcon", "FoliumExportBackupIcon", "FoliumRestoreBackupIcon", "FoliumViewGridIcon", "FoliumViewListIcon", "FoliumSortIcon", "FoliumClearIcon", "FoliumCheckIcon", "FoliumExpandIcon"];
 
     [Fact]
     public async Task AppEmbedsNotoSansFacesAndLucideGeometry()
