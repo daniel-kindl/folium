@@ -63,6 +63,23 @@ public sealed class AppVersion : IEquatable<AppVersion>
     /// <summary>The Android version code, computed as major * 10000 + minor * 100 + patch.</summary>
     public int VersionCode => checked((Major * 10000) + (Minor * 100) + Patch);
 
+    /// <summary>Returns the next version for an explicit patch, minor, or major bump.</summary>
+    /// <param name="bump">The bump to apply. <see cref="VersionBump.Auto"/> is not valid here.</param>
+    /// <returns>The next version, with lower components reset for a minor or major bump.</returns>
+    /// <exception cref="ArgumentException">The bump is Auto.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The next component would exceed the version code limits.</exception>
+    public AppVersion Bump(VersionBump bump)
+    {
+        return bump switch
+        {
+            VersionBump.Patch => new AppVersion(Major, Minor, Patch + 1),
+            VersionBump.Minor => new AppVersion(Major, Minor + 1, 0),
+            VersionBump.Major => new AppVersion(Major + 1, 0, 0),
+            VersionBump.Auto => throw new ArgumentException("An explicit bump is required.", nameof(bump)),
+            _ => throw new ArgumentOutOfRangeException(nameof(bump), bump, "The bump is not supported."),
+        };
+    }
+
     /// <inheritdoc />
     public override string ToString()
     {

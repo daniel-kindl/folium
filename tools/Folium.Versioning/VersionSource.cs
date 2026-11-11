@@ -52,4 +52,34 @@ public static class VersionSource
                 requested.DisplayVersion,
                 source.DisplayVersion));
     }
+
+    /// <summary>Replaces the FoliumVersion property value and keeps the rest of the file intact.</summary>
+    /// <param name="propsPath">The path of the properties file.</param>
+    /// <param name="version">The version to write.</param>
+    /// <exception cref="ArgumentException">The path is blank.</exception>
+    /// <exception cref="ArgumentNullException">The version is null.</exception>
+    /// <exception cref="InvalidOperationException">The property is missing or the file cannot be written.</exception>
+    public static void Write(string propsPath, AppVersion version)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(propsPath);
+        ArgumentNullException.ThrowIfNull(version);
+        _ = Read(propsPath);
+        string text = File.ReadAllText(propsPath);
+        const string OPEN = "<FoliumVersion>";
+        const string CLOSE = "</FoliumVersion>";
+        int start = text.IndexOf(OPEN, StringComparison.Ordinal);
+        int end = start < 0 ? -1 : text.IndexOf(CLOSE, start + OPEN.Length, StringComparison.Ordinal);
+        if (start < 0 || end < 0 || start != text.LastIndexOf(OPEN, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("The properties file does not contain a FoliumVersion property.");
+        }
+
+        string updated = string.Concat(text.AsSpan(0, start + OPEN.Length), version.DisplayVersion, text.AsSpan(end));
+        File.WriteAllText(propsPath, updated);
+        AppVersion written = Read(propsPath);
+        if (!written.Equals(version))
+        {
+            throw new InvalidOperationException("The version source was not updated.");
+        }
+    }
 }
