@@ -27,6 +27,7 @@
             <SolidColorBrush x:Key="FoliumOnInverseBrush" Color="#F1F3EC" />
             <SolidColorBrush x:Key="FoliumInversePrimaryBrush" Color="#AED4B3" />
             <SolidColorBrush x:Key="FoliumScrimBrush" Color="#000000" />
+            <SolidColorBrush x:Key="FoliumDialogBorderBrush" Color="Transparent" />
             <SolidColorBrush x:Key="FoliumCoverSageBrush" Color="#DCE5D9" />
             <SolidColorBrush x:Key="FoliumCoverSageInkBrush" Color="#24402F" />
             <SolidColorBrush x:Key="FoliumCoverSandBrush" Color="#EADFC8" />
@@ -86,6 +87,7 @@
             <SolidColorBrush x:Key="FoliumOnInverseBrush" Color="#202922" />
             <SolidColorBrush x:Key="FoliumInversePrimaryBrush" Color="#315C43" />
             <SolidColorBrush x:Key="FoliumScrimBrush" Color="#000000" />
+            <SolidColorBrush x:Key="FoliumDialogBorderBrush" Color="#87998A" />
             <SolidColorBrush x:Key="FoliumCoverSageBrush" Color="#2C3D31" />
             <SolidColorBrush x:Key="FoliumCoverSageInkBrush" Color="#CFE3D2" />
             <SolidColorBrush x:Key="FoliumCoverSandBrush" Color="#3D3426" />

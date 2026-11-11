@@ -20,6 +20,13 @@ public static class CoverPlaceholder
         return Tones[(hash & int.MaxValue) % Tones.Length];
     }
 
+    /// <summary>True when the name is one of the six placeholder tones.</summary>
+    /// <param name="tone">The tone name to check.</param>
+    public static bool IsTone(string? tone)
+    {
+        return tone is not null && Array.IndexOf(Tones, tone) >= 0;
+    }
+
     /// <summary>Returns the first letter of the title. A leading "The " is skipped.</summary>
     /// <param name="title">The book title. A null title is treated as empty.</param>
     public static string Initial(string title)

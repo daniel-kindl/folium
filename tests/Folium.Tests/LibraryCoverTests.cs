@@ -85,13 +85,12 @@ public sealed class LibraryCoverTests
             Border cover = view.GetVisualDescendants().OfType<Border>().Single(border => border.Width == 120);
             Assert.True(cover.IsEffectivelyVisible);
             Assert.Equal(180, cover.Bounds.Height, tolerance: 0.001);
-            AssertBrush(CoverPlaceholder.Tone(book.Id), ink: false, cover.Background);
+            AssertBrush(CoverPlaceholder.Tone(book.Id), ink: false, cover.Background, ThemeVariant.Dark);
             Assert.Contains(cover.GetVisualDescendants().OfType<TextBlock>(), text => string.Equals(text.Text, "Protocols", StringComparison.Ordinal));
             Assert.Contains(cover.GetVisualDescendants().OfType<TextBlock>(), text => string.Equals(text.Text, "Andrew Huberman", StringComparison.Ordinal));
             LocalCover savedCover = view.FindControl<LocalCover>("SavedCover")!;
             Assert.False(savedCover.IsEffectivelyVisible);
-            Assert.Contains(view.GetVisualDescendants().OfType<TextBlock>(), text =>
-                string.Equals(text.Text, "No saved cover", StringComparison.Ordinal) && text.IsEffectivelyVisible);
+            Assert.DoesNotContain(view.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && text.Text?.EndsWith("aved cover", StringComparison.Ordinal) == true);
             Assert.DoesNotContain(view.GetVisualDescendants().OfType<TextBlock>(), text =>
                 string.Equals(text.Text, "Edition", StringComparison.Ordinal) && text.IsEffectivelyVisible);
             Button reading = view.GetVisualDescendants().OfType<Button>().Single(button =>
@@ -127,10 +126,10 @@ public sealed class LibraryCoverTests
         Assert.Equal(Color.Parse(expected), brush.Color);
     }
 
-    private static void AssertBrush(string tone, bool ink, IBrush? actual)
+    private static void AssertBrush(string tone, bool ink, IBrush? actual, ThemeVariant? variant = null)
     {
         string key = "FoliumCover" + char.ToUpperInvariant(tone[0]) + tone[1..] + (ink ? "Ink" : "") + "Brush";
-        Assert.True(Application.Current!.TryGetResource(key, ThemeVariant.Light, out object? resource), key);
+        Assert.True(Application.Current!.TryGetResource(key, variant ?? ThemeVariant.Light, out object? resource), key);
         SolidColorBrush expected = Assert.IsType<SolidColorBrush>(resource);
         SolidColorBrush brush = Assert.IsType<SolidColorBrush>(actual);
         Assert.Equal(expected.Color, brush.Color);

@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:vm="using:Folium.ViewModels"
+             x:Class="Folium.Views.DeleteBookDialog"
+             x:DataType="vm:LibraryViewModel"
+             Background="Transparent">
+    <Panel>
+        <Border Background="{DynamicResource FoliumScrimBrush}" Opacity="0.48">
+            <Button Command="{Binding KeepBookCommand}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" AutomationProperties.Name="Keep book" />
+        </Border>
+        <Border Classes="folium-dialog" Margin="{StaticResource FoliumSpacingXlThickness}" VerticalAlignment="Center">
+            <StackPanel Spacing="{StaticResource FoliumSpacingMd}">
+                <TextBlock Text="{Binding Heading}" Classes="folium-section" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SaveError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.Name="{Binding SaveError}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <WrapPanel HorizontalAlignment="Right" ItemSpacing="{StaticResource FoliumSpacingSm}" LineSpacing="{StaticResource FoliumSpacingSm}">
+                    <Button Content="Keep book"
+                            Command="{Binding KeepBookCommand}"
+                            Classes="folium-text" />
+                    <Button Content="Delete book"
+                            Command="{Binding ConfirmRemoveCommand}"
+                            Classes="folium-danger">
+                        <Button.ContentTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
+                                    <Path Data="{StaticResource FoliumDeleteIcon}" Classes="folium-icon folium-icon-danger" Width="{StaticResource FoliumInlineIconSize}" Height="{StaticResource FoliumInlineIconSize}" />
+                                    <TextBlock Text="{Binding}" Classes="folium-label" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+    </Panel>
+</UserControl>

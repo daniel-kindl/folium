@@ -214,6 +214,8 @@ public sealed class LibraryViewTests
         foreach (Button filter in filters)
         {
             string filterLabel = Convert.ToString(filter.Content, CultureInfo.InvariantCulture) ?? string.Empty;
+            TextBlock shown = filter.GetVisualDescendants().OfType<TextBlock>().Single();
+            Control content = (Control)shown.GetVisualParent()!;
             TextBlock label = new()
             {
                 Text = filterLabel,
@@ -221,11 +223,10 @@ public sealed class LibraryViewTests
                 FontSize = filter.FontSize,
             };
             label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Assert.True(label.DesiredSize.Width <= filter.Bounds.Width - filter.Padding.Left - filter.Padding.Right,
+            Assert.True(content.DesiredSize.Width <= filter.Bounds.Width - filter.Padding.Left - filter.Padding.Right,
                 $"The {filterLabel} filter label must fit at {scale.ToString(CultureInfo.InvariantCulture)}x.");
-            TextBlock shown = filter.GetVisualDescendants().OfType<TextBlock>().Single();
             Rect filterBounds = BoundsIn(view, filter);
-            Rect shownBounds = BoundsIn(view, shown);
+            Rect shownBounds = BoundsIn(view, content);
             Assert.Equal(filterBounds.Center.Y, shownBounds.Center.Y, tolerance: 1);
             Assert.Equal(filterBounds.Center.X, shownBounds.Center.X, tolerance: 1);
         }

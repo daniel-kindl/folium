@@ -256,7 +256,7 @@ public sealed class SearchViewModelTests
         await model.SearchAsync();
         await model.OpenWorkAsync(model.Works[0]);
         await model.OpenEditionAsync(model.Editions[0]);
-        Assert.Contains("Find a book", headings, StringComparer.Ordinal);
+        Assert.Contains("Find online", headings, StringComparer.Ordinal);
         Assert.Contains("Dune", headings, StringComparer.Ordinal);
         Assert.Contains("Edition preview", headings, StringComparer.Ordinal);
         Assert.False(model.HasNext);

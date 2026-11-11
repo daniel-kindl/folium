@@ -69,6 +69,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             ((Command)ImportCommand).RaiseCanExecuteChanged();
             Raise(nameof(Heading));
+            Raise(nameof(AppBarHeading));
             Raise(nameof(ShowTabBar));
             Raise(nameof(ShowBack));
         };
@@ -231,6 +232,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Closes the top layer, then the current screen.</summary>
     public ICommand BackCommand { get; private set; } = null!;
 
+    /// <summary>The app bar title. The delete dialog keeps the book details title behind it.</summary>
+    public string AppBarHeading => ShowConfirm ? Headings[Screen.Details] : Heading;
+
+    /// <summary>True when book details are visible, also behind the delete dialog.</summary>
+    public bool ShowDetailsLayer => _library is not null && (_screen == Screen.Details || _screen == Screen.ConfirmRemove);
+
     /// <summary>The name of the current screen.</summary>
     public string Heading => _screen == Screen.Search && !Search.ShowWorks ? Search.Heading : Headings[_screen];
 
@@ -384,6 +391,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>True when the library screen shows one reading status.</summary>
     public bool ShowFilterLabel => ShowLibrary && _filter is not null;
+
+    /// <summary>The label of the status button at large text sizes, for example "Status: All".</summary>
+    public string StatusButtonLabel => $"Status: {FilterLabel ?? "All"}";
 
     /// <summary>The empty-library message. Null when the library has a book or another screen is open.</summary>
     public string? EmptyMessage => IsEmpty ? "No books yet" : null;
@@ -843,6 +853,14 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private void SetScreen(Screen screen)
     {
         _screen = screen;
+        Raise(nameof(AppBarHeading));
+        Raise(nameof(ShowDetailsLayer));
+        if (screen != Screen.Library)
+        {
+            _snackbarBookId = null;
+            SnackbarTitle = "";
+        }
+
         Raise(nameof(Heading));
         Raise(nameof(ShowLibrary));
         Raise(nameof(ShowEditor));
@@ -978,6 +996,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(NoMatchMessage));
         Raise(nameof(FilterLabel));
         Raise(nameof(ShowFilterLabel));
+        Raise(nameof(StatusButtonLabel));
         Raise(nameof(ShowBookList));
         Raise(nameof(ShowBookGrid));
         Raise(nameof(IsAllSelected));
@@ -1008,6 +1027,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
         return [.. sorted.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status))
         {
+            ReadingStatus = book.Status,
             Tone = CoverPlaceholder.Tone(book.Id),
             Initial = CoverPlaceholder.Initial(book.Title),
             HasCover = book.Metadata?.Cover.IsEmpty == false,
@@ -1260,10 +1280,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private void ToggleGrid()
     {
         ShowGrid = !ShowGrid;
-        if (_viewPath is not null)
-        {
-            File.WriteAllText(_viewPath, ShowGrid ? "grid" : "list");
-        }
+        SaveGridChoice();
 
         Raise(nameof(ShowGrid));
         Raise(nameof(ViewLabel));
@@ -1317,9 +1334,35 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(RestoreSummary));
     }
 
+    private void SaveGridChoice()
+    {
+        if (_viewPath is null)
+        {
+            return;
+        }
+
+        try
+        {
+            File.WriteAllText(_viewPath, ShowGrid ? "grid" : "list");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // The view choice is a preference. The library stays usable when the file does not write.
+            Trace.TraceWarning(exception.ToString());
+        }
+    }
+
     private static bool ReadGridChoice(string path)
     {
-        return File.Exists(path) && string.Equals(File.ReadAllText(path).Trim(), "grid", StringComparison.Ordinal);
+        try
+        {
+            return File.Exists(path) && string.Equals(File.ReadAllText(path).Trim(), "grid", StringComparison.Ordinal);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Trace.TraceWarning(exception.ToString());
+            return false;
+        }
     }
 
     private static string CountNoun(int count)

@@ -6,7 +6,8 @@
              x:DataType="vm:SearchViewModel">
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
-            <TextBlock Text="{Binding Heading}" Classes="folium-section" TextWrapping="Wrap" />
+            <!-- The app bar shows the screen title. This heading names the edition step only. -->
+            <TextBlock Text="Choose an edition" Classes="folium-section" TextWrapping="Wrap" IsVisible="{Binding ShowEditions}" />
             <StackPanel IsVisible="{Binding ShowWorks}" Spacing="{StaticResource FoliumSpacingSm}">
                 <TextBox Text="{Binding Query, Mode=TwoWay}" PlaceholderText="For example, Middlemarch" AutomationProperties.Name="Title" />
                 <Button Content="Search Open Library" Click="SearchClicked" Classes="folium-primary" IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Stretch" />

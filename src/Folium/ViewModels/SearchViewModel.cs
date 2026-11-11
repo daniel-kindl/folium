@@ -58,10 +58,10 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     /// <summary>The section title.</summary>
     public string Heading => _stage switch
     {
-        Stage.Works => "Find a book",
+        Stage.Works => "Find online",
         Stage.Editions => _work?.Title ?? "Editions",
         Stage.Preview => "Edition preview",
-        _ => "Find a book",
+        _ => "Find online",
     };
 
     /// <summary>True when a preceding result page exists.</summary>
