@@ -7,9 +7,6 @@ on:
         description: SemVer version X.Y.Z. It must match FoliumVersion in Directory.Build.props.
         required: true
         type: string
-  push:
-    tags:
-      - 'v*.*.*'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -19,12 +16,20 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
       version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.version.outputs.sha }}
     steps:
+      - name: Require the main branch
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "The release workflow can run only from main. The current ref is ${GITHUB_REF}." >&2
+            exit 1
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -52,18 +57,11 @@ jobs:
           DISPATCH_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            version="${DISPATCH_VERSION}"
-          else
-            ref="${GITHUB_REF_NAME}"
-            if [ "${ref#v}" = "${ref}" ]; then
-              echo "The tag must be vX.Y.Z." >&2
-              exit 1
-            fi
-            version="${ref#v}"
-          fi
+          version="${DISPATCH_VERSION}"
           printf '%s' "${version}" > "${RUNNER_TEMP}/version.txt"
+          printf '%s' "${GITHUB_SHA}" > "${RUNNER_TEMP}/sha.txt"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "sha=${GITHUB_SHA}" >> "${GITHUB_OUTPUT}"
       - name: Check the release version and CHANGELOG
         run: |
           set -euo pipefail
@@ -74,6 +72,37 @@ jobs:
             --changelog CHANGELOG.md \
             --git-tags \
             --notes-file "${RUNNER_TEMP}/release-notes.md"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: folium-release-meta
+          path: |
+            ${{ runner.temp }}/version.txt
+            ${{ runner.temp }}/sha.txt
+            ${{ runner.temp }}/release-notes.md
+          if-no-files-found: error
+          retention-days: 7
+
+  sign:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ needs.validate.outputs.sha }}
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: microsoft
+          java-version: '21'
+      - name: Install Android workload
+        run: dotnet workload restore
+      - name: Restore locked dependencies
+        run: dotnet restore --locked-mode
       - name: Decode the release keystore
         env:
           ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
@@ -90,21 +119,25 @@ jobs:
           ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
           ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
           ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
         run: |
           set -euo pipefail
           if [ -z "${ANDROID_RELEASE_KEYSTORE_PASSWORD}" ] || [ -z "${ANDROID_RELEASE_KEY_PASSWORD}" ] || [ -z "${ANDROID_RELEASE_KEY_ALIAS}" ]; then
             echo "A signing secret is missing." >&2
             exit 1
           fi
+          # env: is documented only for AndroidSigningKeyPass and AndroidSigningStorePass.
+          # https://github.com/dotnet/android/blob/main/Documentation/docs-mobile/building-apps/build-properties.md
+          # AndroidSigningKeyAlias is the alias itself. GitHub masks the secret in the log.
           dotnet publish src/Folium.Android/Folium.Android.csproj \
             --configuration Release \
             --no-restore \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore="${RUNNER_TEMP}/folium-release.keystore" \
-            -p:AndroidSigningKeyAlias=env:ANDROID_RELEASE_KEY_ALIAS \
+            -p:AndroidSigningKeyAlias="${ANDROID_RELEASE_KEY_ALIAS}" \
             -p:AndroidSigningStorePass=env:ANDROID_RELEASE_KEYSTORE_PASSWORD \
             -p:AndroidSigningKeyPass=env:ANDROID_RELEASE_KEY_PASSWORD
-          version="$(cat "${RUNNER_TEMP}/version.txt")"
+          version="${RELEASE_VERSION}"
           publish_dir="src/Folium.Android/bin/Release/net10.0-android/publish"
           mapfile -t apks < <(find "${publish_dir}" -maxdepth 1 -type f -name '*-Signed.apk' | sort)
           if [ "${#apks[@]}" -ne 1 ]; then
@@ -118,16 +151,13 @@ jobs:
         run: rm -f -- "${RUNNER_TEMP}/folium-release.keystore"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: folium-release
-          path: |
-            ${{ runner.temp }}/folium-${{ steps.version.outputs.version }}.apk
-            ${{ runner.temp }}/release-notes.md
-            ${{ runner.temp }}/version.txt
+          name: folium-release-apk
+          path: ${{ runner.temp }}/folium-${{ needs.validate.outputs.version }}.apk
           if-no-files-found: error
           retention-days: 7
 
   release:
-    needs: build
+    needs: [validate, sign]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -135,20 +165,29 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: folium-release
+          name: folium-release-meta
+          path: "${{ runner.temp }}/folium-release"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: folium-release-apk
           path: "${{ runner.temp }}/folium-release"
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_SHA: ${{ needs.validate.outputs.sha }}
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
         run: |
           set -euo pipefail
-          version="$(cat "${RUNNER_TEMP}/folium-release/version.txt")"
+          version="${RELEASE_VERSION}"
+          sha="${RELEASE_SHA}"
           apk="${RUNNER_TEMP}/folium-release/folium-${version}.apk"
           notes="${RUNNER_TEMP}/folium-release/release-notes.md"
           test -s "${apk}"
           test -s "${notes}"
+          test -n "${sha}"
           gh release create "v${version}" \
             --repo "${GITHUB_REPOSITORY}" \
+            --target "${sha}" \
             --title "v${version}" \
             --notes-file "${notes}" \
             "${apk}"
