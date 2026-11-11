@@ -1326,9 +1326,14 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Records the backup file name shown before replace.</summary>
-    /// <param name="name">The file name. A blank name uses "Backup file".</param>
+    /// <param name="name">The file name. A blank name uses "Backup file". Nothing changes when no restore waits.</param>
     public void SetRestoreFileName(string name)
     {
+        if (!ShowRestore)
+        {
+            return;
+        }
+
         RestoreFileName = string.IsNullOrWhiteSpace(name) ? "Backup file" : name.Trim();
         Raise(nameof(RestoreFileName));
         Raise(nameof(RestoreSummary));

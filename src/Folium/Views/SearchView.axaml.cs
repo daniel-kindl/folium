@@ -30,21 +30,25 @@ public sealed partial class SearchView : UserControl, IDisposable
 
     private void OnLayoutUpdated(object? sender, EventArgs args)
     {
-        if (this.FindControl<Border>("SearchResultsFrame") is not Border frame
-            || this.FindControl<StackPanel>("SearchPageBar") is not StackPanel pages)
+        if (this.FindControl<Border>("SearchResultsFrame") is Border frame
+            && this.FindControl<StackPanel>("SearchPageBar") is StackPanel pages)
         {
-            return;
+            FitAbove(frame, pages);
         }
+    }
 
-        Point frameAt = frame.TranslatePoint(new Point(0, 0), this) ?? new Point(0, 0);
-        Point pagesAt = pages.TranslatePoint(new Point(0, 0), this) ?? new Point(0, 0);
-        double height = Math.Max(0, pagesAt.Y - frameAt.Y);
-        if (double.IsFinite(frame.MaxHeight) && Math.Abs(frame.MaxHeight - height) < 1)
+    private void FitAbove(Border frame, StackPanel pages)
+    {
+        double height = Math.Max(0, Top(pages) - Top(frame));
+        if (!double.IsFinite(frame.MaxHeight) || Math.Abs(frame.MaxHeight - height) >= 1)
         {
-            return;
+            frame.MaxHeight = height;
         }
+    }
 
-        frame.MaxHeight = height;
+    private double Top(Control control)
+    {
+        return control.TranslatePoint(new Point(0, 0), this)?.Y ?? 0;
     }
 
     /// <summary>Releases the decoded cover and detaches state notifications.</summary>
@@ -174,10 +178,7 @@ public sealed partial class SearchView : UserControl, IDisposable
 
     private async void RetryClicked(object? sender, RoutedEventArgs args)
     {
-        if (_model is not null)
-        {
-            await _model.RetryAsync().ConfigureAwait(true);
-        }
+        await _model!.RetryAsync().ConfigureAwait(true);
     }
 
     private async void PreviousClicked(object? sender, RoutedEventArgs args)

@@ -41,19 +41,9 @@ public static class BackupPickers
             return;
         }
 
-        string fileName = "";
-        await BackupActions.RestoreAsync(
-            viewModel,
-            async () =>
-            {
-                IStorageFile? file = await PickRestoreAsync(provider).ConfigureAwait(false);
-                fileName = file?.Name ?? "";
-                return file is null ? null : await file.OpenReadAsync().ConfigureAwait(false);
-            }).ConfigureAwait(true);
-        if (viewModel.ShowRestore)
-        {
-            viewModel.SetRestoreFileName(fileName);
-        }
+        PickedFile picked = new(provider);
+        await BackupActions.RestoreAsync(viewModel, picked.OpenAsync).ConfigureAwait(true);
+        viewModel.SetRestoreFileName(picked.Name);
     }
 
     private static async Task<Stream?> OpenExportAsync(IStorageProvider provider, string name)
@@ -66,6 +56,23 @@ public static class BackupPickers
     {
         IReadOnlyList<IStorageFile> files = await provider.OpenFilePickerAsync(OpenOptions()).ConfigureAwait(true);
         return files.Count == 0 ? null : files[0];
+    }
+
+    private sealed class PickedFile(IStorageProvider provider)
+    {
+        public string Name { get; private set; } = "";
+
+        public async Task<Stream?> OpenAsync()
+        {
+            IStorageFile? file = await PickRestoreAsync(provider).ConfigureAwait(false);
+            if (file is null)
+            {
+                return null;
+            }
+
+            Name = file.Name;
+            return await file.OpenReadAsync().ConfigureAwait(false);
+        }
     }
 
     private static FilePickerSaveOptions SaveOptions(string name)
