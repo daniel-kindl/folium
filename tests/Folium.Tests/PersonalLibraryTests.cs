@@ -99,7 +99,7 @@ public sealed class PersonalLibraryTests : IDisposable
     [Fact]
     public void UnsupportedVersionStaysUnchanged()
     {
-        File.WriteAllText(LibraryPath, /*lang=json,strict*/ """{"version":2,"books":[]}""");
+        File.WriteAllText(LibraryPath, /*lang=json,strict*/ """{"version":3,"books":[]}""");
         byte[] bytes = File.ReadAllBytes(LibraryPath);
 
         _ = Assert.Throws<LibraryStoreException>(Open);

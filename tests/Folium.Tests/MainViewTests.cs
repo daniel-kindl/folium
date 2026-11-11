@@ -47,6 +47,12 @@ public sealed class MainViewTests : IDisposable
         AssertScreenShowsSaveError("ShowLibrary");
     }
 
+    [Fact]
+    public void LoadErrorScreenAnnouncesSaveError()
+    {
+        AssertScreenShowsSaveError("ShowLoadError");
+    }
+
     private static void AssertScreenShowsSaveError(string screen)
     {
         XElement view = XElement.Load(ViewPath());

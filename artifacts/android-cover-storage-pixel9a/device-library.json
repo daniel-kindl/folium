@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "books": [
+    {
+      "id": "528922e1-3829-46bd-bbc3-dda7cae8d77c",
+      "title": "Storage fixture",
+      "author": "Fixture author",
+      "readingStatus": "finished",
+      "metadata": {
+        "workKey": "/works/OL1W",
+        "editionKey": "/books/OL1M",
+        "publisher": "Fixture publisher",
+        "publicationDate": "2001",
+        "isbn": "123",
+        "edition": "First",
+        "language": "eng",
+        "description": "Storage fixture description",
+        "coverId": 1,
+        "cover": ""
+      },
+      "coverFile": "434df491675cbea8b219cac5aae114f5d2a9782dcc0f4f80ba081a6948e2f639"
+    }
+  ]
+}

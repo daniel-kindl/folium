@@ -130,17 +130,42 @@ covers are not uploaded, published, or synchronized.
 
 ### Storage and compatibility
 
-Optional metadata and cover bytes share the private `library.json` document.
-JSON encodes cover bytes as base64. The store replaces the document atomically,
-so metadata and its cover do not need separate file transactions. Removing a
-book also removes its saved cover from the document. This keeps storage simple,
-but rewrites grow with the number and size of covers.
+The private `library.json` uses live storage version 2. It holds book metadata
+and SHA-256 references to optional files in `library.json.covers`.
+An unchanged cover file is not rewritten when you edit a title or reading status.
+Identical cover bytes share one file. Intact files that cannot be decoded show **No saved cover**.
 
-Existing version-1 files without metadata remain readable. The previous app version
-ignores these fields and discards them when it next saves the library.
-Export a personal library backup before you install an older app version.
-That older version cannot restore the backup file.
-The backup still keeps the metadata and covers for this version.
+Version 1 libraries remain readable. The first successful save migrates them.
+Before migration, Folium keeps an exact copy at `library.json.v1.bak`.
+It writes and flushes covers before atomically replacing the metadata document.
+An interrupted save leaves the previous document available. After that replacement,
+Folium flushes the library directory and then removes unused cover files.
+When that directory flush is not available, unused files stay until a later save.
+Deleting or replacing a cover removes files that the committed library no longer references.
+Cleanup failures also leave unused files for a later save to remove.
+
+A missing cover file or a SHA-256 mismatch prevents opening the library.
+Folium keeps the saved files unchanged and shows **Restore backup**.
+Choose a valid personal backup, review the titles, then confirm **Replace library**.
+Canceling the confirmation keeps the current files unchanged.
+Restoring a backup replaces the library, including any edits made after that backup.
+A confirmed replace also overwrites malformed JSON, an unsupported live version,
+or a version 1 library that Folium cannot read. Folium keeps `library.json.v1.bak`
+only when the current file is a valid version 1 library.
+
+Older app versions cannot read live storage version 2.
+Before downgrading, export a personal backup with the current app.
+An older app may not support that portable backup format either.
+For an exact pre-migration rollback, stop the app and retain the whole private directory.
+Replace `library.json` with `library.json.v1.bak` before installing the older app.
+This restores the pre-migration state and discards later edits from the active library.
+The rollback file remains until you deliberately remove it after verifying a newer backup.
+It can retain covers that you later delete from the active library.
+
+Migration needs free space for both the old embedded covers and the extracted files.
+Flushing files and atomically replacing metadata protects against interrupted writes.
+Sudden power loss and filesystem failures can exceed these guarantees.
+See [storage measurements and recovery limits](docs/performance/cover-storage.md).
 
 ### Personal library backup
 
