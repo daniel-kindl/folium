@@ -23,7 +23,7 @@ public sealed class LibraryEmptyStateTests
             emptyWindow.UpdateLayout();
 
             TextBlock emptyMessage = emptyView.GetVisualDescendants().OfType<TextBlock>()
-                .Single(text => string.Equals(text.Text, "No books yet.", StringComparison.Ordinal));
+                .Single(text => string.Equals(text.Text, "No books yet", StringComparison.Ordinal));
             Assert.True(emptyMessage.IsVisible);
 
             Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert");
@@ -75,6 +75,10 @@ public sealed class LibraryEmptyStateTests
         window.Show();
         window.UpdateLayout();
 
+        OpenNamedCommand(view, "Search saved books");
+        window.UpdateLayout();
+        OpenNamedCommand(view, "Sort by");
+        window.UpdateLayout();
         TextBox search = view.FindControl<TextBox>("LibrarySearchInput")!;
         Button clear = ClearButton(view);
         Grid sortGrid = view.FindControl<Grid>("SortGrid")!;
@@ -108,6 +112,13 @@ public sealed class LibraryEmptyStateTests
         Assert.True(search.IsEffectivelyVisible);
         Assert.True(search.Bounds.Height >= 48);
         window.Close();
+    }
+
+    private static void OpenNamedCommand(MainView view, string name)
+    {
+        Button button = view.GetVisualDescendants().OfType<Button>().Single(candidate =>
+            string.Equals(Avalonia.Automation.AutomationProperties.GetName(candidate), name, StringComparison.Ordinal));
+        button.Command!.Execute(button.CommandParameter);
     }
 
     private static Button ClearButton(MainView view)

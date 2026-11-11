@@ -16,6 +16,50 @@
             <SolidColorBrush x:Key="FoliumWarningBrush" Color="#805600" />
             <SolidColorBrush x:Key="FoliumErrorBrush" Color="#A52F35" />
             <SolidColorBrush x:Key="FoliumInfoBrush" Color="#285E86" />
+            <SolidColorBrush x:Key="FoliumStatusToReadBrush" Color="#835A27" />
+            <SolidColorBrush x:Key="FoliumStatusReadingBrush" Color="#285E86" />
+            <SolidColorBrush x:Key="FoliumStatusFinishedBrush" Color="#28613C" />
+            <SolidColorBrush x:Key="FoliumSelectedContainerBrush" Color="#DCE8DE" />
+            <SolidColorBrush x:Key="FoliumFocusBrush" Color="#315C43" />
+            <SolidColorBrush x:Key="FoliumDividerBrush" Color="#E3E0D7" />
+            <SolidColorBrush x:Key="FoliumDisabledTextBrush" Color="#747D75" />
+            <SolidColorBrush x:Key="FoliumInverseSurfaceBrush" Color="#202922" />
+            <SolidColorBrush x:Key="FoliumOnInverseBrush" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="FoliumInversePrimaryBrush" Color="#AED4B3" />
+            <SolidColorBrush x:Key="FoliumScrimBrush" Color="#000000" />
+            <SolidColorBrush x:Key="FoliumDialogBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="FoliumCoverSageBrush" Color="#DCE5D9" />
+            <SolidColorBrush x:Key="FoliumCoverSageInkBrush" Color="#24402F" />
+            <SolidColorBrush x:Key="FoliumCoverSandBrush" Color="#EADFC8" />
+            <SolidColorBrush x:Key="FoliumCoverSandInkBrush" Color="#5A3D17" />
+            <SolidColorBrush x:Key="FoliumCoverClayBrush" Color="#EBD6CE" />
+            <SolidColorBrush x:Key="FoliumCoverClayInkBrush" Color="#6A2E25" />
+            <SolidColorBrush x:Key="FoliumCoverMistBrush" Color="#D6E0E8" />
+            <SolidColorBrush x:Key="FoliumCoverMistInkBrush" Color="#1F4560" />
+            <SolidColorBrush x:Key="FoliumCoverHeatherBrush" Color="#DFD8E7" />
+            <SolidColorBrush x:Key="FoliumCoverHeatherInkBrush" Color="#45395A" />
+            <SolidColorBrush x:Key="FoliumCoverStoneBrush" Color="#E3E1D9" />
+            <SolidColorBrush x:Key="FoliumCoverStoneInkBrush" Color="#343A30" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#F1EFE8" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="#F1EFE8" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="#202922" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="FoliumBackgroundBrush" Color="#171C18" />
@@ -32,6 +76,50 @@
             <SolidColorBrush x:Key="FoliumWarningBrush" Color="#E8C36B" />
             <SolidColorBrush x:Key="FoliumErrorBrush" Color="#FFB3B6" />
             <SolidColorBrush x:Key="FoliumInfoBrush" Color="#A9CEE9" />
+            <SolidColorBrush x:Key="FoliumStatusToReadBrush" Color="#E8BE82" />
+            <SolidColorBrush x:Key="FoliumStatusReadingBrush" Color="#A9CEE9" />
+            <SolidColorBrush x:Key="FoliumStatusFinishedBrush" Color="#A2D5AF" />
+            <SolidColorBrush x:Key="FoliumSelectedContainerBrush" Color="#2F4A39" />
+            <SolidColorBrush x:Key="FoliumFocusBrush" Color="#AED4B3" />
+            <SolidColorBrush x:Key="FoliumDividerBrush" Color="#2E3A31" />
+            <SolidColorBrush x:Key="FoliumDisabledTextBrush" Color="#8C978E" />
+            <SolidColorBrush x:Key="FoliumInverseSurfaceBrush" Color="#F1EFE8" />
+            <SolidColorBrush x:Key="FoliumOnInverseBrush" Color="#202922" />
+            <SolidColorBrush x:Key="FoliumInversePrimaryBrush" Color="#315C43" />
+            <SolidColorBrush x:Key="FoliumScrimBrush" Color="#000000" />
+            <SolidColorBrush x:Key="FoliumDialogBorderBrush" Color="#87998A" />
+            <SolidColorBrush x:Key="FoliumCoverSageBrush" Color="#2C3D31" />
+            <SolidColorBrush x:Key="FoliumCoverSageInkBrush" Color="#CFE3D2" />
+            <SolidColorBrush x:Key="FoliumCoverSandBrush" Color="#3D3426" />
+            <SolidColorBrush x:Key="FoliumCoverSandInkBrush" Color="#EBD5AE" />
+            <SolidColorBrush x:Key="FoliumCoverClayBrush" Color="#43302B" />
+            <SolidColorBrush x:Key="FoliumCoverClayInkBrush" Color="#F0C9BE" />
+            <SolidColorBrush x:Key="FoliumCoverMistBrush" Color="#273642" />
+            <SolidColorBrush x:Key="FoliumCoverMistInkBrush" Color="#C7DCEC" />
+            <SolidColorBrush x:Key="FoliumCoverHeatherBrush" Color="#352F40" />
+            <SolidColorBrush x:Key="FoliumCoverHeatherInkBrush" Color="#DCD0EC" />
+            <SolidColorBrush x:Key="FoliumCoverStoneBrush" Color="#33352F" />
+            <SolidColorBrush x:Key="FoliumCoverStoneInkBrush" Color="#DDDCD2" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#29352D" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="#29352D" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#173823" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#173823" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#173823" />
+            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="#F1F3EC" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
     <x:Double x:Key="FoliumCaptionFontSize">14</x:Double>
@@ -44,6 +132,8 @@
     <x:Double x:Key="FoliumSectionLineHeight">28</x:Double>
     <x:Double x:Key="FoliumTitleFontSize">28</x:Double>
     <x:Double x:Key="FoliumTitleLineHeight">36</x:Double>
+    <x:Double x:Key="FoliumLabelSmallFontSize">14</x:Double>
+    <x:Double x:Key="FoliumLabelSmallLineHeight">20</x:Double>
     <x:Double x:Key="FoliumSpacingXs">4</x:Double>
     <x:Double x:Key="FoliumSpacingSm">8</x:Double>
     <x:Double x:Key="FoliumSpacingMd">12</x:Double>
@@ -56,7 +146,22 @@
     <x:Double x:Key="FoliumInteractiveGapMin">8</x:Double>
     <x:Double x:Key="FoliumControlRadius">8</x:Double>
     <x:Double x:Key="FoliumGroupRadius">12</x:Double>
+    <x:Double x:Key="FoliumCoverRadius">4</x:Double>
     <x:Double x:Key="FoliumFocusWidth">2</x:Double>
+    <x:Double x:Key="FoliumFocusGap">2</x:Double>
+    <x:Double x:Key="FoliumCoverLibraryRowWidth">48</x:Double>
+    <x:Double x:Key="FoliumCoverLibraryRowHeight">72</x:Double>
+    <x:Double x:Key="FoliumCoverLibraryGridWidth">117</x:Double>
+    <x:Double x:Key="FoliumCoverLibraryGridHeight">176</x:Double>
+    <x:Double x:Key="FoliumCoverBookDetailsWidth">120</x:Double>
+    <x:Double x:Key="FoliumCoverBookDetailsHeight">180</x:Double>
+    <x:Double x:Key="FoliumCoverEditionPreviewWidth">104</x:Double>
+    <x:Double x:Key="FoliumCoverEditionPreviewHeight">156</x:Double>
+    <x:Double x:Key="FoliumCoverImportDraftWidth">64</x:Double>
+    <x:Double x:Key="FoliumCoverImportDraftHeight">96</x:Double>
+    <x:Double x:Key="FoliumCoverRestoreRowWidth">32</x:Double>
+    <x:Double x:Key="FoliumCoverRestoreRowHeight">48</x:Double>
+    <x:Double x:Key="FoliumAddButtonHeight">56</x:Double>
     <x:Double x:Key="FoliumInlineIconSize">20</x:Double>
     <x:Double x:Key="FoliumActionIconSize">24</x:Double>
     <x:Double x:Key="FoliumEmptyIconSize">48</x:Double>
@@ -75,5 +180,9 @@
     <Thickness x:Key="FoliumRightSpacingSm">0,0,8,0</Thickness>
     <CornerRadius x:Key="FoliumControlCornerRadius">8</CornerRadius>
     <CornerRadius x:Key="FoliumGroupCornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="FoliumCoverCornerRadius">4</CornerRadius>
     <Thickness x:Key="FoliumFocusThickness">2</Thickness>
+    <Thickness x:Key="FoliumFocusGapThickness">2</Thickness>
+    <Thickness x:Key="FoliumScreenEndThickness">0,0,0,48</Thickness>
+    <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
 </ResourceDictionary>

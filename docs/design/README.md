@@ -26,6 +26,13 @@ All colors are opaque sRGB `#RRGGBB` values.
 | `accent` | Optional foreground emphasis on neutral surfaces |
 | `border` | Relevant boundaries and focus indicators |
 | `success`, `warning`, `error`, `info` | Feedback foregrounds on neutral surfaces |
+| `statusToRead`, `statusReading`, `statusFinished` | Aliases of `accent`, `info`, and `success` for reading status |
+| `selectedContainer` | Fill behind a selected tab |
+| `focus` | Alias of `primary` for the focus ring |
+| `divider` | Row lines. A divider is not a control boundary |
+| `disabledText` | Text on a disabled control. Use it with the `raised` fill |
+| `inverseSurface`, `onInverse`, `inversePrimary` | Snackbar fill, text, and action |
+| `scrim` | Dialog and sheet veil. Use it at 48 percent alpha |
 
 Use text or a symbol with feedback colors. Secondary, accent, and feedback
 colors do not define filled controls. The contrast checker checks text roles
@@ -48,8 +55,9 @@ gutters, minimum touch bounds, and minimum separation between interactive items.
 The wide-layout breakpoint remains unspecified. Check physical touch sizes on Android.
 
 `radius.control` applies to fields and buttons. `radius.group` applies to grouped
-surfaces. `border.focusWidth` defines the two-unit focus ring. A neutral gap is
-required, but its width remains unspecified. Do not infer a gap from this token.
+surfaces and to the Add book button. `radius.cover` applies to cover frames.
+`border.focusWidth` defines the two-unit focus ring. `border.focusGap` defines
+the two-unit gap between the control and that ring.
 
 `elevation` names surface roles, not shadow recipes or numeric Z coordinates.
 Use `surface` for flat content and `raised` for dialogs and menus.
@@ -62,9 +70,24 @@ semantic roles to Lucide names. These names are asset-selection guidance.
 The app includes selected Lucide geometry for each role. The UI must still
 provide accessible names for icon-only actions.
 
-Cover frames must have consistent dimensions within each view and preserve image
-aspect ratios. Exact cover dimensions remain unspecified. Do not add invented
-cover sizes, motion durations, or responsive breakpoints to this contract.
+Cover frames use the sizes in `cover`. Each view uses one size and preserves the
+image aspect ratio. Do not add motion durations or responsive breakpoints to
+this contract. A cover without a saved image uses one `coverTones` pair. The
+tone is the first color and the ink is the second.
+
+Daniel accepted the `cover` sizes on 2026-11-11 in
+[pull request 49](https://github.com/daniel-kindl/folium/pull/49).
+
+## Open Leaf decisions
+
+Daniel decided these open items from
+[issue 39](https://github.com/daniel-kindl/folium/issues/39) on 2026-11-11:
+
+- The second tab is "Find online".
+- The Library opens in the list view. The app remembers the last list or grid choice.
+- The delete action is "Delete book".
+- A cover without a saved image shows a cover tone with the title and the author.
+  A cover narrower than 80 units shows the first letter of the title.
 
 ## Avalonia integration
 

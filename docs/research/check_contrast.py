@@ -12,7 +12,10 @@ def load_palettes(path=TOKEN_PATH):
     palettes = tokens['color']
     required = {'background', 'surface', 'raised', 'text', 'muted', 'primary',
                 'onPrimary', 'secondary', 'accent', 'border', 'success',
-                'warning', 'error', 'info'}
+                'warning', 'error', 'info', 'statusToRead', 'statusReading',
+                'statusFinished', 'selectedContainer', 'focus', 'divider',
+                'disabledText', 'inverseSurface', 'onInverse', 'inversePrimary',
+                'scrim'}
     if set(palettes) != {'light', 'dark'}:
         raise ValueError('Define exactly the light and dark palettes.')
     for theme, palette in palettes.items():
@@ -58,6 +61,36 @@ def main():
         print(f'| {theme} | onPrimary on primary | {value:.2f}:1 | 4.5:1 |')
         if value < 4.5:
             failures.append(f'{theme}/onPrimary')
+        aliases = (
+            ('statusToRead', 'accent'),
+            ('statusReading', 'info'),
+            ('statusFinished', 'success'),
+            ('focus', 'primary'),
+        )
+        for name, source in aliases:
+            if palette[name] != palette[source]:
+                failures.append(f'{theme}/{name} alias')
+        selected = ratio(palette['primary'], palette['selectedContainer'])
+        print(f'| {theme} | primary on selectedContainer | {selected:.2f}:1 | 4.5:1 |')
+        if selected < 4.5:
+            failures.append(f'{theme}/selectedContainer')
+        inverse = ratio(palette['onInverse'], palette['inverseSurface'])
+        print(f'| {theme} | onInverse on inverseSurface | {inverse:.2f}:1 | 4.5:1 |')
+        if inverse < 4.5:
+            failures.append(f'{theme}/onInverse')
+        action = ratio(palette['inversePrimary'], palette['inverseSurface'])
+        print(f'| {theme} | inversePrimary on inverseSurface | {action:.2f}:1 | 4.5:1 |')
+        if action < 4.5:
+            failures.append(f'{theme}/inversePrimary')
+        if palette['scrim'] != '#000000':
+            failures.append(f'{theme}/scrim')
+    tones = json.loads(TOKEN_PATH.read_text(encoding='utf-8'))['coverTones']
+    for theme, pairs in tones.items():
+        for name, colors in pairs.items():
+            value = ratio(colors[1], colors[0])
+            print(f'| {theme} | cover {name} | {value:.2f}:1 | 7:1 |')
+            if value < 7:
+                failures.append(f'{theme}/cover/{name}')
     if failures:
         raise SystemExit('Contrast failed: ' + ', '.join(failures))
 

@@ -18,6 +18,7 @@ public class App : Application
         "FoliumLabelFontSize", "FoliumLabelLineHeight",
         "FoliumSectionFontSize", "FoliumSectionLineHeight",
         "FoliumTitleFontSize", "FoliumTitleLineHeight",
+        "FoliumLabelSmallFontSize", "FoliumLabelSmallLineHeight",
     ];
     private static Dictionary<string, double>? _baseFontMetrics;
 

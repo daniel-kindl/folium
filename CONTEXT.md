@@ -24,6 +24,9 @@ _Avoid_: Writer, creator
 The place of a saved book in the person's reading. The values are to read, reading, and finished.
 _Avoid_: Progress, state, shelf
 
+**Find online**:
+The task that searches Open Library. It needs a network. It is not a search of saved books.
+
 **Provider work**:
 An Open Library grouping of editions. A search result is not a saved book.
 

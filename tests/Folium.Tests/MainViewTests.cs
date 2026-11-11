@@ -29,7 +29,7 @@ public sealed class MainViewTests : IDisposable
 
         Assert.True(viewModel.ShowDetails);
         Assert.Equal("Folium could not save this status.", viewModel.SaveError);
-        AssertScreenShowsSaveError("ShowDetails");
+        AssertScreenShowsSaveError("ShowDetailsLayer");
     }
 
     [Fact]
@@ -56,9 +56,10 @@ public sealed class MainViewTests : IDisposable
     private static void AssertScreenShowsSaveError(string screen)
     {
         XElement view = XElement.Load(ViewPath());
-        XElement panel = view.Descendants().First(element =>
-            string.Equals(Binding(element, "IsVisible"), screen, StringComparison.Ordinal));
-        XElement error = panel.Descendants().FirstOrDefault(IsSaveError) ?? throw new InvalidOperationException(
+        XElement error = view.Descendants()
+            .Where(element => string.Equals(Binding(element, "IsVisible"), screen, StringComparison.Ordinal))
+            .SelectMany(panel => panel.Descendants())
+            .FirstOrDefault(IsSaveError) ?? throw new InvalidOperationException(
             $"The {screen} screen does not show SaveError.");
         Assert.Equal("Assertive", error.Attribute("AutomationProperties.LiveSetting")?.Value);
     }

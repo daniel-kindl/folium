@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="using:Folium.ViewModels">
+        <DataTemplate x:Key="FilterSegmentContent" x:DataType="x:String">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingXs}" HorizontalAlignment="Center">
+                <Path Data="{StaticResource FoliumCheckIcon}"
+                      Classes="folium-icon folium-check"
+                      Width="{StaticResource FoliumInlineIconSize}"
+                      Height="{StaticResource FoliumInlineIconSize}"
+                      Stretch="Uniform"
+                      VerticalAlignment="Center" />
+                <TextBlock Text="{Binding}" Classes="folium-label-small" VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="FoliumStatusChip" x:DataType="vm:BookRow">
+            <StackPanel Orientation="Horizontal"
+                        Spacing="{StaticResource FoliumSpacingXs}"
+                        Classes.folium-status-to-read="{Binding IsToRead}"
+                        Classes.folium-status-reading="{Binding IsReading}"
+                        Classes.folium-status-finished="{Binding IsFinished}">
+                <Panel Width="{StaticResource FoliumInlineIconSize}" Height="{StaticResource FoliumInlineIconSize}" VerticalAlignment="Center">
+                    <Path Data="{StaticResource FoliumToReadIcon}" Classes="folium-icon" Stretch="Uniform" IsVisible="{Binding IsToRead}" />
+                    <Path Data="{StaticResource FoliumReadingIcon}" Classes="folium-icon" Stretch="Uniform" IsVisible="{Binding IsReading}" />
+                    <Path Data="{StaticResource FoliumReadIcon}" Classes="folium-icon" Stretch="Uniform" IsVisible="{Binding IsFinished}" />
+                </Panel>
+                <TextBlock Text="{Binding Status}" Classes="folium-label-small" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
+</ResourceDictionary>

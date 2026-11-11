@@ -32,6 +32,10 @@
         "sha256": "c5f4b88076108eb1a0d95336e1aa7e7bb1419a3a92af96f6247d88cd3456f933"
       },
       {
+        "path": "docs/design/assets/lucide/source/arrow-up-down.svg",
+        "sha256": "d15411438095bac7cab0cf91f18cadfbde2ca752284c06b4b3642c4695b1774e"
+      },
+      {
         "path": "docs/design/assets/lucide/source/book-check.svg",
         "sha256": "b71e4df5415de5eed7a2512e97d70908a05a5c07ca027139dd6fb35970cdbdf2"
       },
@@ -44,6 +48,14 @@
         "sha256": "1d5023760db81f21c3b5a63f012ef540acc01932731c733e4645012a876d39f4"
       },
       {
+        "path": "docs/design/assets/lucide/source/check.svg",
+        "sha256": "7f33acc9a77a61659531044525fc008edebe215bf4dcf1c789c8674ad3277db0"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/chevron-down.svg",
+        "sha256": "66ea878e72ed3488bb3b464c39dfdccee8d1f78e560dccea40e5e12da0e87e87"
+      },
+      {
         "path": "docs/design/assets/lucide/source/circle-alert.svg",
         "sha256": "ce3e98b7a03b78c0071131df42466e4e1ff5187fccad30e739ec9ce951cf685a"
       },
@@ -52,12 +64,32 @@
         "sha256": "e9d3e3acf4d1c280fcf8092293439dc0a4756a908ceb859de144b12451cd1cb9"
       },
       {
-        "path": "docs/design/assets/lucide/source/ellipsis.svg",
-        "sha256": "4f495cc72013ffdfec677f03b33a150f7b4dd741979283fd6853a09024bca112"
+        "path": "docs/design/assets/lucide/source/ellipsis-vertical.svg",
+        "sha256": "655ee2104d9540cc9377c83f3b9fea628d78d9f4e1cdca7c1b36e952599944d7"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/file-down.svg",
+        "sha256": "ef04b1758104a3e8231f2926ddaad2101205c14e4a842d238946f5dee7fcdb29"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/file-up.svg",
+        "sha256": "0bd753699aed9b50bcbde59b12e1409329bb9291c0aa523dd4553497cd665c0b"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/globe.svg",
+        "sha256": "82c6b8fa0b8e8d775ec9becd86f74a4e50bff7bee4c81f7362de45348504f14d"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/layout-grid.svg",
+        "sha256": "b8903f61d09b1d75e55c71158277d26570962f69c2099446a251871e0a2d6678"
       },
       {
         "path": "docs/design/assets/lucide/source/library.svg",
         "sha256": "892ba1bd1ee2e5bba320eea1c30c83ed83055ded5a0a0c0e7e4ee5fb06c307a5"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/list.svg",
+        "sha256": "ff97a7379eb962ddc3863bb59f0f45875ac8da91aac8a38a67361e7118d2d627"
       },
       {
         "path": "docs/design/assets/lucide/source/pencil.svg",
@@ -68,12 +100,24 @@
         "sha256": "7f6af73bf1ff6c4bca3f18351c8d1bdec6749c0c2530c4de5da85d520c21df17"
       },
       {
+        "path": "docs/design/assets/lucide/source/refresh-cw.svg",
+        "sha256": "2e10dd403c85a24f163d59fc6151aa21147fe9402e1305dfc8979208caee8944"
+      },
+      {
         "path": "docs/design/assets/lucide/source/search.svg",
         "sha256": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc"
       },
       {
         "path": "docs/design/assets/lucide/source/trash.svg",
         "sha256": "27299f69ad7c6272be64b1b8e2d48cbd6dcf0ef0d4f92827a1affa945c91700e"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/wifi-off.svg",
+        "sha256": "318b290106e55c3505933f434d3663524206c7a44165a89508774fba4fdbaadd"
+      },
+      {
+        "path": "docs/design/assets/lucide/source/x.svg",
+        "sha256": "4a9cdab38fbb96162e7dace28e33f4ca0e49d8963a6162abc3d4691b7d675117"
       }
     ]
   }

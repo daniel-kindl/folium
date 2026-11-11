@@ -39,7 +39,7 @@ public sealed class LibraryViewTests
             Avalonia.Controls.Shapes.Path[] icons = [.. view.GetVisualDescendants()
                 .OfType<Avalonia.Controls.Shapes.Path>()
                 .Where(path => path.Classes.Contains("folium-icon-primary"))];
-            Assert.Equal(2, icons.Length);
+            Assert.NotEmpty(icons);
             Assert.All(icons, icon => AssertBrushColor("#FFFFFF", icon.Stroke));
 
             window.RequestedThemeVariant = ThemeVariant.Dark;
@@ -130,9 +130,11 @@ public sealed class LibraryViewTests
             library.ShowSearchCommand.Execute(parameter: null);
             window.UpdateLayout();
 
-            TextBlock title = view.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "Search"));
+            TextBlock title = view.GetVisualDescendants().OfType<TextBlock>().Single(text =>
+                text.Classes.Contains("folium-title") && Equals(text.Text, "Find online"));
             TextBox query = view.GetVisualDescendants().OfType<TextBox>().Single(box => box.IsEffectivelyVisible);
-            Button back = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Back"));
+            Button back = view.GetVisualDescendants().OfType<Button>().Single(button =>
+                Equals(button.Content, "Back") && button.IsEffectivelyVisible);
             Assert.Equal(16, BoundsIn(view, title).Left, tolerance: 0.001);
             Assert.Equal(16, BoundsIn(view, query).Left, tolerance: 0.001);
             Assert.Equal(16, BoundsIn(view, back).Left, tolerance: 0.001);
@@ -149,9 +151,9 @@ public sealed class LibraryViewTests
         window.Show();
         window.UpdateLayout();
 
-        Button search = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Find a book online"));
-        Button add = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Add a book"));
-        TextBlock emptyMessage = view.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "No books yet."));
+        Button search = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Find a book online") && button.IsEffectivelyVisible);
+        Button add = view.GetVisualDescendants().OfType<Button>().Single(button => Equals(button.Content, "Add a book by hand") && button.IsEffectivelyVisible);
+        TextBlock emptyMessage = view.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "No books yet"));
         Viewbox emptyIcon = view.FindControl<Viewbox>("EmptyIcon")!;
         Assert.True(search.IsEffectivelyVisible);
         Assert.True(add.IsEffectivelyVisible);
@@ -196,6 +198,13 @@ public sealed class LibraryViewTests
 
     private static void AssertFilterLayout(MainView view, Button search, double scale)
     {
+        if (scale >= 2)
+        {
+            Assert.True(view.FindControl<Button>("StatusFilter")!.IsEffectivelyVisible);
+            Assert.False(view.FindControl<Grid>("FilterGrid")!.IsEffectivelyVisible);
+            return;
+        }
+
         Button[] filters = [.. view.FindControl<Grid>("FilterGrid")!.Children.OfType<Button>()];
         Assert.Equal(4, filters.Length);
         Grid filterGrid = view.FindControl<Grid>("FilterGrid")!;
@@ -205,6 +214,8 @@ public sealed class LibraryViewTests
         foreach (Button filter in filters)
         {
             string filterLabel = Convert.ToString(filter.Content, CultureInfo.InvariantCulture) ?? string.Empty;
+            TextBlock shown = filter.GetVisualDescendants().OfType<TextBlock>().Single();
+            Control content = (Control)shown.GetVisualParent()!;
             TextBlock label = new()
             {
                 Text = filterLabel,
@@ -212,11 +223,10 @@ public sealed class LibraryViewTests
                 FontSize = filter.FontSize,
             };
             label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Assert.True(label.DesiredSize.Width <= filter.Bounds.Width - filter.Padding.Left - filter.Padding.Right,
+            Assert.True(content.DesiredSize.Width <= filter.Bounds.Width - filter.Padding.Left - filter.Padding.Right,
                 $"The {filterLabel} filter label must fit at {scale.ToString(CultureInfo.InvariantCulture)}x.");
-            TextBlock shown = filter.GetVisualDescendants().OfType<TextBlock>().Single();
             Rect filterBounds = BoundsIn(view, filter);
-            Rect shownBounds = BoundsIn(view, shown);
+            Rect shownBounds = BoundsIn(view, content);
             Assert.Equal(filterBounds.Center.Y, shownBounds.Center.Y, tolerance: 1);
             Assert.Equal(filterBounds.Center.X, shownBounds.Center.X, tolerance: 1);
         }

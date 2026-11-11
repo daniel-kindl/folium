@@ -25,7 +25,7 @@ public sealed class LibraryViewModelTests : IDisposable
         Assert.True(viewModel.ShowLibrary);
         Assert.True(viewModel.IsEmpty);
         Assert.False(viewModel.ShowBooks);
-        Assert.Equal("No books yet.", viewModel.EmptyMessage);
+        Assert.Equal("No books yet", viewModel.EmptyMessage);
         Assert.False(viewModel.ShowEditor);
         Assert.False(viewModel.ShowDetails);
         Assert.False(viewModel.ShowConfirm);
@@ -178,8 +178,8 @@ public sealed class LibraryViewModelTests : IDisposable
         viewModel.AskRemoveCommand.Execute(parameter: null);
 
         Assert.True(viewModel.ShowConfirm);
-        Assert.Equal("Remove this book?", viewModel.Heading);
-        Assert.Equal("Folium deletes this book from your library.", viewModel.ConfirmMessage);
+        Assert.Equal("Delete this book?", viewModel.Heading);
+        Assert.Equal("Folium deletes Dune from this device. You cannot undo this.", viewModel.ConfirmMessage);
         Assert.Equal("Dune", viewModel.SelectedTitle);
 
         viewModel.KeepBookCommand.Execute(parameter: null);
@@ -824,6 +824,86 @@ public sealed class LibraryViewModelTests : IDisposable
 
         Assert.Equal("No books with this status.", viewModel.NoMatchMessage);
         Assert.Empty(viewModel.ShownBooks);
+    }
+
+    [Fact]
+    public void BackClosesTheTopLibraryLayerFirst()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        viewModel.ShowAddSheetCommand.Execute(parameter: null);
+        Assert.True(viewModel.ShowAddSheet);
+        Assert.True(viewModel.GoBack());
+        Assert.False(viewModel.ShowAddSheet);
+
+        viewModel.ShowLibraryMenuCommand.Execute(parameter: null);
+        Assert.True(viewModel.ShowLibraryMenu);
+        Assert.True(viewModel.GoBack());
+        Assert.False(viewModel.ShowLibraryMenu);
+
+        viewModel.ToggleSortMenuCommand.Execute(parameter: null);
+        Assert.True(viewModel.ShowSortMenu);
+        Assert.True(viewModel.GoBack());
+        Assert.False(viewModel.ShowSortMenu);
+
+        viewModel.ToggleSavedSearchCommand.Execute(parameter: null);
+        viewModel.SearchQuery = "Dune";
+        Assert.True(viewModel.ShowSavedSearch);
+        Assert.True(viewModel.GoBack());
+        Assert.False(viewModel.ShowSavedSearch);
+        Assert.Equal("", viewModel.SearchQuery);
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void BackFromBackupReturnsToTheLibrary()
+    {
+        LibraryViewModel viewModel = Open();
+
+        viewModel.ShowBackupCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowBackup);
+        Assert.True(viewModel.GoBack());
+        Assert.False(viewModel.ShowBackup);
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void OpenSnackbarOpensTheSavedBook()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+
+        Assert.Equal("Dune is saved in your library.", viewModel.SnackbarMessage);
+        Assert.True(viewModel.OpenSnackbarCommand.CanExecute(parameter: null));
+        viewModel.OpenSnackbarCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowDetails);
+        Assert.Equal("Dune", viewModel.SelectedTitle);
+        Assert.False(viewModel.ShowSnackbar);
+    }
+
+    [Fact]
+    public void TheLibraryRemembersTheCoverGrid()
+    {
+        (LibraryViewModel viewModel, string path) = OpenAtPath();
+        Add(viewModel, "Dune", "Frank Herbert");
+        Assert.False(viewModel.ShowGrid);
+        Assert.Equal("Show covers", viewModel.ViewLabel);
+        Assert.True(viewModel.ShowBookList);
+        Assert.False(viewModel.ShowBookGrid);
+
+        viewModel.ToggleGridCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowGrid);
+        Assert.Equal("Show list", viewModel.ViewLabel);
+        Assert.Equal("grid", File.ReadAllText(path + ".view"));
+        Assert.False(viewModel.ShowBookList);
+        Assert.True(viewModel.ShowBookGrid);
+        LibraryViewModel reopened = LibraryViewModel.Open(new FileBookStore(path));
+        Assert.True(reopened.ShowGrid);
+        Assert.True(reopened.ShowBookGrid);
     }
 
     private static string[] Titles(LibraryViewModel viewModel)

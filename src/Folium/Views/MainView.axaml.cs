@@ -1,7 +1,8 @@
+using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Platform.Storage;
 using Folium.ViewModels;
 
 namespace Folium.Views;
@@ -9,10 +10,13 @@ namespace Folium.Views;
 /// <summary>The screen that shows the personal library.</summary>
 public partial class MainView : UserControl
 {
+    /// <summary>Defines the <see cref="GridColumns"/> property.</summary>
+    public static readonly StyledProperty<int> GridColumnsProperty =
+        AvaloniaProperty.Register<MainView, int>(nameof(GridColumns), defaultValue: 3);
+
     private readonly Button[] _filterButtons;
     private readonly Control _emptyIcon;
     private readonly Grid _filterGrid;
-    private bool? _isLandscape;
 
     /// <summary>Loads the view markup. The mutation compile does not run the Avalonia source generator.</summary>
     public MainView()
@@ -30,98 +34,115 @@ public partial class MainView : UserControl
         SizeChanged += MainViewSizeChanged;
     }
 
+    /// <summary>The number of cover grid columns: three, or two at large text sizes.</summary>
+    public int GridColumns
+    {
+        get => GetValue(GridColumnsProperty);
+        set => SetValue(GridColumnsProperty, value);
+    }
+
     private async void ExportBackupClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not LibraryViewModel viewModel)
+        if (DataContext is LibraryViewModel viewModel)
         {
-            return;
+            await BackupPickers.ExportAsync(this, viewModel).ConfigureAwait(true);
         }
-
-        IStorageProvider? provider = TopLevel.GetTopLevel(this)?.StorageProvider;
-        if (provider?.CanSave != true)
-        {
-            viewModel.ShowBackupError("Folium could not open the document picker.");
-            return;
-        }
-
-        await BackupActions.ExportAsync(
-            viewModel,
-            async name => await OpenExportAsync(provider, name).ConfigureAwait(false)).ConfigureAwait(true);
     }
 
     private async void RestoreBackupClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is not LibraryViewModel viewModel)
+        if (DataContext is LibraryViewModel viewModel)
         {
-            return;
+            await BackupPickers.RestoreAsync(this, viewModel).ConfigureAwait(true);
         }
-
-        IStorageProvider? provider = TopLevel.GetTopLevel(this)?.StorageProvider;
-        if (provider?.CanOpen != true)
-        {
-            viewModel.ShowBackupError("Folium could not open the document picker.");
-            return;
-        }
-
-        await BackupActions.RestoreAsync(
-            viewModel,
-            async () => await OpenRestoreAsync(provider).ConfigureAwait(false)).ConfigureAwait(true);
-    }
-
-    private static async Task<Stream?> OpenExportAsync(IStorageProvider provider, string name)
-    {
-        IStorageFile? file = await provider.SaveFilePickerAsync(SaveOptions(name)).ConfigureAwait(true);
-        return file is null ? null : await file.OpenWriteAsync().ConfigureAwait(true);
-    }
-
-    private static async Task<Stream?> OpenRestoreAsync(IStorageProvider provider)
-    {
-        IReadOnlyList<IStorageFile> files = await provider.OpenFilePickerAsync(OpenOptions()).ConfigureAwait(true);
-        return files.Count == 0 ? null : await files[0].OpenReadAsync().ConfigureAwait(true);
-    }
-
-    private static FilePickerSaveOptions SaveOptions(string name)
-    {
-        return new FilePickerSaveOptions
-        {
-            Title = "Export backup",
-            SuggestedFileName = name,
-            ShowOverwritePrompt = true,
-            FileTypeChoices = [BackupFileType()],
-        };
-    }
-
-    private static FilePickerOpenOptions OpenOptions()
-    {
-        return new FilePickerOpenOptions
-        {
-            Title = "Restore backup",
-            AllowMultiple = false,
-            FileTypeFilter = [BackupFileType()],
-        };
-    }
-
-    private static FilePickerFileType BackupFileType()
-    {
-        return new FilePickerFileType("Folium backup")
-        {
-            Patterns = ["*.json"],
-            MimeTypes = ["application/json"],
-        };
     }
 
     private void MainViewSizeChanged(object? sender, SizeChangedEventArgs args)
     {
-        bool isLandscape = args.NewSize.Width > args.NewSize.Height;
-        if (_isLandscape == isLandscape)
+        _emptyIcon.IsVisible = args.NewSize.Width <= args.NewSize.Height;
+        bool compact = IsCompactStatus();
+        SetStatusMode(compact);
+        GridColumns = ScaledBody() >= 24 ? 2 : 3;
+        if (!compact)
         {
-            return;
+            ApplyFilterColumns(PreferredColumns(args.NewSize.Width));
+        }
+    }
+
+    private bool IsCompactStatus()
+    {
+        return ScaledBody() >= 32;
+    }
+
+    private void SetStatusMode(bool compact)
+    {
+        if (this.FindControl<Button>("StatusFilter") is Button status)
+        {
+            status.IsVisible = compact;
         }
 
-        _isLandscape = isLandscape;
-        _emptyIcon.IsVisible = !isLandscape;
-        int columns = isLandscape ? _filterButtons.Length : 2;
-        int rows = isLandscape ? 1 : 2;
+        _filterGrid.IsVisible = !compact;
+        if (this.FindControl<Button>("AddBookButton") is Button add)
+        {
+            add.Classes.Set("folium-compact", compact);
+        }
+    }
+
+    private int PreferredColumns(double width)
+    {
+        if (ScaledBody() >= 24)
+        {
+            return 2;
+        }
+
+        double grid = Math.Max(0, width - Margin.Left - Margin.Right);
+        return WidestFilterLabel() <= ContentWidth(grid, columns: 4) ? 4 : 2;
+    }
+
+    private double ScaledBody()
+    {
+        return Application.Current?.TryGetResource("FoliumBodyFontSize", ActualThemeVariant, out object? metric) == true
+            && metric is double body
+            ? body
+            : 0;
+    }
+
+    private double ContentWidth(double grid, int columns)
+    {
+        Thickness padding = _filterButtons[0].Padding;
+        double gaps = _filterGrid.ColumnSpacing * (columns - 1);
+        return ((grid - gaps) / columns) - padding.Left - padding.Right;
+    }
+
+    private double WidestFilterLabel()
+    {
+        double widest = 0;
+        foreach (Button filter in _filterButtons)
+        {
+            TextBlock probe = new()
+            {
+                Text = Convert.ToString(filter.Content, CultureInfo.InvariantCulture) ?? string.Empty,
+                FontFamily = filter.FontFamily,
+                FontSize = filter.FontSize,
+            };
+            probe.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            widest = Math.Max(widest, probe.DesiredSize.Width);
+        }
+
+        // The selected segment also shows the check icon and its gap.
+        return widest + CheckAllowance();
+    }
+
+    private double CheckAllowance()
+    {
+        double icon = this.TryFindResource("FoliumInlineIconSize", out object? size) && size is double inline ? inline : 20;
+        double gap = this.TryFindResource("FoliumSpacingXs", out object? spacing) && spacing is double xs ? xs : 4;
+        return icon + gap;
+    }
+
+    private void ApplyFilterColumns(int columns)
+    {
+        int rows = _filterButtons.Length / columns;
         _filterGrid.ColumnDefinitions.Clear();
         _filterGrid.RowDefinitions.Clear();
         for (int column = 0; column < columns; column++)

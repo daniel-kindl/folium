@@ -55,7 +55,9 @@ class TokenTests(unittest.TestCase):
 
     def test_type_scale_and_touch_bounds_are_consistent(self):
         styles = self.tokens['typography']['styles']
-        self.assertEqual(set(styles), {'caption', 'body', 'label', 'section', 'title'})
+        self.assertEqual(
+            set(styles),
+            {'caption', 'body', 'label', 'labelSmall', 'section', 'title'})
         for style in styles.values():
             self.assertGreater(style['fontSize'], 0)
             self.assertGreaterEqual(style['lineHeight'], style['fontSize'])
@@ -67,6 +69,19 @@ class TokenTests(unittest.TestCase):
         self.assertGreaterEqual(layout['gutterWide'], layout['gutter'])
         self.assertEqual(sorted(self.tokens['spacing'].values()),
                          list(self.tokens['spacing'].values()))
+        self.assertEqual(self.tokens['radius']['cover'], 4)
+        self.assertEqual(self.tokens['border']['focusGap'], 2)
+        self.assertEqual(self.tokens['border']['focusWidth'], 2)
+        covers = self.tokens['cover']
+        self.assertEqual(covers['libraryRow'], {'width': 48, 'height': 72})
+        self.assertEqual(covers['libraryGrid'], {'width': 117, 'height': 176})
+        self.assertEqual(covers['bookDetails'], {'width': 120, 'height': 180})
+        self.assertEqual(covers['editionPreview'], {'width': 104, 'height': 156})
+        self.assertEqual(covers['importDraft'], {'width': 64, 'height': 96})
+        self.assertEqual(covers['restoreRow'], {'width': 32, 'height': 48})
+        self.assertEqual(self.tokens['icon']['roles']['overflow'], 'ellipsis-vertical')
+        self.assertEqual(self.tokens['icon']['roles']['delete'], 'trash')
+        self.assertEqual(self.tokens['icon']['roles']['restoreBackup'], 'file-up')
 
 
 if __name__ == '__main__':

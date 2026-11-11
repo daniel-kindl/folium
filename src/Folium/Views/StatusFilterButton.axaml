@@ -1,0 +1,27 @@
+<Button xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Folium.ViewModels"
+        x:Class="Folium.Views.StatusFilterButton"
+        x:DataType="vm:LibraryViewModel"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Stretch"
+        AutomationProperties.Name="{Binding StatusButtonLabel}"
+        AutomationProperties.HelpText="Reading status">
+    <Button.Flyout>
+        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+            <MenuItem Header="All" Command="{Binding FilterCommand}" CommandParameter="all" />
+            <MenuItem Header="To read" Command="{Binding FilterCommand}" CommandParameter="to-read" />
+            <MenuItem Header="Reading" Command="{Binding FilterCommand}" CommandParameter="reading" />
+            <MenuItem Header="Finished" Command="{Binding FilterCommand}" CommandParameter="finished" />
+        </MenuFlyout>
+    </Button.Flyout>
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+        <TextBlock Text="{Binding StatusButtonLabel}" Classes="folium-label" TextWrapping="Wrap" VerticalAlignment="Center" />
+        <Path Grid.Column="1"
+              Data="{StaticResource FoliumExpandIcon}"
+              Classes="folium-icon"
+              Width="{StaticResource FoliumActionIconSize}"
+              Height="{StaticResource FoliumActionIconSize}"
+              VerticalAlignment="Center" />
+    </Grid>
+</Button>

@@ -5,62 +5,107 @@
              xmlns:views="using:Folium.Views"
              x:Class="Folium.Views.MainView"
              x:DataType="vm:LibraryViewModel">
-    <Grid Margin="{StaticResource FoliumGutterThickness}" RowDefinitions="Auto,*">
-        <TextBlock Text="{Binding Heading}" Classes="folium-title" TextWrapping="Wrap" />
+    <Grid Margin="{StaticResource FoliumGutterThickness}" RowDefinitions="Auto,*,Auto">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+            <Button Command="{Binding BackCommand}"
+                    IsVisible="{Binding ShowBack}"
+                    Classes="folium-icon-button"
+                    AutomationProperties.Name="Back"
+                    Margin="{StaticResource FoliumRightSpacingSm}">
+                <Path Data="{StaticResource FoliumBackIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+            </Button>
+            <TextBlock Grid.Column="1"
+                       Text="{Binding AppBarHeading}"
+                       Classes="folium-title"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center" />
+            <Button Grid.Column="2"
+                    Command="{Binding ToggleSavedSearchCommand}"
+                    IsVisible="{Binding ShowSavedBookControls}"
+                    AutomationProperties.Name="Search saved books"
+                    Classes="folium-icon-button">
+                <Path Data="{StaticResource FoliumSearchIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+            </Button>
+            <Button Grid.Column="3"
+                    Command="{Binding ToggleGridCommand}"
+                    IsVisible="{Binding ShowSavedBookControls}"
+                    AutomationProperties.Name="{Binding ViewLabel}"
+                    Classes="folium-icon-button">
+                <Panel>
+                    <Path x:Name="ViewGridIcon" Data="{StaticResource FoliumViewGridIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" IsVisible="{Binding !ShowGrid}" />
+                    <Path x:Name="ViewListIcon" Data="{StaticResource FoliumViewListIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" IsVisible="{Binding ShowGrid}" />
+                </Panel>
+            </Button>
+            <Button Grid.Column="2"
+                    Command="{Binding EditCommand}"
+                    IsVisible="{Binding ShowDetails}"
+                    AutomationProperties.Name="Edit book"
+                    Classes="folium-icon-button">
+                <Path Data="{StaticResource FoliumEditIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+            </Button>
+            <Button Grid.Column="4"
+                    Command="{Binding ShowLibraryMenuCommand}"
+                    IsVisible="{Binding ShowLibrary}"
+                    AutomationProperties.Name="More options"
+                    Classes="folium-icon-button">
+                <Path Data="{StaticResource FoliumOverflowIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+            </Button>
+            <Button Grid.Column="4"
+                    IsVisible="{Binding ShowDetails}"
+                    AutomationProperties.Name="More options"
+                    Classes="folium-icon-button">
+                <Button.Flyout>
+                    <Flyout>
+                        <Button Content="Delete book"
+                                Command="{Binding AskRemoveCommand}"
+                                Classes="folium-danger"
+                                AutomationProperties.Name="Delete book" />
+                    </Flyout>
+                </Button.Flyout>
+                <Path Data="{StaticResource FoliumOverflowIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+            </Button>
+        </Grid>
         <Grid Grid.Row="1" Margin="{StaticResource FoliumTopSpacingLg}">
             <Grid IsVisible="{Binding ShowLibrary}" RowDefinitions="Auto,*,Auto">
                 <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
-                    <Button Content="Find a book online"
-                            Classes="folium-primary"
-                            Command="{Binding ShowSearchCommand}"
-                            AutomationProperties.Name="Find a book online"
-                            HorizontalAlignment="Stretch">
-                        <Button.ContentTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
-                                    <Path Data="{StaticResource FoliumSearchIcon}"
-                                          Classes="folium-icon folium-icon-primary"
-                                          Width="{StaticResource FoliumActionIconSize}"
-                                          Height="{StaticResource FoliumActionIconSize}" />
-                                    <TextBlock Text="{Binding}" Classes="folium-label" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </Button.ContentTemplate>
-                    </Button>
                     <Grid x:Name="FilterGrid"
-                          ColumnDefinitions="*,*"
-                          RowDefinitions="Auto,Auto"
+                          ColumnDefinitions="*,*,*,*"
                           ColumnSpacing="{StaticResource FoliumSpacingSm}"
                           RowSpacing="{StaticResource FoliumSpacingSm}">
                         <Button x:Name="AllFilter"
-                                Grid.Row="0"
+                                ContentTemplate="{StaticResource FilterSegmentContent}"
                                 Grid.Column="0"
                                 Content="All"
-                                Classes="folium-filter"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsAllSelected}"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="all" />
                         <Button x:Name="ToReadFilter"
-                                Grid.Row="0"
+                                ContentTemplate="{StaticResource FilterSegmentContent}"
                                 Grid.Column="1"
                                 Content="To read"
-                                Classes="folium-filter"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsToReadSelected}"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="to-read" />
                         <Button x:Name="ReadingFilter"
-                                Grid.Row="1"
-                                Grid.Column="0"
+                                ContentTemplate="{StaticResource FilterSegmentContent}"
+                                Grid.Column="2"
                                 Content="Reading"
-                                Classes="folium-filter"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsReadingSelected}"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="reading" />
                         <Button x:Name="FinishedFilter"
-                                Grid.Row="1"
-                                Grid.Column="1"
+                                ContentTemplate="{StaticResource FilterSegmentContent}"
+                                Grid.Column="3"
                                 Content="Finished"
-                                Classes="folium-filter"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsFinishedSelected}"
                                 Command="{Binding FilterCommand}"
                                 CommandParameter="finished" />
                     </Grid>
+                    <views:StatusFilterButton x:Name="StatusFilter" IsVisible="False" />
                     <TextBlock Text="{Binding FilterLabel}"
                                Classes="folium-active-filter folium-label"
                                TextWrapping="Wrap"
@@ -72,11 +117,28 @@
                                IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                                AutomationProperties.Name="{Binding SaveError}"
                                AutomationProperties.LiveSetting="Assertive" />
+                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding ShowSavedBookControls}">
+                        <TextBlock Text="{Binding CountLabel}" Classes="folium-caption folium-muted" VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Content="{Binding SortLabel}"
+                                Classes="folium-text"
+                                Command="{Binding ToggleSortMenuCommand}"
+                                AutomationProperties.Name="Sort by">
+                            <Button.ContentTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingXs}">
+                                        <Path Data="{StaticResource FoliumSortIcon}" Classes="folium-icon" Width="{StaticResource FoliumInlineIconSize}" Height="{StaticResource FoliumInlineIconSize}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding}" Classes="folium-label-small" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+                    </Grid>
                 </StackPanel>
                 <ScrollViewer x:Name="LibraryContentScroll" Grid.Row="1">
                     <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                         <StackPanel Spacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding ShowSavedBookControls}">
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding ShowSavedSearch}">
                                 <TextBox x:Name="LibrarySearchInput"
                                          Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          PlaceholderText="Search saved books"
@@ -87,14 +149,8 @@
                                         IsVisible="{Binding ShowClearSearch}"
                                         AutomationProperties.Name="Clear saved book search" />
                             </Grid>
-                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingXs}">
-                                <TextBlock Text="Sort by:" Classes="folium-label" />
-                                <TextBlock Text="{Binding SortLabel}"
-                                           Classes="folium-label"
-                                           AutomationProperties.Name="Current sort order"
-                                           AutomationProperties.LiveSetting="Polite" />
-                            </StackPanel>
-                            <Grid x:Name="SortGrid"
+                            <TextBlock Text="{Binding SearchNote}" Classes="folium-caption folium-muted" TextWrapping="Wrap" IsVisible="{Binding ShowSavedSearch}" />
+                            <Grid x:Name="SortGrid" IsVisible="{Binding ShowSortMenu}"
                                   ColumnDefinitions="*,*"
                                   RowDefinitions="Auto,Auto"
                                   ColumnSpacing="{StaticResource FoliumSpacingSm}"
@@ -140,38 +196,118 @@
                                       Height="{StaticResource FoliumActionIconSize}" />
                             </Viewbox>
                             <TextBlock Text="{Binding EmptyMessage}" Classes="folium-section" TextWrapping="Wrap" />
-                        </StackPanel>
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
-                            <Button Content="Export backup"
-                                    Click="ExportBackupClick"
-                                    AutomationProperties.Name="Export backup"
+                            <TextBlock Text="{x:Static vm:LibraryViewModel.EmptyDetail}" TextWrapping="Wrap" />
+                            <Button Content="Find a book online"
+                                    Classes="folium-primary"
+                                    Command="{Binding ShowSearchCommand}"
+                                    AutomationProperties.Name="Find a book online"
+                                    HorizontalAlignment="Stretch">
+                                <Button.ContentTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
+                                            <Path Data="{StaticResource FoliumSearchIcon}"
+                                                  Classes="folium-icon folium-icon-primary"
+                                                  Width="{StaticResource FoliumActionIconSize}"
+                                                  Height="{StaticResource FoliumActionIconSize}" />
+                                            <TextBlock Text="{Binding}" Classes="folium-label" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </Button.ContentTemplate>
+                            </Button>
+                            <Button Content="Add a book by hand"
+                                    Command="{Binding AddByHandCommand}"
+                                    AutomationProperties.Name="Add a book by hand"
                                     HorizontalAlignment="Stretch" />
-                            <Button Grid.Column="1"
-                                    Content="Restore backup"
+                            <Button Content="Restore backup"
                                     Click="RestoreBackupClick"
                                     AutomationProperties.Name="Restore backup"
                                     HorizontalAlignment="Stretch" />
-                        </Grid>
+                        </StackPanel>
                         <TextBlock Text="{Binding NoMatchMessage}"
                                    Classes="folium-muted"
                                    TextWrapping="Wrap"
                                    IsVisible="{Binding ShowNoMatches}" />
-                        <ItemsControl x:Name="LibraryBooksList" ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBooks}">
+                        <ItemsControl x:Name="LibraryBooksList" ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBookList}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BookRow">
-                                    <Button Margin="{StaticResource FoliumBottomSpacingSm}"
-                                            Padding="{StaticResource FoliumSpacingMdThickness}"
+                                    <Button Classes="folium-row"
                                             HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            Background="{DynamicResource FoliumSurfaceBrush}"
-                                            BorderBrush="{DynamicResource FoliumBorderBrush}"
-                                            BorderThickness="1"
+                                            HorizontalContentAlignment="Stretch"
                                             Command="{Binding $parent[views:MainView].DataContext.OpenCommand}"
-                                            CommandParameter="{Binding Id}">
+                                            CommandParameter="{Binding Id}"
+                                            AutomationProperties.Name="{Binding AccessibleName}">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource FoliumSpacingMd}">
+                                            <views:CoverTone Width="{StaticResource FoliumCoverLibraryRowWidth}"
+                                                             Height="{StaticResource FoliumCoverLibraryRowHeight}"
+                                                             CornerRadius="{StaticResource FoliumCoverCornerRadius}"
+                                                             Tone="{Binding Tone}"
+                                                             IsVisible="{Binding !HasCover}"
+                                                             AutomationProperties.AccessibilityView="Raw">
+                                                <TextBlock Text="{Binding Initial}"
+                                                           Classes="folium-section"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{Binding $parent[views:CoverTone].Ink}" />
+                                            </views:CoverTone>
+                                            <views:LocalCover Grid.Column="0"
+                                                              Width="{StaticResource FoliumCoverLibraryRowWidth}"
+                                                              Height="{StaticResource FoliumCoverLibraryRowHeight}"
+                                                              Bytes="{Binding Cover}"
+                                                              IsVisible="{Binding HasCover}"
+                                                              Stretch="UniformToFill"
+                                                              AutomationProperties.AccessibilityView="Raw" />
+                                            <StackPanel Grid.Column="1" Spacing="{StaticResource FoliumSpacingXs}" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding Author}" Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+                                                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FoliumStatusChip}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ItemsControl x:Name="LibraryBooksGrid" ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBookGrid}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="{Binding $parent[views:MainView].GridColumns}" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:BookRow">
+                                    <Button Classes="folium-tile"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            VerticalAlignment="Top"
+                                            Command="{Binding $parent[views:MainView].DataContext.OpenCommand}"
+                                            CommandParameter="{Binding Id}"
+                                            AutomationProperties.Name="{Binding AccessibleName}">
                                         <StackPanel Spacing="{StaticResource FoliumSpacingXs}">
-                                            <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" />
-                                            <TextBlock Text="{Binding Author}" Classes="folium-body" TextWrapping="Wrap" />
-                                            <TextBlock Text="{Binding Status}" Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+                                            <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" AutomationProperties.AccessibilityView="Raw">
+                                                <Grid>
+                                                    <views:CoverTone Width="{StaticResource FoliumCoverLibraryGridWidth}"
+                                                                     Height="{StaticResource FoliumCoverLibraryGridHeight}"
+                                                                     CornerRadius="{StaticResource FoliumCoverCornerRadius}"
+                                                                     Tone="{Binding Tone}"
+                                                                     IsVisible="{Binding !HasCover}"
+                                                                     Padding="{StaticResource FoliumSpacingSmThickness}">
+                                                        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="{StaticResource FoliumSpacingSm}">
+                                                            <Border Width="{StaticResource FoliumSpacingXl}" Height="2" HorizontalAlignment="Left" Background="{Binding $parent[views:CoverTone].Ink}" />
+                                                            <TextBlock Grid.Row="1" Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                                                                       Foreground="{Binding $parent[views:CoverTone].Ink}" />
+                                                            <TextBlock Grid.Row="2" Text="{Binding Author}" Classes="folium-caption" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                                                       Foreground="{Binding $parent[views:CoverTone].Ink}" />
+                                                        </Grid>
+                                                    </views:CoverTone>
+                                                    <views:LocalCover Width="{StaticResource FoliumCoverLibraryGridWidth}"
+                                                                      Height="{StaticResource FoliumCoverLibraryGridHeight}"
+                                                                      Bytes="{Binding Cover}"
+                                                                      IsVisible="{Binding HasCover}"
+                                                                      Stretch="UniformToFill" />
+                                                </Grid>
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding Title}" Classes="folium-label-small" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Author}" Classes="folium-caption folium-muted" MaxLines="1" TextTrimming="CharacterEllipsis" />
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FoliumStatusChip}" />
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -179,13 +315,24 @@
                         </ItemsControl>
                     </StackPanel>
                 </ScrollViewer>
-                <Button Grid.Row="2"
-                        Content="Add a book"
-                        Command="{Binding ShowAddCommand}"
-                        Classes="folium-primary"
-                        AutomationProperties.Name="Add a book"
-                        Margin="{StaticResource FoliumTopSpacingLg}"
-                        HorizontalAlignment="Stretch">
+                <StackPanel Grid.Row="2" Spacing="{StaticResource FoliumSpacingSm}">
+                    <Border IsVisible="{Binding ShowSnackbar}"
+                            Margin="{StaticResource FoliumTopSpacingLg}"
+                            Background="{DynamicResource FoliumInverseSurfaceBrush}"
+                            CornerRadius="{StaticResource FoliumControlCornerRadius}"
+                            Padding="{StaticResource FoliumSpacingMdThickness}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding SnackbarMessage}" Foreground="{DynamicResource FoliumOnInverseBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Open" Command="{Binding OpenSnackbarCommand}" Classes="folium-text" Foreground="{DynamicResource FoliumInversePrimaryBrush}" />
+                        </Grid>
+                    </Border>
+                <Button x:Name="AddBookButton"
+                        Content="Add book"
+                        Command="{Binding ShowAddSheetCommand}"
+                        Classes="folium-primary folium-add"
+                        IsVisible="{Binding ShowSavedBookControls}"
+                        AutomationProperties.Name="Add book"
+                        HorizontalAlignment="Right">
                     <Button.ContentTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
@@ -193,17 +340,18 @@
                                       Classes="folium-icon folium-icon-primary"
                                       Width="{StaticResource FoliumActionIconSize}"
                                       Height="{StaticResource FoliumActionIconSize}" />
-                                <TextBlock Text="{Binding}" Classes="folium-label" />
+                                <TextBlock Text="{Binding}" Classes="folium-label folium-add-label" />
                             </StackPanel>
                         </DataTemplate>
                     </Button.ContentTemplate>
                 </Button>
+                </StackPanel>
             </Grid>
             <Grid IsVisible="{Binding ShowSearch}">
                 <views:SearchView DataContext="{Binding Search}" />
             </Grid>
             <ScrollViewer IsVisible="{Binding ShowEditor}">
-                <StackPanel Spacing="{StaticResource FoliumSpacingMd}">
+                <StackPanel Spacing="{StaticResource FoliumSpacingMd}" Margin="{StaticResource FoliumScreenEndThickness}">
                     <TextBlock Text="Title" Classes="folium-label" />
                     <TextBox Text="{Binding TitleInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              AutomationProperties.Name="Title" />
@@ -225,11 +373,18 @@
                         <TextBlock Text="Language" Classes="folium-label" />
                         <TextBox Name="LanguageInput" Text="{Binding MetadataEditor.Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Language" />
                         <TextBlock Text="Description" Classes="folium-label" />
-                        <TextBox Name="DescriptionInput" Text="{Binding MetadataEditor.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Description" />
+                        <TextBox Name="DescriptionInput"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MaxHeight="160"
+                                 Text="{Binding MetadataEditor.Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 AutomationProperties.Name="Description" />
                         <CheckBox Name="KeepCoverInput" IsChecked="{Binding MetadataEditor.KeepCover, Mode=TwoWay}" IsVisible="{Binding MetadataEditor.HasCover}">
                             <TextBlock Text="I have permission to save this cover on my device" TextWrapping="Wrap" />
                         </CheckBox>
-                        <TextBlock Text="Cover images can have separate copyright restrictions. Leave the box unchecked to save without a cover." TextWrapping="Wrap" />
+                        <TextBlock Text="Cover images can have separate copyright restrictions. Leave the box unchecked to save without a cover."
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding MetadataEditor.HasCover}" />
                     </StackPanel>
                     </Border>
                     <TextBlock Text="{Binding InputError}" Classes="folium-error" TextWrapping="Wrap" />
@@ -239,7 +394,7 @@
                                IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                                AutomationProperties.Name="{Binding SaveError}"
                                AutomationProperties.LiveSetting="Assertive" />
-                    <Button Content="Save"
+                    <Button Content="Save book"
                             Command="{Binding SaveCommand}"
                             Classes="folium-primary"
                             HorizontalAlignment="Stretch"
@@ -250,37 +405,79 @@
                             HorizontalContentAlignment="Center" />
                 </StackPanel>
             </ScrollViewer>
-            <Grid IsVisible="{Binding ShowDetails}" RowDefinitions="*,Auto,Auto">
+            <Grid IsVisible="{Binding ShowDetailsLayer}" RowDefinitions="*,Auto,Auto">
                 <ScrollViewer Grid.Row="0">
-                    <StackPanel Spacing="{StaticResource FoliumSpacingMd}">
+                    <StackPanel Spacing="{StaticResource FoliumSpacingMd}" Margin="{StaticResource FoliumScreenEndThickness}">
                         <TextBlock Text="Title" Classes="folium-caption folium-muted" />
                         <TextBlock Text="{Binding SelectedTitle}" Classes="folium-section" TextWrapping="Wrap" />
                         <TextBlock Text="Author" Classes="folium-caption folium-muted" />
                         <TextBlock Text="{Binding SelectedAuthor}" TextWrapping="Wrap" />
-                        <views:LocalCover Name="SavedCover" Bytes="{Binding SelectedCover}" MaxHeight="220" Stretch="Uniform" AutomationProperties.Name="Saved book cover" />
-                        <TextBlock Text="No saved cover" IsVisible="{Binding #SavedCover.Source, Converter={x:Static conv:ObjectConverters.IsNull}}" />
+                        <views:CoverTone Width="{StaticResource FoliumCoverBookDetailsWidth}"
+                                Height="{StaticResource FoliumCoverBookDetailsHeight}"
+                                CornerRadius="{StaticResource FoliumCoverCornerRadius}"
+                                Tone="{Binding SelectedTone}"
+                                IsVisible="{Binding !HasSelectedCover}"
+                                Padding="{StaticResource FoliumSpacingSmThickness}"
+                                HorizontalAlignment="Left">
+                            <StackPanel Spacing="{StaticResource FoliumSpacingXs}" VerticalAlignment="Bottom">
+                                <TextBlock Text="{Binding SelectedTitle}"
+                                           Classes="folium-label"
+                                           TextWrapping="Wrap"
+                                           Foreground="{Binding $parent[views:CoverTone].Ink}" />
+                                <TextBlock Text="{Binding SelectedAuthor}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{Binding $parent[views:CoverTone].Ink}" />
+                            </StackPanel>
+                        </views:CoverTone>
+                        <views:LocalCover Name="SavedCover"
+                                          Bytes="{Binding SelectedCover}"
+                                          Width="{StaticResource FoliumCoverBookDetailsWidth}"
+                                          Height="{StaticResource FoliumCoverBookDetailsHeight}"
+                                          Stretch="Uniform"
+                                          IsVisible="{Binding HasSelectedCover}"
+                                          AutomationProperties.Name="Saved book cover" />
+                        <TextBlock Text="Saved cover" Classes="folium-caption folium-muted">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="HasSelectedCover" />
+                                    <Binding ElementName="SavedCover" Path="Source" Converter="{x:Static ObjectConverters.IsNotNull}" />
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
+                        <TextBlock Text="No saved cover">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="HasSelectedCover" />
+                                    <Binding ElementName="SavedCover" Path="Source" Converter="{x:Static ObjectConverters.IsNull}" />
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
                         <Border Classes="folium-group" IsVisible="{Binding HasSelectedMetadata}">
                         <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                             <TextBlock Text="Metadata from Open Library" Classes="folium-label" TextWrapping="Wrap" />
                             <TextBlock Text="{Binding SelectedMetadata.WorkKey}" TextWrapping="Wrap" />
                             <TextBlock Text="{Binding SelectedMetadata.EditionKey}" TextWrapping="Wrap" />
-                            <TextBlock Text="Publisher" Classes="folium-caption folium-muted" />
-                            <TextBlock Text="{Binding SelectedMetadata.Publisher}" TextWrapping="Wrap" />
-                            <TextBlock Text="Publication date" Classes="folium-caption folium-muted" />
-                            <TextBlock Text="{Binding SelectedMetadata.PublicationDate}" TextWrapping="Wrap" />
-                            <TextBlock Text="ISBN" Classes="folium-caption folium-muted" />
-                            <TextBlock Text="{Binding SelectedMetadata.Isbn}" TextWrapping="Wrap" />
-                            <TextBlock Text="Edition" Classes="folium-caption folium-muted" />
-                            <TextBlock Text="{Binding SelectedMetadata.Edition}" TextWrapping="Wrap" />
-                            <TextBlock Text="Language" Classes="folium-caption folium-muted" />
-                            <TextBlock Text="{Binding SelectedMetadata.Language}" TextWrapping="Wrap" />
-                            <TextBlock Text="Description" Classes="folium-caption folium-muted" />
-                            <TextBlock Text="{Binding SelectedMetadata.Description}" TextWrapping="Wrap" />
+                            <TextBlock Text="Publisher" Classes="folium-caption folium-muted" IsVisible="{Binding SelectedMetadata.Publisher, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding SelectedMetadata.Publisher}" TextWrapping="Wrap" IsVisible="{Binding SelectedMetadata.Publisher, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="Publication date" Classes="folium-caption folium-muted" IsVisible="{Binding SelectedMetadata.PublicationDate, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding SelectedMetadata.PublicationDate}" TextWrapping="Wrap" IsVisible="{Binding SelectedMetadata.PublicationDate, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="ISBN" Classes="folium-caption folium-muted" IsVisible="{Binding SelectedMetadata.Isbn, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding SelectedMetadata.Isbn}" TextWrapping="Wrap" IsVisible="{Binding SelectedMetadata.Isbn, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="Edition" Classes="folium-caption folium-muted" IsVisible="{Binding SelectedMetadata.Edition, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding SelectedMetadata.Edition}" TextWrapping="Wrap" IsVisible="{Binding SelectedMetadata.Edition, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="Language" Classes="folium-caption folium-muted" IsVisible="{Binding SelectedMetadata.Language, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding SelectedMetadata.Language}" TextWrapping="Wrap" IsVisible="{Binding SelectedMetadata.Language, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="Description" Classes="folium-caption folium-muted" IsVisible="{Binding SelectedMetadata.Description, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Text="{Binding SelectedMetadata.Description}" TextWrapping="Wrap" IsVisible="{Binding SelectedMetadata.Description, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
                         </StackPanel>
                         </Border>
-                        <TextBlock Text="Status" Classes="folium-caption folium-muted" />
+                        <TextBlock Text="Reading status" Classes="folium-caption folium-muted" />
                         <TextBlock Text="{Binding SelectedStatus}" Classes="folium-label" TextWrapping="Wrap" />
-                        <Button Content="To read"
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                        <Button Grid.Column="0"
+                                Content="To read"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsSelectedToRead}"
                                 Command="{Binding SetStatusCommand}"
                                 AutomationProperties.Name="To read"
                                 CommandParameter="to-read"
@@ -294,7 +491,10 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        <Button Content="Reading"
+                        <Button Grid.Column="1"
+                                Content="Reading"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsSelectedReading}"
                                 Command="{Binding SetStatusCommand}"
                                 AutomationProperties.Name="Reading"
                                 CommandParameter="reading"
@@ -308,7 +508,10 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
-                        <Button Content="Finished"
+                        <Button Grid.Column="2"
+                                Content="Finished"
+                                Classes="folium-segment"
+                                Classes.folium-primary="{Binding IsSelectedFinished}"
                                 Command="{Binding SetStatusCommand}"
                                 AutomationProperties.Name="Finished"
                                 CommandParameter="finished"
@@ -322,6 +525,7 @@
                                 </DataTemplate>
                             </Button.ContentTemplate>
                         </Button>
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
                 <TextBlock Grid.Row="1"
@@ -332,7 +536,7 @@
                            IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                            AutomationProperties.Name="{Binding SaveError}"
                            AutomationProperties.LiveSetting="Assertive" />
-                <StackPanel Grid.Row="2" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumTopSpacingLg}">
+                <StackPanel Grid.Row="2" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumTopSpacingLg}" IsVisible="False">
                     <Button Content="Edit"
                             Command="{Binding EditCommand}"
                             AutomationProperties.Name="Edit"
@@ -362,26 +566,11 @@
                     </Button>
                 </StackPanel>
             </Grid>
-            <StackPanel IsVisible="{Binding ShowConfirm}" Spacing="{StaticResource FoliumSpacingMd}" VerticalAlignment="Center">
-                <TextBlock Text="{Binding SelectedTitle}" Classes="folium-section" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding ConfirmMessage}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding SaveError}"
-                           Classes="folium-error"
-                           TextWrapping="Wrap"
-                           IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
-                           AutomationProperties.Name="{Binding SaveError}"
-                           AutomationProperties.LiveSetting="Assertive" />
-                <Button Content="Remove book"
-                        Command="{Binding ConfirmRemoveCommand}"
-                        Classes="folium-danger"
-                        HorizontalAlignment="Stretch" />
-                <Button Content="Keep book"
-                        Command="{Binding KeepBookCommand}"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center" />
-            </StackPanel>
             <Grid IsVisible="{Binding ShowRestore}" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="{StaticResource FoliumSpacingMd}">
-                <TextBlock Text="{Binding RestoreMessage}" TextWrapping="Wrap" />
+                <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                    <TextBlock Text="{Binding RestoreMessage}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding RestoreSummary}" Classes="folium-label-small" TextWrapping="Wrap" />
+                </StackPanel>
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <TextBlock Text="{Binding RestorePreview}" TextWrapping="Wrap" />
                 </ScrollViewer>
@@ -400,6 +589,39 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center" />
             </Grid>
+            <StackPanel IsVisible="{Binding ShowBackup}" Spacing="{StaticResource FoliumSpacingMd}">
+                <TextBlock Text="Export backup" Classes="folium-section" />
+                <TextBlock Text="Write your saved books to a file you choose. The file holds reading status, metadata and saved covers." TextWrapping="Wrap" />
+                <Button Content="Export backup"
+                        Click="ExportBackupClick"
+                        Classes="folium-primary"
+                        AutomationProperties.Name="Export backup"
+                        HorizontalAlignment="Stretch" />
+                <TextBlock Text="Restore backup" Classes="folium-section" />
+                <TextBlock Text="Replace the books on this device with the books in a backup file. You see the titles before anything changes." TextWrapping="Wrap" />
+                <Button Content="Choose backup file"
+                        Click="RestoreBackupClick"
+                        AutomationProperties.Name="Choose backup file"
+                        HorizontalAlignment="Stretch" />
+                <TextBlock Text="Folium does not upload backups. The file contains your reading history, so keep it in a private place. Folium reads version 1 backups up to 32 MiB." Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel IsVisible="{Binding ShowLibraryMenu}" Spacing="{StaticResource FoliumSpacingSm}" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Content="Backup and restore" Command="{Binding ShowBackupCommand}" HorizontalAlignment="Stretch" />
+            </StackPanel>
+            <Border IsVisible="{Binding ShowAddSheet}" Background="{DynamicResource FoliumScrimBrush}" Opacity="0.48">
+                <Button Command="{Binding DismissAddSheetCommand}" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" AutomationProperties.Name="Close add book" />
+            </Border>
+            <Border IsVisible="{Binding ShowAddSheet}"
+                    VerticalAlignment="Bottom"
+                    Background="{DynamicResource FoliumRaisedBrush}"
+                    CornerRadius="{StaticResource FoliumGroupCornerRadius}"
+                    Padding="{StaticResource FoliumSpacingLgThickness}">
+                <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                    <TextBlock Text="Add a book" Classes="folium-section" />
+                    <Button Content="Find a book online" Command="{Binding ShowSearchCommand}" Classes="folium-primary" HorizontalAlignment="Stretch" />
+                    <Button Content="Add a book by hand" Command="{Binding AddByHandCommand}" HorizontalAlignment="Stretch" />
+                </StackPanel>
+            </Border>
             <StackPanel IsVisible="{Binding ShowLoadError}"
                         Spacing="{StaticResource FoliumSpacingSm}">
                 <TextBlock Text="{Binding LoadError}" TextWrapping="Wrap" />
@@ -413,5 +635,32 @@
                            AutomationProperties.LiveSetting="Assertive" />
             </StackPanel>
         </Grid>
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" IsVisible="{Binding ShowTabBar}" Margin="{StaticResource FoliumTopSpacingSm}"
+              AutomationProperties.Name="Main">
+            <Button Command="{Binding SelectLibraryCommand}"
+                    Classes="folium-tab"
+                    Classes.folium-selected="{Binding ShowLibrary}"
+                    AutomationProperties.Name="Library">
+                <StackPanel Spacing="{StaticResource FoliumSpacingXs}" HorizontalAlignment="Center">
+                    <Border Classes="folium-tab-pill">
+                        <Path Data="{StaticResource FoliumLibraryIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+                    </Border>
+                    <TextBlock Text="Library" Classes="folium-label-small" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="1"
+                    Command="{Binding ShowSearchCommand}"
+                    Classes="folium-tab"
+                    Classes.folium-selected="{Binding ShowSearch}"
+                    AutomationProperties.Name="Find online">
+                <StackPanel Spacing="{StaticResource FoliumSpacingXs}" HorizontalAlignment="Center">
+                    <Border Classes="folium-tab-pill">
+                        <Path Data="{StaticResource FoliumOnlineIcon}" Classes="folium-icon" Width="{StaticResource FoliumActionIconSize}" Height="{StaticResource FoliumActionIconSize}" />
+                    </Border>
+                    <TextBlock Text="Find online" Classes="folium-label-small" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </Grid>
+        <views:DeleteBookDialog Grid.RowSpan="3" Margin="-16" IsVisible="{Binding ShowConfirm}" />
     </Grid>
 </UserControl>
