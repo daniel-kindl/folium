@@ -25,6 +25,26 @@ public sealed partial class SearchView : UserControl, IDisposable
     {
         AvaloniaXamlLoader.Load(this);
         DataContextChanged += ContextChanged;
+        LayoutUpdated += OnLayoutUpdated;
+    }
+
+    private void OnLayoutUpdated(object? sender, EventArgs args)
+    {
+        if (this.FindControl<Border>("SearchResultsFrame") is not Border frame
+            || this.FindControl<StackPanel>("SearchPageBar") is not StackPanel pages)
+        {
+            return;
+        }
+
+        Point frameAt = frame.TranslatePoint(new Point(0, 0), this) ?? new Point(0, 0);
+        Point pagesAt = pages.TranslatePoint(new Point(0, 0), this) ?? new Point(0, 0);
+        double height = Math.Max(0, pagesAt.Y - frameAt.Y);
+        if (double.IsFinite(frame.MaxHeight) && Math.Abs(frame.MaxHeight - height) < 1)
+        {
+            return;
+        }
+
+        frame.MaxHeight = height;
     }
 
     /// <summary>Releases the decoded cover and detaches state notifications.</summary>

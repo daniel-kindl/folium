@@ -24,7 +24,8 @@
                 <Button Content="Go to Library" Click="BackClicked" HorizontalAlignment="Stretch" />
             </StackPanel>
         </StackPanel>
-        <ScrollViewer Grid.Row="2">
+        <Border Name="SearchResultsFrame" Grid.Row="2" ClipToBounds="True">
+        <ScrollViewer Name="SearchResults" ClipToBounds="True" Height="{Binding #SearchResultsFrame.Bounds.Height}">
             <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                 <ItemsControl ItemsSource="{Binding Works}" IsVisible="{Binding ShowWorks}" IsEnabled="{Binding !IsBusy}">
                     <ItemsControl.ItemTemplate>
@@ -77,7 +78,8 @@
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
-        <StackPanel Grid.Row="3" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumTopSpacingSm}">
+        </Border>
+        <StackPanel Name="SearchPageBar" Grid.Row="3" Spacing="{StaticResource FoliumSpacingSm}" Margin="{StaticResource FoliumTopSpacingSm}">
             <Grid ColumnDefinitions="*,*" IsVisible="{Binding !ShowPreview}">
                 <Button Content="Previous page" Click="PreviousClicked" IsEnabled="{Binding HasPrevious}" />
                 <Button Grid.Column="1" Content="Next page" Click="NextClicked" IsEnabled="{Binding HasNext}" />

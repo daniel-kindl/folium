@@ -132,6 +132,21 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>The selected book's local cover, or empty bytes.</summary>
     public ReadOnlyMemory<byte> SelectedCover => SelectedMetadata?.Cover ?? ReadOnlyMemory<byte>.Empty;
 
+    /// <summary>True when the selected book has a saved cover image.</summary>
+    public bool HasSelectedCover => !SelectedCover.IsEmpty;
+
+    /// <summary>The cover tone for the selected book. Empty selection uses sage.</summary>
+    public string SelectedTone => _selected is null ? "sage" : CoverPlaceholder.Tone(_selected.Id);
+
+    /// <summary>True when the selected book is marked to read.</summary>
+    public bool IsSelectedToRead => _selected?.Status == ReadingStatus.ToRead;
+
+    /// <summary>True when the selected book is being read.</summary>
+    public bool IsSelectedReading => _selected?.Status == ReadingStatus.Reading;
+
+    /// <summary>True when the selected book is finished.</summary>
+    public bool IsSelectedFinished => _selected?.Status == ReadingStatus.Finished;
+
     /// <summary>Opens metadata search.</summary>
     public ICommand ShowSearchCommand { get; }
 
@@ -842,10 +857,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowTabBar));
         Raise(nameof(ShowBack));
         RaiseChrome();
-        Raise(nameof(SelectedTitle));
-        Raise(nameof(ConfirmMessage));
-        Raise(nameof(SelectedAuthor));
-        Raise(nameof(SelectedStatus));
+        RaiseSelectedBook();
         Raise(nameof(MetadataEditor));
         Raise(nameof(SelectedMetadata));
         Raise(nameof(HasSelectedMetadata));
@@ -888,7 +900,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         UseBooks(library.Books);
         _selected = saved;
         ClearErrors();
-        Raise(nameof(SelectedStatus));
+        RaiseSelectedBook();
     }
 
     private void ShowStatusSaveError(LibraryStoreException exception)
@@ -940,6 +952,20 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(Books));
         Raise(nameof(ShownBooks));
         RaiseLibraryShape();
+    }
+
+    private void RaiseSelectedBook()
+    {
+        Raise(nameof(SelectedTitle));
+        Raise(nameof(ConfirmMessage));
+        Raise(nameof(SelectedAuthor));
+        Raise(nameof(SelectedStatus));
+        Raise(nameof(SelectedCover));
+        Raise(nameof(HasSelectedCover));
+        Raise(nameof(SelectedTone));
+        Raise(nameof(IsSelectedToRead));
+        Raise(nameof(IsSelectedReading));
+        Raise(nameof(IsSelectedFinished));
     }
 
     private void RaiseLibraryShape()

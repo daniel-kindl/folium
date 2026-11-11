@@ -39,6 +39,26 @@
             <SolidColorBrush x:Key="FoliumCoverHeatherInkBrush" Color="#45395A" />
             <SolidColorBrush x:Key="FoliumCoverStoneBrush" Color="#E3E1D9" />
             <SolidColorBrush x:Key="FoliumCoverStoneInkBrush" Color="#343A30" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#F1EFE8" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="#F1EFE8" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#315C43" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="#202922" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="FoliumBackgroundBrush" Color="#171C18" />
@@ -78,6 +98,26 @@
             <SolidColorBrush x:Key="FoliumCoverHeatherInkBrush" Color="#DCD0EC" />
             <SolidColorBrush x:Key="FoliumCoverStoneBrush" Color="#33352F" />
             <SolidColorBrush x:Key="FoliumCoverStoneInkBrush" Color="#DDDCD2" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUnchecked" Color="#202922" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" Color="#29352D" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillUncheckedPressed" Color="#29352D" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPressed" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#AED4B3" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundChecked" Color="#173823" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" Color="#173823" />
+            <SolidColorBrush x:Key="CheckBoxCheckGlyphForegroundCheckedPressed" Color="#173823" />
+            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#F1F3EC" />
+            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="#F1F3EC" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
     <x:Double x:Key="FoliumCaptionFontSize">14</x:Double>
@@ -141,4 +181,6 @@
     <CornerRadius x:Key="FoliumCoverCornerRadius">4</CornerRadius>
     <Thickness x:Key="FoliumFocusThickness">2</Thickness>
     <Thickness x:Key="FoliumFocusGapThickness">2</Thickness>
+    <Thickness x:Key="FoliumScreenEndThickness">0,0,0,48</Thickness>
+    <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
 </ResourceDictionary>

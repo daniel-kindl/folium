@@ -119,6 +119,7 @@ public sealed class SearchViewTests
             Click(search, "Search Open Library");
             window.UpdateLayout();
             _ = Assert.Single(library.Search.Works);
+            Assert.False(library.Search.ShowRetry);
             Button work = search.GetVisualDescendants().OfType<Button>().First(button => button.Tag is SearchWork);
             Button resultCover = work.GetVisualDescendants().OfType<Button>().First(button => Equals(button.Content, "Preview cover"));
             Activate(resultCover);
@@ -213,7 +214,8 @@ public sealed class SearchViewTests
 
     private static void ReturnToLibrary(SearchView search, LibraryViewModel library)
     {
-        Click(search, "Try again");
+        Assert.DoesNotContain(search.GetVisualDescendants().OfType<Button>(), button =>
+            string.Equals(button.Content as string, "Try again", StringComparison.Ordinal) && button.IsEffectivelyVisible);
         Click(search, "Back");
         Assert.True(library.Search.ShowEditions);
         Click(search, "Back");

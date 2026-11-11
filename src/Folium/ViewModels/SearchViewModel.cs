@@ -74,10 +74,12 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     public bool CanRetry => !IsBusy && _searchedTitle.Length > 0;
 
     /// <summary>True when the retry button is shown. The offline panel has its own retry button.</summary>
-    public bool ShowRetry => CanRetry && !IsOffline;
+    public bool ShowRetry => SearchFailed && CanRetry && !IsOffline;
 
     /// <summary>True when the last failure was a lost connection.</summary>
     public bool IsOffline { get; private set; }
+
+    private bool SearchFailed { get; set; }
 
     /// <summary>The selected edition's provider page.</summary>
     public Uri? Source => Preview is null ? null : new Uri("https://openlibrary.org" + Preview.Key);
@@ -250,6 +252,7 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
         _pending = pending;
         Message = "Searching Open Library…";
         IsOffline = false;
+        SearchFailed = false;
         Changed();
         try
         {
@@ -266,6 +269,7 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
             {
                 Message = exception.Message;
                 IsOffline = exception.Message.Contains("connection", StringComparison.OrdinalIgnoreCase);
+                SearchFailed = !IsOffline;
             }
         }
         finally
@@ -303,6 +307,8 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
             if (generation == _generation)
             {
                 Message = "The cover could not load. The edition metadata is available. Try again to reload the cover.";
+                SearchFailed = true;
+                Changed();
             }
         }
     }

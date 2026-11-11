@@ -51,6 +51,21 @@ public sealed class SearchViewModelTests
         await model.SearchAsync();
         _ = Assert.Single(model.Works);
         Assert.False(model.IsOffline);
+        Assert.False(model.ShowRetry);
+    }
+
+    [Fact]
+    public async Task AProviderFailureShowsRetryUntilSearchWorks()
+    {
+        FakeSearch provider = new() { Fail = true, FailMessage = "Open Library did not answer." };
+        SearchViewModel model = new(provider) { Query = "Dune" };
+        await model.SearchAsync();
+        Assert.False(model.IsOffline);
+        Assert.Equal("Open Library did not answer.", model.Message);
+        Assert.True(model.ShowRetry);
+        provider.Fail = false;
+        await model.SearchAsync();
+        Assert.False(model.ShowRetry);
     }
 
     [Fact]
@@ -286,6 +301,8 @@ public sealed class SearchViewModelTests
         public bool FullPage { get; set; }
         public int LastPage { get; private set; }
         public bool Fail { get; set; }
+
+        public string? FailMessage { get; set; }
         public bool Empty { get; set; }
         public TaskCompletionSource<SearchPage<SearchWork>>? Pending { get; set; }
 
@@ -317,7 +334,7 @@ public sealed class SearchViewModelTests
         {
             SearchWork[] works = Empty ? [] : [new("/works/OL1W", "Dune", "Frank Herbert", "1965")];
             return Fail
-                ? throw new SearchException("Connection failed.")
+                ? throw new SearchException(FailMessage ?? "Connection failed.")
                 : Pending?.Task ?? Task.FromResult(new SearchPage<SearchWork>(works, HasAnotherPage: false));
         }
 
