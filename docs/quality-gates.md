@@ -73,6 +73,8 @@ When a CI job fails, fix the cause. Do not lower a minimum threshold.
 
 `.github/workflows/dependabot-auto-merge.yml` turns on auto-merge (squash) for a Dependabot pull request with a patch or a minor update. A major update waits for Daniel. The workflow is a copy of the dkstack template. See [coding/dependencies.md](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/coding/dependencies.md) in dkstack.
 
-- The required checks gate the merge. If no rule on `main` blocks the merge, the job stops with an error and nothing merges.
+- Each update in the pull request must be a patch or a minor update. In a group, one update of another type keeps auto-merge off.
+- The required checks gate the merge. If no ruleset on `main` requires a status check, the job stops with an error and nothing merges. The `protect-main` ruleset requires `build`, `mutation` and `crap`. The job merges only the head commit that it read (`--match-head-commit`).
+- When a person or an agent pushes to or reopens a Dependabot pull request, the `disable-auto-merge` job turns auto-merge off. Then the normal review applies.
 - The screen check in [Merge requirements](#merge-requirements) does not block a Dependabot patch or minor auto-merge. This includes Avalonia and its packages. Daniel decided this on 2026-11-12. If an update breaks a screen, fix it in a new pull request.
 - A merge by `GITHUB_TOKEN` does not start the `push` run of CI on `main`. The pull request run already tested the change.
