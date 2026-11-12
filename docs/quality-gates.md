@@ -65,7 +65,7 @@ Investigate those gaps; a missing measurement is not evidence of safety.
 ## Merge requirements
 
 All required CI jobs must pass. The jobs are build, mutation, and CRAP.
-A person checks that the Android screens are usable on an emulator or on a physical device. CI does not run this check.
+A person checks that the Android screens are usable on an emulator or on a physical device. CI does not run this check. This check does not block a Dependabot patch or minor auto-merge. See [Dependabot auto-merge](#dependabot-auto-merge).
 
 When a CI job fails, fix the cause. Do not lower a minimum threshold.
 
@@ -74,5 +74,5 @@ When a CI job fails, fix the cause. Do not lower a minimum threshold.
 `.github/workflows/dependabot-auto-merge.yml` turns on auto-merge (squash) for a Dependabot pull request with a patch or a minor update. A major update waits for Daniel. The workflow is a copy of the dkstack template. See [coding/dependencies.md](https://raw.githubusercontent.com/daniel-kindl/dkstack/v1/coding/dependencies.md) in dkstack.
 
 - The required checks gate the merge. If no rule on `main` blocks the merge, the job stops with an error and nothing merges.
-- No person checks the Android screens before an auto-merge. Daniel decides if this is acceptable for each update.
+- The screen check in [Merge requirements](#merge-requirements) does not block a Dependabot patch or minor auto-merge. This includes Avalonia and its packages. Daniel decided this on 2026-11-12. If an update breaks a screen, fix it in a new pull request.
 - A merge by `GITHUB_TOKEN` does not start the `push` run of CI on `main`. The pull request run already tested the change.
