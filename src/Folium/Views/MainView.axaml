@@ -68,6 +68,40 @@
         <Grid Grid.Row="1" Margin="{StaticResource FoliumTopSpacingLg}">
             <Grid IsVisible="{Binding ShowLibrary}" RowDefinitions="Auto,*,Auto">
                 <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                    <Border IsVisible="{Binding Updates.HasRelease, FallbackValue=False}"
+                            Background="{DynamicResource FoliumRaisedBrush}"
+                            CornerRadius="{StaticResource FoliumGroupCornerRadius}"
+                            Padding="{StaticResource FoliumSpacingMdThickness}"
+                            AutomationProperties.Name="{Binding Updates.OfferText}"
+                            AutomationProperties.LiveSetting="Polite">
+                        <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                            <TextBlock Text="{Binding Updates.OfferText}" Classes="folium-section" TextWrapping="Wrap" />
+                            <Button Content="Release notes" Command="{Binding Updates.ToggleNotesCommand}" AutomationProperties.Name="Show release notes" />
+                            <TextBlock Text="{Binding Updates.Release.Notes}" TextWrapping="Wrap" Classes="folium-caption" MaxHeight="180" IsVisible="{Binding Updates.ShowNotes}" />
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
+                                <Button Content="Update" Command="{Binding Updates.UpdateCommand}" Classes="folium-primary" />
+                                <Button Content="Later" Command="{Binding Updates.LaterCommand}" />
+                                <Button Content="Skip this version" Command="{Binding Updates.SkipCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel IsVisible="{Binding Updates.ShowProgress, FallbackValue=False}" Spacing="{StaticResource FoliumSpacingXs}">
+                        <TextBlock Text="Downloading update" AutomationProperties.LiveSetting="Polite" />
+                        <ProgressBar Minimum="0" Maximum="1" Value="{Binding Updates.Progress}" />
+                        <TextBlock Text="{Binding Updates.ProgressText}" AutomationProperties.LiveSetting="Polite" />
+                        <Button Content="Cancel" Command="{Binding Updates.CancelCommand}" IsVisible="{Binding Updates.CanCancel}" AutomationProperties.Name="Cancel update download" />
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding Updates.NeedsInstallPermission, FallbackValue=False}" Spacing="{StaticResource FoliumSpacingSm}">
+                        <TextBlock Text="Allow Folium to install the downloaded update. Android asks for this permission once." TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                        <Button Content="Open install settings" Command="{Binding Updates.PermissionCommand}" AutomationProperties.Name="Open install unknown apps settings" />
+                    </StackPanel>
+                    <StackPanel IsVisible="{Binding Updates.HasError, FallbackValue=False}" Spacing="{StaticResource FoliumSpacingXs}">
+                        <TextBlock Text="{Binding Updates.Error}" Classes="folium-error" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
+                            <Button Content="Retry" Command="{Binding Updates.RetryCommand}" />
+                            <Button Content="Open release page" Command="{Binding Updates.OpenReleasePageCommand}" />
+                        </StackPanel>
+                    </StackPanel>
                     <Grid x:Name="FilterGrid"
                           ColumnDefinitions="*,*,*,*"
                           ColumnSpacing="{StaticResource FoliumSpacingSm}"
@@ -607,7 +641,21 @@
             </StackPanel>
             <StackPanel IsVisible="{Binding ShowLibraryMenu}" Spacing="{StaticResource FoliumSpacingSm}" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button Content="Backup and restore" Command="{Binding ShowBackupCommand}" HorizontalAlignment="Stretch" />
+                <Button Content="Settings" Command="{Binding Updates.ToggleSettingsCommand}" HorizontalAlignment="Stretch" IsVisible="{Binding HasUpdateSettings}" />
             </StackPanel>
+            <Border IsVisible="{Binding Updates.ShowSettings, FallbackValue=False}"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource FoliumRaisedBrush}"
+                    CornerRadius="{StaticResource FoliumGroupCornerRadius}"
+                    Padding="{StaticResource FoliumSpacingLgThickness}">
+                <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                    <TextBlock Text="Settings" Classes="folium-section" />
+                    <TextBlock Text="{Binding Updates.VersionText}" Classes="folium-caption" />
+                    <CheckBox Content="Check for updates" IsChecked="{Binding Updates.ChecksEnabled, Mode=TwoWay}" />
+                    <Button Content="Check now" Command="{Binding Updates.CheckNowCommand}" />
+                    <Button Content="Done" Command="{Binding Updates.CloseSettingsCommand}" />
+                </StackPanel>
+            </Border>
             <Border IsVisible="{Binding ShowAddSheet}" Background="{DynamicResource FoliumScrimBrush}" Opacity="0.48">
                 <Button Command="{Binding DismissAddSheetCommand}" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" AutomationProperties.Name="Close add book" />
             </Border>

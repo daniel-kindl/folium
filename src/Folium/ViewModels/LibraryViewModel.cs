@@ -53,11 +53,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private Guid? _snackbarBookId;
     private string SnackbarTitle { get; set; } = "";
 
-    private LibraryViewModel(PersonalLibrary? library, IBookSearch? search, IBookStore store)
+    private LibraryViewModel(PersonalLibrary? library, IBookSearch? search, IBookStore store, UpdateViewModel? updates)
     {
         _library = library;
         _store = store;
         Search = new SearchViewModel(search ?? SearchProvider);
+        Updates = updates;
         if (library is not null)
         {
             Books = library.Books;
@@ -117,6 +118,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>The independent metadata search state.</summary>
     public SearchViewModel Search { get; }
+
+    /// <summary>The update check and install controls.</summary>
+    public UpdateViewModel? Updates { get; }
+
+    /// <summary>Whether this host provides update controls.</summary>
+    public bool HasUpdateSettings => Updates is not null;
 
     /// <summary>Reviews the current edition in the book editor.</summary>
     public ICommand ImportCommand { get; }
@@ -529,17 +536,18 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Opens the library from the store. A store failure leaves the library closed and the file unchanged.</summary>
     /// <param name="store">The store that holds the saved books. Must not be null.</param>
     /// <param name="search">The metadata provider. Null uses Open Library.</param>
-    public static LibraryViewModel Open(IBookStore store, IBookSearch? search = null)
+    /// <param name="updates">The optional update view model.</param>
+    public static LibraryViewModel Open(IBookStore store, IBookSearch? search = null, UpdateViewModel? updates = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         try
         {
-            return new LibraryViewModel(new PersonalLibrary(store), search, store);
+            return new LibraryViewModel(new PersonalLibrary(store), search, store, updates);
         }
         catch (LibraryStoreException exception)
         {
             Trace.TraceError(exception.ToString());
-            return new LibraryViewModel(library: null, search, store);
+            return new LibraryViewModel(library: null, search, store, updates);
         }
     }
 
@@ -551,6 +559,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private bool CloseTransientLayer()
     {
+        if (Updates?.ShowSettings == true)
+        {
+            Updates.CloseSettingsCommand.Execute(parameter: null);
+            return true;
+        }
+
         if (ShowAddSheet || ShowLibraryMenu || ShowSortMenu)
         {
             CloseLayers();

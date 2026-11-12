@@ -15,6 +15,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <DefineConstants Condition="'$(FoliumVerification)' == 'true'">$(DefineConstants);FOLIUM_VERIFICATION</DefineConstants>
+    <DefineConstants Condition="'$(FoliumVerificationUpdateApk)' != ''">$(DefineConstants);FOLIUM_VERIFICATION;FOLIUM_UPDATE_VERIFICATION</DefineConstants>
     <ImplicitUsings>enable</ImplicitUsings>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>

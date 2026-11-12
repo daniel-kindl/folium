@@ -28,8 +28,12 @@
     <PackageReference Include="Avalonia.Android" />
     <ProjectReference Include="../Folium/Folium.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(FoliumVerification)' == 'true'">
+  <ItemGroup Condition="'$(FoliumVerification)' == 'true' Or '$(FoliumVerificationUpdateApk)' != ''">
     <Compile Include="../../tools/android/VerificationHttpHandler.cs" Link="VerificationHttpHandler.cs" />
     <AndroidAsset Include="../../tools/android/fixtures/*" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(FoliumVerificationUpdateApk)' != ''">
+    <Compile Include="../../tools/android/VerificationReleaseSource.cs" Link="VerificationReleaseSource.cs" />
+    <AndroidAsset Include="$(FoliumVerificationUpdateApk)" Link="folium-update.apk" />
   </ItemGroup>
 </Project>

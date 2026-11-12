@@ -64,6 +64,8 @@ Use **Preview cover** on a result to load an available cover. Empty metadata fie
 mean Open Library did not supply the value.
 
 Search requires a network connection. You can cancel a pending request or use Back.
+
+Folium checks GitHub for stable releases once per day by default. You can turn off update checks in Settings. Update checks and APK downloads use HTTPS and send no account details or device identifiers. Folium does not use update telemetry. If update checks are off, Folium makes no update request unless you choose **Check now**.
 Failures leave the title available for another attempt. Nothing in search changes
 the saved library.
 

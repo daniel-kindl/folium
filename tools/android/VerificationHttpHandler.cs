@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 
 namespace Folium.Android;
 
@@ -20,6 +21,19 @@ internal sealed class VerificationHttpHandler() : HttpMessageHandler
         }
 
         string path = request.RequestUri!.AbsolutePath;
+        if (string.Equals(path, "/repos/daniel-kindl/folium/releases/latest", StringComparison.Ordinal))
+        {
+            _ = global::Android.Util.Log.Info("FoliumUpdateFixture", "Served latest release metadata.");
+            const string RELEASE = """
+                {"tag_name":"v0.2.0","draft":false,"prerelease":false,"html_url":"https://github.com/daniel-kindl/folium/releases/tag/v0.2.0","body":"Verification update","assets":[{"name":"folium-0.2.0.apk","browser_download_url":"https://api.github.com/assets/folium-0.2.0.apk","size":0}]}
+                """;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new StringContent(RELEASE, Encoding.UTF8, "application/json"),
+            };
+        }
+
         string asset = path switch
         {
             "/search.json" => request.RequestUri.Query.Contains("page=2", StringComparison.Ordinal) ? "search-page2.json" : "search.json",
@@ -30,8 +44,14 @@ internal sealed class VerificationHttpHandler() : HttpMessageHandler
             "/authors/OL1A.json" => "author.json",
             "/b/id/123-M.jpg" => "cover.png",
             "/b/id/124-M.jpg" => "folium-verification.txt",
+            "/assets/folium-0.2.0.apk" => "folium-update.apk",
             _ => throw new HttpRequestException("The verification fixture does not exist: " + path),
         };
+        if (string.Equals(asset, "folium-update.apk", StringComparison.Ordinal))
+        {
+            _ = global::Android.Util.Log.Info("FoliumUpdateFixture", "Served the 0.2.0 APK fixture.");
+        }
+
         Stream stream = global::Android.App.Application.Context.Assets!.Open(asset);
         await using (stream.ConfigureAwait(false))
         {
@@ -39,7 +59,11 @@ internal sealed class VerificationHttpHandler() : HttpMessageHandler
             await using (bytes.ConfigureAwait(false))
             {
                 await stream.CopyToAsync(bytes, cancellationToken).ConfigureAwait(false);
-                return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(bytes.ToArray()) };
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    RequestMessage = request,
+                    Content = new ByteArrayContent(bytes.ToArray()),
+                };
             }
         }
     }
