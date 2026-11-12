@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using Folium.Storage;
+using Folium.Updates;
 using Folium.ViewModels;
 using Folium.Views;
 
@@ -24,6 +25,15 @@ public class App : Application
 
     /// <summary>The library file path. The Android host sets it before the main view opens.</summary>
     public static string? LibraryFilePath { get; set; }
+
+    /// <summary>Update check service configured by the platform host.</summary>
+    public static UpdateCheckService? UpdateChecks { get; set; }
+
+    /// <summary>Platform installer configured by the platform host.</summary>
+    public static IUpdateInstaller? UpdateInstaller { get; set; }
+
+    /// <summary>Installed display version configured by the platform host.</summary>
+    public static string CurrentVersion { get; set; } = "0.1.0";
 
 #if FOLIUM_VERIFICATION
     /// <summary>The deterministic search provider for native verification builds.</summary>
@@ -71,12 +81,18 @@ public class App : Application
     {
         string path = string.IsNullOrWhiteSpace(LibraryFilePath) ? LibraryPaths.DefaultPath() : LibraryFilePath;
 #if FOLIUM_VERIFICATION
-        LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path), VerificationSearch);
+        LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path), VerificationSearch, CreateUpdates());
 #else
-        LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path));
+        LibraryViewModel library = LibraryViewModel.Open(new FileBookStore(path), updates: CreateUpdates());
 #endif
         Library = library;
+        _ = library.Updates?.CheckAtStartAsync();
         return new MainView { DataContext = library };
+    }
+
+    private static UpdateViewModel? CreateUpdates()
+    {
+        return UpdateChecks is null ? null : new UpdateViewModel(UpdateChecks, UpdateInstaller, CurrentVersion);
     }
 
     private Dictionary<string, double> ReadBaseFontMetrics()

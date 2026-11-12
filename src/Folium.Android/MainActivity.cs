@@ -24,6 +24,24 @@ public class MainActivity : AvaloniaMainActivity
         OnBackPressedDispatcher.AddCallback(this, _libraryBackCallback);
     }
 
+    /// <summary>Checks for a due app update when the activity resumes.</summary>
+    protected override void OnResume()
+    {
+        base.OnResume();
+        if (Avalonia.Application.Current is App { Library.Updates: { } updates })
+        {
+            updates.OnResume(UpdateInstallReceiver.ConsumeConfirmationPromptReturn());
+            _ = updates.CheckAtStartAsync();
+        }
+    }
+
+    /// <summary>Records when Android pauses Folium for the package install prompt.</summary>
+    protected override void OnPause()
+    {
+        base.OnPause();
+        UpdateInstallReceiver.MarkConfirmationPromptShown();
+    }
+
     /// <summary>Applies the system text size after a handled configuration change.</summary>
     /// <param name="newConfig">The new Android configuration.</param>
     public override void OnConfigurationChanged(Configuration newConfig)
