@@ -20,7 +20,7 @@ public class Application(nint javaReference, JniHandleOwnership transfer)
     private static readonly HttpClient VerificationReleaseHttp = new(new VerificationHttpHandler());
     private static readonly HttpClient VerificationInstallerHttp = new(new VerificationHttpHandler());
 #elif !FOLIUM_VERIFICATION
-    private static readonly HttpClient ReleaseHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly HttpClient ReleaseHttp = new();
 #endif
 
     /// <summary>Sets the library file path after the Android application starts.</summary>
@@ -34,8 +34,9 @@ public class Application(nint javaReference, JniHandleOwnership transfer)
             throw new InvalidOperationException("The app data directory is not available.");
         }
 
-        string? version = PackageManager?.GetPackageInfo(PackageName!, global::Android.Content.PM.PackageInfoFlags.SigningCertificates)?.VersionName;
-        App.CurrentVersion = string.IsNullOrWhiteSpace(version) ? "0.1.0" : version;
+        const global::Android.Content.PM.PackageInfoFlags VERSION_FLAGS = default;
+        string? version = PackageManager?.GetPackageInfo(PackageName!, VERSION_FLAGS)?.VersionName;
+        App.CurrentVersion = string.IsNullOrWhiteSpace(version) ? App.CurrentVersion : version;
 #if FOLIUM_UPDATE_VERIFICATION
         App.UpdateChecks = new UpdateCheckService(
             new VerificationReleaseSource(VerificationReleaseHttp),

@@ -59,13 +59,19 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
         return CheckAsync(force: true, cancellationToken);
     }
 
-    /// <summary>Continues a pending install after the user returns from Android settings.</summary>
-    public void OnResume()
+    /// <summary>Continues permission handling or checks a pending install when the app resumes.</summary>
+    /// <param name="installPromptWasDismissed">Whether Android paused this activity for the install prompt.</param>
+    public void OnResume(bool installPromptWasDismissed = false)
     {
         if (NeedsInstallPermission && _installer?.CanRequestInstallPackages == true)
         {
             SetNeedsInstallPermission(needed: false);
             InstallAsync();
+        }
+        else if (IsBusy && !CanCancel && !installPromptWasDismissed)
+        {
+            SetError(ErrorSummary(UpdateFailureReason.Install));
+            _installCancellation?.Cancel(throwOnFirstException: false);
         }
     }
 
@@ -92,6 +98,12 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>Whether the current update phase can be cancelled.</summary>
     public bool CanCancel { get; private set; }
+
+    /// <summary>The current update phase for screen readers.</summary>
+    public string ProgressPhaseText => CanCancel ? "Downloading update" : "Installing update";
+
+    /// <summary>The release notes button label for screen readers.</summary>
+    public string ReleaseNotesButtonText => ShowNotes ? "Hide release notes" : "Show release notes";
 
     /// <summary>Download progress from zero to one.</summary>
     public double Progress { get; private set; }
@@ -161,7 +173,7 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
         catch (OperationCanceledException)
         {
         }
-        catch (HttpRequestException)
+        catch (Exception exception) when (exception is HttpRequestException or IOException or UnauthorizedAccessException)
         {
         }
     }
@@ -186,15 +198,7 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
         Progress<UpdateProgress> progress = new(SetProgress);
         try
         {
-            await installer.InstallAsync(release, progress, cancellation.Token).ConfigureAwait(true);
-        }
-        catch (OperationCanceledException)
-        {
-            SetError("Update download cancelled.");
-        }
-        catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
-        {
-            SetError(ErrorSummary(exception));
+            await InstallReleaseAsync(installer, release, progress, cancellation.Token).ConfigureAwait(true);
         }
         finally
         {
@@ -202,6 +206,31 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
             _installCancellation = null;
             SetBusy(busy: false);
         }
+    }
+
+    private async Task InstallReleaseAsync(IUpdateInstaller installer, ReleaseInfo release,
+        IProgress<UpdateProgress> progress, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await installer.InstallAsync(release, progress, cancellationToken).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!HasError)
+            {
+                SetError("Update download cancelled.");
+            }
+        }
+        catch (Exception exception) when (IsExpectedInstallFailure(exception))
+        {
+            SetError(ErrorSummary(exception));
+        }
+    }
+
+    private static bool IsExpectedInstallFailure(Exception exception)
+    {
+        return exception is UpdateFailureException or HttpRequestException or IOException or UnauthorizedAccessException or InvalidOperationException;
     }
 
     private bool TryPrepareInstall(out ReleaseInfo release, out IUpdateInstaller installer)
@@ -267,16 +296,15 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
     {
         ShowNotes = show;
         Raise(nameof(ShowNotes));
+        Raise(nameof(ReleaseNotesButtonText));
     }
 
     private void SetBusy(bool busy)
     {
         IsBusy = busy;
-        if (!busy)
-        {
-            CanCancel = false;
-            Raise(nameof(CanCancel));
-        }
+        CanCancel = busy;
+        Raise(nameof(CanCancel));
+        Raise(nameof(ProgressPhaseText));
         Raise(nameof(IsBusy));
         Raise(nameof(ShowProgress));
         RaiseCommands();
@@ -295,6 +323,7 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
         Raise(nameof(Progress));
         Raise(nameof(ProgressText));
         Raise(nameof(CanCancel));
+        Raise(nameof(ProgressPhaseText));
         ((Command)CancelCommand).RaiseCanExecuteChanged();
     }
 
@@ -320,29 +349,27 @@ public sealed class UpdateViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    private static string ErrorSummary(UpdateFailureReason reason)
+    {
+        return reason switch
+        {
+            UpdateFailureReason.Download => "Download failed.",
+            UpdateFailureReason.FileCheck => "File check failed.",
+            UpdateFailureReason.SignatureMismatch => "Signature mismatch.",
+            UpdateFailureReason.Install => "Install failed.",
+            _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, "Unknown update failure reason."),
+        };
+    }
+
     private static string ErrorSummary(Exception exception)
     {
-        if (exception is HttpRequestException or IOException)
+        UpdateFailureReason reason = exception switch
         {
-            return "Download failed.";
-        }
-
-        if (exception is InvalidOperationException)
-        {
-            if (exception.Message.Contains("certificate", StringComparison.OrdinalIgnoreCase))
-            {
-                return "Signature mismatch.";
-            }
-
-            if (exception.Message.Contains("APK", StringComparison.OrdinalIgnoreCase)
-                || exception.Message.Contains("version", StringComparison.OrdinalIgnoreCase)
-                || exception.Message.Contains("package name", StringComparison.OrdinalIgnoreCase))
-            {
-                return "File check failed.";
-            }
-        }
-
-        return "Install failed.";
+            UpdateFailureException failure => failure.Reason,
+            HttpRequestException or IOException or UnauthorizedAccessException => UpdateFailureReason.Download,
+            _ => UpdateFailureReason.Install,
+        };
+        return ErrorSummary(reason);
     }
 
     private void RaiseCommands()

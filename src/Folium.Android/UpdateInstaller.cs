@@ -6,7 +6,6 @@ namespace Folium.Android;
 /// <summary>Downloads and installs release APKs through Android's package installer.</summary>
 public sealed class UpdateInstaller : IUpdateInstaller, IDisposable
 {
-    private const string PACKAGE_NAME = "dev.danielkindl.folium";
     private readonly Context _context;
     private readonly HttpClient _http;
     private readonly bool _ownsHttp;
@@ -33,7 +32,8 @@ public sealed class UpdateInstaller : IUpdateInstaller, IDisposable
     /// <inheritdoc />
     public void OpenInstallPermissionSettings()
     {
-        using Intent intent = new(global::Android.Provider.Settings.ActionManageUnknownAppSources, global::Android.Net.Uri.Parse($"package:{PACKAGE_NAME}"));
+        string packageName = _context.PackageName ?? throw new InvalidOperationException("The installed Folium package is not available.");
+        using Intent intent = new(global::Android.Provider.Settings.ActionManageUnknownAppSources, global::Android.Net.Uri.Parse($"package:{packageName}"));
         _ = intent.AddFlags(ActivityFlags.NewTask);
         _context.StartActivity(intent);
     }
@@ -54,7 +54,7 @@ public sealed class UpdateInstaller : IUpdateInstaller, IDisposable
         ArgumentNullException.ThrowIfNull(progress);
         if (!CanRequestInstallPackages)
         {
-            throw new InvalidOperationException("Allow Folium to install unknown apps in Android settings, then try again.");
+            throw new UpdateFailureException(UpdateFailureReason.Install, "Allow Folium to install unknown apps in Android settings, then try again.");
         }
 
         string path = Path.Combine(_cacheDirectory, $"folium-update-{release.Version}.apk");
@@ -69,7 +69,22 @@ public sealed class UpdateInstaller : IUpdateInstaller, IDisposable
         catch (Java.Lang.Exception exception)
         {
             TryDelete(path);
-            throw new InvalidOperationException("Android could not install the update.", exception);
+            throw new UpdateFailureException(UpdateFailureReason.Install, "Android could not install the update.", exception);
+        }
+        catch (UpdateFailureException)
+        {
+            TryDelete(path);
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            TryDelete(path);
+            throw;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or UnauthorizedAccessException)
+        {
+            TryDelete(path);
+            throw new UpdateFailureException(UpdateFailureReason.Download, "The update download failed.", exception);
         }
         catch
         {

@@ -7,11 +7,10 @@ public sealed class UpdatePolicyTests
     [Fact]
     public void OffersNewerVersionWhenCheckIsDue()
     {
-        UpdateDecision decision = UpdatePolicy.Decide(
-            settings: new UpdateSettings(), currentVersion: "0.1.0", now: new DateTimeOffset(year: 2026, month: 11, day: 12, hour: 0, minute: 0, second: 0, offset: TimeSpan.Zero), lastCheck: null, skippedVersion: null,
-            new ReleaseInfo(new SemVersion(0, 2, 0), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release")));
+        ReleaseInfo release = new(new SemVersion(0, 2, 0), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release"));
 
-        Assert.Equal(UpdateDecision.Offer, decision);
+        Assert.True(UpdatePolicy.IsCheckDue(new UpdateSettings(), DateTimeOffset.UnixEpoch, force: false));
+        Assert.True(UpdatePolicy.ShouldOffer(release, "0.1.0", skippedVersion: null));
     }
 
     [Theory]
@@ -20,19 +19,18 @@ public sealed class UpdatePolicyTests
     [InlineData("0.2.0", "0.2.0")]
     public void DoesNotOfferEqualOlderOrSkippedRelease(string candidate, string? skipped)
     {
-        UpdateDecision decision = UpdatePolicy.Decide(
-            settings: new UpdateSettings(), currentVersion: "0.1.0", now: new DateTimeOffset(year: 2026, month: 11, day: 12, hour: 0, minute: 0, second: 0, offset: TimeSpan.Zero), lastCheck: null, skippedVersion: skipped,
-            new ReleaseInfo(SemVersion.Parse(candidate), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release")));
+        ReleaseInfo release = new(SemVersion.Parse(candidate), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release"));
 
-        Assert.Equal(UpdateDecision.None, decision);
+        Assert.False(UpdatePolicy.ShouldOffer(release, "0.1.0", skipped));
     }
 
     [Fact]
     public void DisabledOrNotDueDoesNotCheck()
     {
         DateTimeOffset now = new(year: 2026, month: 11, day: 12, hour: 0, minute: 0, second: 0, offset: TimeSpan.Zero);
-        Assert.Equal(UpdateDecision.Disabled, UpdatePolicy.Decide(settings: new UpdateSettings(ChecksEnabled: false), currentVersion: "0.1.0", now: now, lastCheck: null, skippedVersion: null, release: null));
-        Assert.Equal(UpdateDecision.NotDue, UpdatePolicy.Decide(settings: new UpdateSettings(), currentVersion: "0.1.0", now: now, lastCheck: now.AddHours(-1), skippedVersion: null, release: null));
+        Assert.False(UpdatePolicy.IsCheckDue(new UpdateSettings(ChecksEnabled: false), now, force: false));
+        Assert.False(UpdatePolicy.IsCheckDue(new UpdateSettings(LastCheck: now.AddHours(-1)), now, force: false));
+        Assert.True(UpdatePolicy.IsCheckDue(new UpdateSettings(ChecksEnabled: false), now, force: true));
     }
 
     [Theory]
@@ -52,15 +50,34 @@ public sealed class UpdatePolicyTests
     {
         Assert.True(SemVersion.Parse("1.10.0") > SemVersion.Parse("1.9.9"));
         Assert.True(SemVersion.Parse("2.0.0") > SemVersion.Parse("1.99.99"));
+        Assert.True(SemVersion.Parse("1.2.4") > SemVersion.Parse("1.2.3"));
+        Assert.False(SemVersion.Parse("1.2.3") > SemVersion.Parse("1.2.3"));
+        Assert.True(SemVersion.Parse("1.2.3") >= SemVersion.Parse("1.2.3"));
+    }
+
+    [Fact]
+    public void RejectsNullVersionAndUpdatePreferences()
+    {
+        _ = Assert.Throws<ArgumentNullException>(() => SemVersion.Parse(null!));
+        _ = Assert.Throws<ArgumentNullException>(() => UpdatePolicy.IsCheckDue(null!, DateTimeOffset.UnixEpoch));
+        _ = Assert.Throws<ArgumentException>(() => UpdatePolicy.ShouldOffer(release: null, currentVersion: " ", skippedVersion: null));
+    }
+
+    [Fact]
+    public void InvalidVersionTextUsesTheVersionFormatError()
+    {
+        FormatException missingComponent = Assert.Throws<FormatException>(() => SemVersion.Parse("1.2"));
+        FormatException invalidComponent = Assert.Throws<FormatException>(() => SemVersion.Parse("1.2.x"));
+
+        Assert.Equal("The version must use X.Y.Z format.", missingComponent.Message);
+        Assert.Equal("The version must use X.Y.Z format.", invalidComponent.Message);
     }
 
     [Fact]
     public void OffersVersionNewerThanTheSkippedVersion()
     {
         ReleaseInfo release = new(SemVersion.Parse("0.3.0"), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release"));
-        UpdateDecision decision = UpdatePolicy.Decide(settings: new UpdateSettings(), currentVersion: "0.1.0", now: DateTimeOffset.UtcNow,
-            lastCheck: null, skippedVersion: "0.2.0", release: release);
-        Assert.Equal(UpdateDecision.Offer, decision);
+        Assert.True(UpdatePolicy.ShouldOffer(release, "0.1.0", skippedVersion: "0.2.0"));
     }
 
     [Fact]
@@ -69,9 +86,7 @@ public sealed class UpdatePolicyTests
         DateTimeOffset now = new(year: 2026, month: 11, day: 12, hour: 0, minute: 0, second: 0, offset: TimeSpan.Zero);
         ReleaseInfo release = new(SemVersion.Parse("0.2.0"), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release"));
 
-        UpdateDecision decision = UpdatePolicy.Decide(settings: new UpdateSettings(), currentVersion: "0.1.0",
-            now: now, lastCheck: now.AddHours(-24), skippedVersion: null, release: release);
-
-        Assert.Equal(UpdateDecision.Offer, decision);
+        Assert.True(UpdatePolicy.IsCheckDue(new UpdateSettings(LastCheck: now.AddHours(-24)), now, force: false));
+        Assert.True(UpdatePolicy.ShouldOffer(release, "0.1.0", skippedVersion: null));
     }
 }

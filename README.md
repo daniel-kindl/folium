@@ -65,7 +65,6 @@ mean Open Library did not supply the value.
 
 Search requires a network connection. You can cancel a pending request or use Back.
 
-Folium checks GitHub for stable releases once per day by default. You can turn off update checks in Settings. Update checks and APK downloads use HTTPS and send no account details or device identifiers. Folium does not use update telemetry. If update checks are off, Folium makes no update request unless you choose **Check now**.
 Failures leave the title available for another attempt. Nothing in search changes
 the saved library.
 
@@ -75,6 +74,10 @@ user actions, run at most once per second, and identify Folium by its repository
 URL. Successful responses stay in a bounded session cache. The client honors
 Retry-After and does not retry automatically. Result pages contain at most 20
 works or editions. No API key or backend is required.
+
+### Updates
+
+Folium checks GitHub for stable releases once per day by default. Turn off update checks in Settings. Folium uses HTTPS for update checks and APK downloads. It sends no account details or device identifiers. Folium does not use update telemetry. When update checks are off, Folium makes no request unless you choose **Check now**.
 
 ### Import a book
 

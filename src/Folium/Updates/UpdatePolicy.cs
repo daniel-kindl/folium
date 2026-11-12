@@ -1,43 +1,27 @@
 namespace Folium.Updates;
 
-/// <summary>The result of applying update-check rules.</summary>
-/// <summary>Pure update timing and offer rules.</summary>
+/// <summary>Applies update timing and offer rules.</summary>
 public static class UpdatePolicy
 {
-    /// <summary>Decides whether a check is due and whether its release must be offered.</summary>
+    /// <summary>Returns whether an automatic or forced release check must run.</summary>
     /// <param name="settings">The update preferences.</param>
-    /// <param name="currentVersion">The installed version.</param>
     /// <param name="now">The current time.</param>
-    /// <param name="lastCheck">The time of the last check.</param>
-    /// <param name="skippedVersion">The version the user skipped.</param>
-    /// <param name="release">The latest release, if available.</param>
-    /// <param name="force">Whether to ignore the disabled and 24-hour rules.</param>
-    public static UpdateDecision Decide(UpdateSettings settings, string currentVersion, DateTimeOffset now,
-        DateTimeOffset? lastCheck, string? skippedVersion, ReleaseInfo? release, bool force = false)
+    /// <param name="force">Whether a user started the check manually.</param>
+    public static bool IsCheckDue(UpdateSettings settings, DateTimeOffset now, bool force = false)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        return !settings.ChecksEnabled && !force ? UpdateDecision.Disabled
-            : GetDueDecision(now, lastCheck, force, currentVersion, skippedVersion, release);
+        return force || (settings.ChecksEnabled
+            && (settings.LastCheck is not DateTimeOffset lastCheck || now - lastCheck >= TimeSpan.FromHours(24)));
     }
 
-    private static bool IsDue(DateTimeOffset now, DateTimeOffset? lastCheck, bool force)
+    /// <summary>Returns whether the release is newer than the installed and skipped versions.</summary>
+    /// <param name="release">The latest release, if available.</param>
+    /// <param name="currentVersion">The installed version.</param>
+    /// <param name="skippedVersion">The version the user skipped.</param>
+    public static bool ShouldOffer(ReleaseInfo? release, string currentVersion, string? skippedVersion)
     {
-        return force || lastCheck is not DateTimeOffset checkedAt || now - checkedAt >= TimeSpan.FromHours(24);
-    }
-
-    private static UpdateDecision GetDueDecision(DateTimeOffset now, DateTimeOffset? lastCheck, bool force,
-        string currentVersion, string? skippedVersion, ReleaseInfo? release)
-    {
-        return IsDue(now, lastCheck, force)
-            ? GetOffer(currentVersion, skippedVersion, release)
-            : UpdateDecision.NotDue;
-    }
-
-    private static UpdateDecision GetOffer(string currentVersion, string? skippedVersion, ReleaseInfo? release)
-    {
-        return release is null || release.Version.CompareTo(SemVersion.Parse(currentVersion)) <= 0
-            || string.Equals(release.Version.ToString(), skippedVersion, StringComparison.Ordinal)
-            ? UpdateDecision.None
-            : UpdateDecision.Offer;
+        ArgumentException.ThrowIfNullOrWhiteSpace(currentVersion);
+        return release?.Version.CompareTo(SemVersion.Parse(currentVersion)) > 0
+            && !string.Equals(release?.Version.ToString(), skippedVersion, StringComparison.Ordinal);
     }
 }

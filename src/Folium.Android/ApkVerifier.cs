@@ -1,43 +1,42 @@
-using System.Security.Cryptography;
 using Android.Content;
 using Android.Content.PM;
+using Folium.Updates;
 
 namespace Folium.Android;
 
 /// <summary>Checks an APK's package, version and signing certificate.</summary>
 internal static class ApkVerifier
 {
-    private const string PACKAGE_ID = "dev.danielkindl.folium";
-
     public static void Verify(Context context, string path)
     {
         ArgumentNullException.ThrowIfNull(context);
-        PackageManager manager = context.PackageManager ?? throw new InvalidOperationException("Android package manager is not available.");
+        string packageName = context.PackageName ?? throw new UpdateFailureException(UpdateFailureReason.Install, "The installed Folium package is not available.");
+        PackageManager manager = context.PackageManager ?? throw new UpdateFailureException(UpdateFailureReason.Install, "Android package manager is not available.");
         const PackageInfoFlags SIGNING_FLAGS = PackageInfoFlags.SigningCertificates;
-        PackageInfo archive = manager.GetPackageArchiveInfo(path, SIGNING_FLAGS) ?? throw new InvalidOperationException("The downloaded file is not a valid APK.");
-        PackageInfo installed = manager.GetPackageInfo(PACKAGE_ID, SIGNING_FLAGS) ?? throw new InvalidOperationException("The installed Folium package is not available.");
-        if (!string.Equals(archive.PackageName, PACKAGE_ID, StringComparison.Ordinal))
+        PackageInfo archive = manager.GetPackageArchiveInfo(path, SIGNING_FLAGS)
+            ?? throw new UpdateFailureException(UpdateFailureReason.FileCheck, "The downloaded file is not a valid APK.");
+        PackageInfo installed = manager.GetPackageInfo(packageName, SIGNING_FLAGS)
+            ?? throw new UpdateFailureException(UpdateFailureReason.Install, "The installed Folium package is not available.");
+        ApkMetadata archiveMetadata = new(archive.PackageName, archive.LongVersionCode, GetSigners(archive));
+        ApkMetadata installedMetadata = new(installed.PackageName, installed.LongVersionCode, GetSigners(installed));
+        switch (ApkUpdateVerifier.Compare(archiveMetadata, installedMetadata))
         {
-            throw new InvalidOperationException("The APK package name does not match Folium.");
-        }
-
-        if (archive.LongVersionCode <= installed.LongVersionCode)
-        {
-            throw new InvalidOperationException("The APK version is not newer than the installed version.");
-        }
-
-        byte[]? archiveSignature = GetSignature(archive);
-        byte[]? installedSignature = GetSignature(installed);
-        if (archiveSignature is null || installedSignature is null
-            || !CryptographicOperations.FixedTimeEquals(SHA256.HashData(archiveSignature), SHA256.HashData(installedSignature)))
-        {
-            throw new InvalidOperationException("The APK signing certificate does not match this installation.");
+            case ApkVerificationFailure.None:
+                return;
+            case ApkVerificationFailure.PackageNameMismatch:
+                throw new UpdateFailureException(UpdateFailureReason.FileCheck, "The APK package name does not match Folium.");
+            case ApkVerificationFailure.VersionNotNewer:
+                throw new UpdateFailureException(UpdateFailureReason.FileCheck, "The APK version is not newer than the installed version.");
+            case ApkVerificationFailure.SignatureMismatch:
+                throw new UpdateFailureException(UpdateFailureReason.SignatureMismatch, "The APK signing certificate does not match this installation.");
+            default:
+                throw new InvalidOperationException("APK verification returned an unknown result.");
         }
     }
 
-    private static byte[]? GetSignature(PackageInfo info)
+    private static byte[]?[] GetSigners(PackageInfo info)
     {
         Signature[]? signatures = info.SigningInfo?.GetApkContentsSigners();
-        return signatures is { Length: 1 } ? signatures[0]?.ToByteArray() : null;
+        return signatures is null ? [] : [.. signatures.Select(signature => signature?.ToByteArray())];
     }
 }

@@ -19,17 +19,23 @@ public sealed class UpdateCheckService(IReleaseSource source, UpdateSettingsFile
         try
         {
             UpdateSettings settings = settingsFile.Read();
-            if (UpdatePolicy.Decide(settings, currentVersion, _clock(), settings.LastCheck, settings.SkippedVersion, release: null, force) is UpdateDecision.Disabled or UpdateDecision.NotDue)
+            DateTimeOffset checkedAt = _clock();
+            if (!UpdatePolicy.IsCheckDue(settings, checkedAt, force))
             {
                 return null;
             }
 
-            DateTimeOffset checkedAt = _clock();
             ReleaseInfo? release = await source.GetLatestAsync(cancellationToken).ConfigureAwait(false);
-            settingsFile.Write(settings with { LastCheck = checkedAt });
-            return UpdatePolicy.Decide(settings, currentVersion, checkedAt, lastCheck: null, settings.SkippedVersion, release, force: true) == UpdateDecision.Offer
-                ? release
-                : null;
+            try
+            {
+                settingsFile.Write(settings with { LastCheck = checkedAt });
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+
+            return UpdatePolicy.ShouldOffer(release, currentVersion, settings.SkippedVersion) ? release : null;
         }
         finally
         {

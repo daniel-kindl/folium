@@ -1,4 +1,3 @@
-using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -44,10 +43,7 @@ public sealed class GitHubReleaseSource(HttpClient client) : IReleaseSource
     private static bool IsUsableResponse(HttpResponseMessage response)
     {
         bool secure = string.Equals(response.RequestMessage?.RequestUri?.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal);
-        bool successful = response.IsSuccessStatusCode;
-        bool notFound = response.StatusCode == HttpStatusCode.NotFound;
-        bool rateLimited = response.StatusCode == HttpStatusCode.Forbidden || (int)response.StatusCode == 429;
-        return secure && successful && !notFound && !rateLimited;
+        return secure && response.IsSuccessStatusCode;
     }
 
     private static bool IsQuietFailure(Exception exception)

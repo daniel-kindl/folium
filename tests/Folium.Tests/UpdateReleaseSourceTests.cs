@@ -51,9 +51,31 @@ public sealed class UpdateReleaseSourceTests
     }
 
     [Fact]
+    public async Task CancellationFromTheHttpHandlerIsQuiet()
+    {
+        using CancellationHandler handler = new();
+        using HttpClient client = new(handler);
+        GitHubReleaseSource source = new(client);
+
+        Assert.Null(await source.GetLatestAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task RequestsThatExceedTheReleaseTimeoutAreQuiet()
+    {
+        string json = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json"), TestContext.Current.CancellationToken);
+        using DelayedHandler handler = new(json);
+        using HttpClient client = new(handler) { Timeout = Timeout.InfiniteTimeSpan };
+        GitHubReleaseSource source = new(client);
+
+        Assert.Null(await source.GetLatestAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task RejectsAnHttpRedirect()
     {
-        using StatusHandler handler = new(HttpStatusCode.OK, useHttpUri: true);
+        string json = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json"), TestContext.Current.CancellationToken);
+        using FixtureHandler handler = new(json, useHttpUri: true);
         using HttpClient client = new(handler);
         GitHubReleaseSource source = new(client);
         Assert.Null(await source.GetLatestAsync(TestContext.Current.CancellationToken));
@@ -73,16 +95,99 @@ public sealed class UpdateReleaseSourceTests
         Assert.Null(GitHubReleaseSource.Parse(modified.RootElement));
     }
 
+    [Theory]
+    [InlineData("1.2.3")]
+    [InlineData("v")]
+    [InlineData("v1.2")]
+    [InlineData("v1.2.3.4")]
+    public void RejectsTagsWithoutOneStrictVersion(string tag)
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        release["tag_name"] = tag;
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+
+        Assert.Null(GitHubReleaseSource.Parse(document.RootElement));
+    }
+
     [Fact]
-    public void RejectsDuplicateMatchingAssetsAndHttpUrls()
+    public void RejectsAnUnparseableTagWhenItsFallbackAssetNameExists()
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        release["tag_name"] = "vbad";
+        release["assets"]![0]!["name"] = "folium-0.0.0.apk";
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+
+        Assert.Null(GitHubReleaseSource.Parse(document.RootElement));
+    }
+
+    [Fact]
+    public void RejectsATagWithoutAStringValue()
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        _ = release.Remove("tag_name");
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+
+        Assert.Null(GitHubReleaseSource.Parse(document.RootElement));
+    }
+
+    [Fact]
+    public void RejectsAnUnprefixedTagWhenItsFallbackAssetNameExists()
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        release["tag_name"] = "bad";
+        release["assets"]![0]!["name"] = "folium-0.0.0.apk";
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+
+        Assert.Null(GitHubReleaseSource.Parse(document.RootElement));
+    }
+
+    [Fact]
+    public void RejectsAssetsThatAreNotAnArray()
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        release["assets"] = new JsonObject();
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+
+        Assert.Null(GitHubReleaseSource.Parse(document.RootElement));
+    }
+
+    [Fact]
+    public void MissingReleaseNotesAreEmpty()
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        _ = release.Remove("body");
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+
+        Assert.Equal(string.Empty, GitHubReleaseSource.Parse(document.RootElement)?.Notes);
+    }
+
+    [Fact]
+    public void RejectsDuplicateMatchingAssets()
     {
         string json = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json"));
         JsonObject duplicate = JsonNode.Parse(json)!.AsObject();
         duplicate["assets"]!.AsArray().Add(JsonNode.Parse("{\"name\":\"folium-0.2.0.apk\",\"browser_download_url\":\"https://example.test/app.apk\"}"));
         using JsonDocument doc = JsonDocument.Parse(duplicate.ToJsonString());
         Assert.Null(GitHubReleaseSource.Parse(doc.RootElement));
-        using JsonDocument http = JsonDocument.Parse(json.Replace("https://github.com", "http://github.com", StringComparison.Ordinal));
-        Assert.Null(GitHubReleaseSource.Parse(http.RootElement));
+    }
+
+    [Theory]
+    [InlineData("html_url")]
+    [InlineData("browser_download_url")]
+    public void RejectsAnHttpReleaseUrl(string propertyName)
+    {
+        JsonObject release = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "github-release.json")))!.AsObject();
+        if (string.Equals(propertyName, "html_url", StringComparison.Ordinal))
+        {
+            release[propertyName] = "http://github.com/daniel-kindl/folium/releases/tag/v0.2.0";
+        }
+        else
+        {
+            release["assets"]![0]![propertyName] = "http://github.com/daniel-kindl/folium/releases/download/v0.2.0/folium-0.2.0.apk";
+        }
+
+        using JsonDocument document = JsonDocument.Parse(release.ToJsonString());
+        Assert.Null(GitHubReleaseSource.Parse(document.RootElement));
     }
 
     [Fact]
@@ -126,6 +231,36 @@ public sealed class UpdateReleaseSourceTests
         Assert.Equal(now, file.Read().LastCheck);
     }
 
+    [Theory]
+    [InlineData("0.2.0", "0.1.0")]
+    [InlineData(null, "0.2.0")]
+    public async Task CheckReturnsOnlyReleasesThatPassTheOfferPolicy(string? skippedVersion, string currentVersion)
+    {
+        using TemporaryDirectory directory = new();
+        DateTimeOffset now = DateTimeOffset.UnixEpoch;
+        UpdateSettingsFile file = new(Path.Combine(directory.Path, "updates.json"));
+        file.Write(new UpdateSettings(SkippedVersion: skippedVersion));
+        ReleaseInfo release = new(SemVersion.Parse("0.2.0"), new Uri("https://example.test/app.apk"), 10, "notes", new Uri("https://example.test/release"));
+        UpdateCheckService service = new(new CountingSource(release), file, () => now);
+
+        ReleaseInfo? result = await service.CheckAsync(currentVersion, force: true, TestContext.Current.CancellationToken);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task SettingsWriteFailureReturnsAQuietCheckResult()
+    {
+        using TemporaryDirectory directory = new();
+        string settingsPath = Path.Combine(directory.Path, "settings-directory");
+        Directory.CreateDirectory(settingsPath);
+        UpdateCheckService service = new(new CountingSource(), new UpdateSettingsFile(settingsPath));
+
+        ReleaseInfo? release = await service.CheckAsync("0.1.0", force: true, TestContext.Current.CancellationToken);
+
+        Assert.Null(release);
+    }
+
     [Fact]
     public async Task OverlappingAutomaticChecksMakeOneReleaseRequest()
     {
@@ -146,13 +281,18 @@ public sealed class UpdateReleaseSourceTests
         Assert.Equal(now, file.Read().LastCheck);
     }
 
-    private sealed class FixtureHandler(string json) : HttpMessageHandler
+    private sealed class FixtureHandler(string json, bool useHttpUri = false) : HttpMessageHandler
     {
         public string Accept { get; private set; } = "";
         public string UserAgent { get; private set; } = "";
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            if (useHttpUri)
+            {
+                request.RequestUri = new Uri("http://example.test/redirect");
+            }
+
             Accept = request.Headers.Accept.ToString();
             UserAgent = request.Headers.UserAgent.ToString();
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request, Content = new StringContent(json) });
@@ -177,6 +317,27 @@ public sealed class UpdateReleaseSourceTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             return Task.FromException<HttpResponseMessage>(new HttpRequestException("request failed"));
+        }
+    }
+
+    private sealed class CancellationHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromException<HttpResponseMessage>(new OperationCanceledException());
+        }
+    }
+
+    private sealed class DelayedHandler(string json) : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(16), cancellationToken).ConfigureAwait(false);
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new StringContent(json),
+            };
         }
     }
 

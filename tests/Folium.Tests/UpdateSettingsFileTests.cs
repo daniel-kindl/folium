@@ -5,6 +5,15 @@ namespace Folium.Tests;
 public sealed class UpdateSettingsFileTests
 {
     [Fact]
+    public void RequiresPreferencesWhenWriting()
+    {
+        using TemporaryDirectory directory = new();
+        UpdateSettingsFile file = new(Path.Combine(directory.Path, "updates.json"));
+
+        _ = Assert.Throws<ArgumentNullException>(() => file.Write(null!));
+    }
+
+    [Fact]
     public void MissingOrCorruptSettingsUseEnabledDefaults()
     {
         using TemporaryDirectory directory = new();

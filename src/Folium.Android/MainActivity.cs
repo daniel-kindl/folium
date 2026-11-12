@@ -30,9 +30,16 @@ public class MainActivity : AvaloniaMainActivity
         base.OnResume();
         if (Avalonia.Application.Current is App { Library.Updates: { } updates })
         {
-            updates.OnResume();
+            updates.OnResume(UpdateInstallReceiver.ConsumeConfirmationPromptReturn());
             _ = updates.CheckAtStartAsync();
         }
+    }
+
+    /// <summary>Records when Android pauses Folium for the package install prompt.</summary>
+    protected override void OnPause()
+    {
+        base.OnPause();
+        UpdateInstallReceiver.MarkConfirmationPromptShown();
     }
 
     /// <summary>Applies the system text size after a handled configuration change.</summary>

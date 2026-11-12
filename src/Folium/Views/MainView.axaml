@@ -76,7 +76,7 @@
                             AutomationProperties.LiveSetting="Polite">
                         <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                             <TextBlock Text="{Binding Updates.OfferText}" Classes="folium-section" TextWrapping="Wrap" />
-                            <Button Content="Release notes" Command="{Binding Updates.ToggleNotesCommand}" AutomationProperties.Name="Show release notes" />
+                            <Button Content="{Binding Updates.ReleaseNotesButtonText}" Command="{Binding Updates.ToggleNotesCommand}" AutomationProperties.Name="{Binding Updates.ReleaseNotesButtonText}" />
                             <TextBlock Text="{Binding Updates.Release.Notes}" TextWrapping="Wrap" Classes="folium-caption" MaxHeight="180" IsVisible="{Binding Updates.ShowNotes}" />
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource FoliumSpacingSm}">
                                 <Button Content="Update" Command="{Binding Updates.UpdateCommand}" Classes="folium-primary" />
@@ -86,7 +86,7 @@
                         </StackPanel>
                     </Border>
                     <StackPanel IsVisible="{Binding Updates.ShowProgress, FallbackValue=False}" Spacing="{StaticResource FoliumSpacingXs}">
-                        <TextBlock Text="Downloading update" AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock Text="{Binding Updates.ProgressPhaseText}" AutomationProperties.LiveSetting="Polite" />
                         <ProgressBar Minimum="0" Maximum="1" Value="{Binding Updates.Progress}" />
                         <TextBlock Text="{Binding Updates.ProgressText}" AutomationProperties.LiveSetting="Polite" />
                         <Button Content="Cancel" Command="{Binding Updates.CancelCommand}" IsVisible="{Binding Updates.CanCancel}" AutomationProperties.Name="Cancel update download" />

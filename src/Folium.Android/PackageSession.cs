@@ -7,10 +7,9 @@ namespace Folium.Android;
 /// <summary>Streams a verified APK into an Android package installation session.</summary>
 internal static class PackageSession
 {
-    private const string PACKAGE_ID = "dev.danielkindl.folium";
-
     public static async Task CommitAsync(Context context, string path, CancellationToken cancellationToken)
     {
+        string packageName = context.PackageName ?? throw new InvalidOperationException("The installed Folium package is not available.");
         PackageInstaller installer = context.PackageManager?.PackageInstaller ?? throw new InvalidOperationException("Android package installer is not available.");
         using PackageInstaller.SessionParams parameters = new(PackageInstallMode.FullInstall);
         int sessionId = installer.CreateSession(parameters);
@@ -31,19 +30,34 @@ internal static class PackageSession
 
             cancellationToken.ThrowIfCancellationRequested();
             using Intent callback = new(context, typeof(UpdateInstallReceiver));
-            _ = callback.SetAction($"{PACKAGE_ID}.UPDATE_STATUS.{sessionId.ToString(CultureInfo.InvariantCulture)}");
+            _ = callback.SetAction($"{packageName}.UPDATE_STATUS.{sessionId.ToString(CultureInfo.InvariantCulture)}");
             using PendingIntent pending = PendingIntent.GetBroadcast(context, sessionId, callback,
                 PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Mutable) ?? throw new InvalidOperationException("Android could not create the installer callback.");
             UpdateInstallReceiver.Register(sessionId, completion);
-            session.Commit(pending.IntentSender);
+            CancellationTokenRegistration registration = cancellationToken.Register(
+                () => _ = completion.TrySetCanceled(cancellationToken));
+            await using (registration.ConfigureAwait(false))
+            {
+                session.Commit(pending.IntentSender);
+                _ = await completion.Task.ConfigureAwait(false);
+            }
         }
         catch
         {
             UpdateInstallReceiver.Remove(sessionId);
-            session.Abandon();
+            try
+            {
+                session.Abandon();
+            }
+            catch (Java.Lang.Exception)
+            {
+            }
+
             throw;
         }
-
-        _ = await completion.Task.ConfigureAwait(false);
+        finally
+        {
+            UpdateInstallReceiver.Remove(sessionId);
+        }
     }
 }

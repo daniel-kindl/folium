@@ -4,7 +4,8 @@
     "test-runner": "mtp",
     "mutate": [
       "Books/**/*.cs",
-      "Storage/**/*.cs"
+      "Storage/**/*.cs",
+      "Updates/**/*.cs"
     ],
     "thresholds": {
       "high": 85,
