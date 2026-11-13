@@ -4,9 +4,25 @@ Notable changes are recorded here. Versions follow [Semantic Versioning](https:/
 
 ## Unreleased
 
+## 0.2.0
+
 - Stop the version tests from pinning FoliumVersion to 0.1.0, so a later release can pass the test suite.
 - Start a signed release from main with one workflow run. The workflow works out the next version, writes the CHANGELOG, signs the APK, and publishes the GitHub release after signing succeeds.
 - Check GitHub for stable releases and install signed APK updates through the Android package installer.
+
+### Features
+
+- apply Open Leaf visual design ([#49](https://github.com/daniel-kindl/folium/pull/49))
+- add update checks and installation ([#51](https://github.com/daniel-kindl/folium/pull/51))
+
+### Fixes
+
+- drop hard-coded version asserts ([#53](https://github.com/daniel-kindl/folium/pull/53))
+
+### Other changes
+
+- rewrite README in ocho style ([#43](https://github.com/daniel-kindl/folium/pull/43))
+- one-click release from main ([#48](https://github.com/daniel-kindl/folium/pull/48))
 
 ## 0.1.0
 
