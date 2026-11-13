@@ -203,15 +203,32 @@ public sealed class ReleaseVersionCheckTests
     [Fact]
     public void RepositoryVersionSourceIsStrictAndMatchesTheFormula()
     {
-        string root = RepositoryRoot();
-        AppVersion version = VersionSource.Read(Path.Combine(root, "Directory.Build.props"));
+        AssertVersionSourceIsStrictAndMatchesTheFormula(
+            Path.Combine(RepositoryRoot(), "Directory.Build.props"));
+    }
 
-        Assert.Equal(version.DisplayVersion, version.ToString());
+    [Fact]
+    public void VersionSourceCheckAcceptsABumpedFoliumVersion()
+    {
+        const string CHANGELOG = "# Changelog\n\n## Unreleased\n\n## 0.1.0\n\n- First release.\n";
+        using ReleaseCheckFiles files = ReleaseCheckFiles.Create("0.1.0", CHANGELOG);
+
+        ReleasePrepareResult result = ReleasePrepare.Run(
+            new ReleasePrepareRequest(
+                files.PropsPath,
+                files.ChangelogPath,
+                ["v0.1.0"],
+                [new ReleaseCommit("feat: add update checks and installation (#51)", string.Empty)],
+                VersionBump.Auto,
+                new Uri("https://github.com/daniel-kindl/folium")));
+
+        Assert.Equal("0.2.0", result.Version.DisplayVersion);
+        Assert.Equal("0.2.0", VersionSource.Read(files.PropsPath).DisplayVersion);
+        AssertVersionSourceIsStrictAndMatchesTheFormula(files.PropsPath);
         Assert.Equal(
-            (version.Major * 10000) + (version.Minor * 100) + version.Patch,
-            version.VersionCode);
-        Assert.Equal("0.1.0", version.DisplayVersion);
-        Assert.Equal(100, version.VersionCode);
+            result.Notes,
+            ReleaseCheck.Run(
+                new ReleaseCheckRequest("0.2.0", files.PropsPath, files.ChangelogPath, ["v0.1.0"])));
     }
 
     [Fact]
@@ -223,6 +240,18 @@ public sealed class ReleaseVersionCheckTests
             new ReleaseCheckRequest("0.1.0", files.PropsPath, files.ChangelogPath, []));
 
         Assert.Equal("- First release.", notes);
+    }
+
+
+    private static void AssertVersionSourceIsStrictAndMatchesTheFormula(string propsPath)
+    {
+        AppVersion version = VersionSource.Read(propsPath);
+
+        Assert.Equal(version.DisplayVersion, version.ToString());
+        Assert.Equal(
+            (version.Major * 10000) + (version.Minor * 100) + version.Patch,
+            version.VersionCode);
+        Assert.Equal(version, AppVersion.Parse(version.DisplayVersion));
     }
 
     private static string RepositoryRoot()
