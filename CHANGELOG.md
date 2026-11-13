@@ -4,6 +4,7 @@ Notable changes are recorded here. Versions follow [Semantic Versioning](https:/
 
 ## Unreleased
 
+- Stop the version tests from pinning FoliumVersion to 0.1.0, so a later release can pass the test suite.
 - Start a signed release from main with one workflow run. The workflow works out the next version, writes the CHANGELOG, signs the APK, and publishes the GitHub release after signing succeeds.
 - Check GitHub for stable releases and install signed APK updates through the Android package installer.
 
