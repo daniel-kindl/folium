@@ -61,7 +61,91 @@ public sealed class LibraryBackupTests : IDisposable
 
         Assert.Empty(LibraryBackup.Read(backup));
         Assert.Contains("\"kind\": \"personal-library-backup\"", backup, StringComparison.Ordinal);
-        Assert.Contains("\"version\": 1", backup, StringComparison.Ordinal);
+        Assert.Contains("\"version\": 2", backup, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VersionTwoBackupRoundTripsShelvesAndMemberships()
+    {
+        Guid lowerId = new(0x11111111, 0x1111, 0x1111, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11);
+        Guid higherId = new(0x22222222, 0x2222, 0x2222, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22);
+        Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert", shelfIds: [higherId, lowerId]);
+        LibrarySnapshot snapshot = new([book], [new Shelf(lowerId, "Zeta"), new Shelf(higherId, "Apple")]);
+
+        string backup = LibraryBackup.ExportSnapshot(snapshot);
+        LibrarySnapshot restored = LibraryBackup.ReadSnapshot(backup);
+        using JsonDocument document = JsonDocument.Parse(backup);
+
+        Assert.Contains("\"version\": 2", backup, StringComparison.Ordinal);
+        Assert.Equal(["Apple", "Zeta"], restored.Shelves.Select(shelf => shelf.Name), StringComparer.Ordinal);
+        Assert.Equal(snapshot.Books[0].ShelfIds, restored.Books[0].ShelfIds);
+        Assert.Equal([lowerId, higherId], document.RootElement.GetProperty("books")[0].GetProperty("shelfIds")
+            .EnumerateArray().Select(id => id.GetGuid()));
+    }
+
+    [Fact]
+    public void VersionOneBackupLoadsWithoutShelves()
+    {
+        const string JSON = /*lang=json,strict*/ """{"kind":"personal-library-backup","version":1,"books":[]}""";
+
+        LibrarySnapshot snapshot = LibraryBackup.ReadSnapshot(JSON);
+
+        Assert.Empty(snapshot.Books);
+        Assert.Empty(snapshot.Shelves);
+    }
+
+    [Fact]
+    public void BackupWithUnknownShelfReferenceIsRejected()
+    {
+        Guid bookId = Guid.NewGuid();
+        Guid shelfId = Guid.NewGuid();
+        Guid missingShelfId = Guid.NewGuid();
+        string json = $$"""{"kind":"personal-library-backup","version":2,"shelves":[{"id":"{{shelfId}}","name":"Favourites"}],"books":[{"id":"{{bookId}}","title":"Dune","author":"Frank Herbert","shelfIds":["{{missingShelfId}}"]}]}""";
+
+        LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.ReadSnapshot(json));
+
+        Assert.Equal("This backup is incomplete.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(/*lang=json,strict*/ """{"kind":"personal-library-backup","version":2,"shelves":[{"id":"00000000-0000-0000-0000-000000000000","name":"Favourites"}],"books":[]}""")]
+    [InlineData(/*lang=json,strict*/ """{"kind":"personal-library-backup","version":2,"shelves":[{"id":"11111111-1111-1111-1111-111111111111","name":"Favourites"},{"id":"11111111-1111-1111-1111-111111111111","name":"Read again"}],"books":[]}""")]
+    [InlineData(/*lang=json,strict*/ """{"kind":"personal-library-backup","version":2,"shelves":[{"id":"11111111-1111-1111-1111-111111111111","name":"Café"},{"id":"22222222-2222-2222-2222-222222222222","name":"CAFE"}],"books":[]}""")]
+    [InlineData(/*lang=json,strict*/ """{"kind":"personal-library-backup","version":2,"shelves":[{"id":"11111111-1111-1111-1111-111111111111","name":" "}],"books":[]}""")]
+    [InlineData(/*lang=json,strict*/ """{"kind":"personal-library-backup","version":2,"shelves":[{"id":"11111111-1111-1111-1111-111111111111","name":" Favourites "}],"books":[]}""")]
+    public void InvalidShelfInBackupIsRejected(string json)
+    {
+        LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.ReadSnapshot(json));
+
+        Assert.Equal("This backup is incomplete.", exception.Message);
+    }
+
+    [Fact]
+    public void ExportRejectsAnInvalidShelf()
+    {
+        LibrarySnapshot snapshot = new([], [new Shelf(Guid.NewGuid(), " ")]);
+
+        LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.ExportSnapshot(snapshot));
+
+        Assert.Equal("This backup contains a shelf Folium cannot save.", exception.Message);
+    }
+
+    [Fact]
+    public void ExportRejectsABookWithAnUnknownShelf()
+    {
+        Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert", shelfIds: [Guid.NewGuid()]);
+
+        LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.ExportSnapshot(new([book], [])));
+
+        Assert.Equal("This backup contains a book Folium cannot save.", exception.Message);
+    }
+
+    [Fact]
+    public void ExportRejectsAnEmptyBookEntry()
+    {
+        LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.ExportSnapshot(new([null!], [])));
+
+        Assert.Equal("This backup contains a book Folium cannot save.", exception.Message);
     }
 
     [Fact]
@@ -124,11 +208,11 @@ public sealed class LibraryBackupTests : IDisposable
     [Fact]
     public void UnsupportedVersionIsRejected()
     {
-        const string JSON = /*lang=json,strict*/ """{"kind":"personal-library-backup","version":2,"books":[]}""";
+        const string JSON = /*lang=json,strict*/ """{"kind":"personal-library-backup","version":3,"books":[]}""";
 
         LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.Read(JSON));
 
-        Assert.Equal("This backup uses version 2. Folium reads version 1.", exception.Message);
+        Assert.Equal("This backup uses version 3. Folium reads versions 1 and 2.", exception.Message);
     }
 
     [Fact]
@@ -220,7 +304,7 @@ public sealed class LibraryBackupTests : IDisposable
     [Fact]
     public void ExportOverTheSizeLimitDoesNotReturnText()
     {
-        Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert", Metadata: MetadataWithDescription(new string('x', 64)));
+        Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert", metadata: MetadataWithDescription(new string('x', 64)));
 
         LibraryBackupException exception = Assert.Throws<LibraryBackupException>(() => LibraryBackup.Export([book], maximumBytes: 32));
 
@@ -233,7 +317,7 @@ public sealed class LibraryBackupTests : IDisposable
         string library = "{\"version\":1,\"books\":" + document.RootElement.GetProperty("books").GetRawText() + "}";
         string path = Path.Combine(_directory, "library.json");
         File.WriteAllText(path, library);
-        IReadOnlyList<Book> stored = new FileBookStore(path).Read();
+        IReadOnlyList<Book> stored = new FileBookStore(path).Read().Books;
 
         Assert.Equal(expected.Length, stored.Count);
         for (int index = 0; index < expected.Length; index++)

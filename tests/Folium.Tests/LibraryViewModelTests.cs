@@ -947,20 +947,20 @@ public sealed class LibraryViewModelTests : IDisposable
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
             {
-                throw new MissingBookException(books[0].Id);
+                throw new MissingBookException(snapshot.Books[0].Id);
             }
 
-            store.Replace(books);
+            store.Replace(snapshot);
         }
     }
 
@@ -968,12 +968,12 @@ public sealed class LibraryViewModelTests : IDisposable
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
@@ -981,7 +981,7 @@ public sealed class LibraryViewModelTests : IDisposable
                 throw new LibraryStoreException("Folium could not write the library file.");
             }
 
-            store.Replace(books);
+            store.Replace(snapshot);
         }
     }
 }

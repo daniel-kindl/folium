@@ -132,12 +132,12 @@ public sealed class LibraryEmptyStateTests
 
     private sealed class SnapshotStore(IReadOnlyList<Book> initialBooks) : IBookStore
     {
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return initialBooks;
+            return new(initialBooks, []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             throw new InvalidOperationException("The library empty state test must not save books.");
         }

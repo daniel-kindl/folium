@@ -5,8 +5,8 @@ Folium is a personal library of books that stays on one device.
 ## Language
 
 **Personal library**:
-The books a person saves on one device.
-_Avoid_: Catalog, collection, shelf
+The books a person saves on one device, with reading status and shelves.
+_Avoid_: Catalog, collection
 
 **Book**:
 A saved book with its own local identifier. Two books can share a title and an author. Each book remains distinct.
@@ -22,7 +22,13 @@ _Avoid_: Writer, creator
 
 **Reading status**:
 The place of a saved book in the person's reading. The values are to read, reading, and finished.
-_Avoid_: Progress, state, shelf
+_Avoid_: Progress, state
+
+**Shelf**:
+A group of books that the reader names. A book can be on zero, one, or many shelves. A shelf can have no books. A shelf does not replace reading status.
+
+**Shelf name**:
+The name of a shelf. It has 1 to 40 characters after trimming and is unique after case and accent folding.
 
 **Find online**:
 The task that searches Open Library. It needs a network. It is not a search of saved books.
@@ -50,9 +56,10 @@ A private image copy that the person confirms they have permission to save.
 A book does not require a saved cover.
 
 **Personal library backup**:
-A file of the saved books from one device, with reading status, metadata, source identifiers, and saved covers.
-Version 1 uses the kind `personal-library-backup`.
+A file of the saved books and shelves from one device, with reading status,
+metadata, source identifiers, saved covers, and shelf memberships.
+Versions 1 and 2 use the kind `personal-library-backup`. Version 1 has no shelves.
 The file is separate from the private library file.
-Folium reads version 1 up to 32 MiB and does not upload the file.
-Restore replaces the saved books after confirmation.
+Folium reads versions 1 and 2 up to 32 MiB and does not upload the file.
+Restore replaces the saved books and shelves after confirmation.
 _Avoid_: Library file, sync, cloud backup

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="using:Avalonia.Data.Converters"
+             xmlns:books="using:Folium.Books"
              xmlns:vm="using:Folium.ViewModels"
              xmlns:views="using:Folium.Views"
              x:Class="Folium.Views.MainView"
@@ -151,12 +152,23 @@
                                IsVisible="{Binding SaveError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
                                AutomationProperties.Name="{Binding SaveError}"
                                AutomationProperties.LiveSetting="Assertive" />
-                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding ShowSavedBookControls}">
-                        <TextBlock Text="{Binding CountLabel}" Classes="folium-caption folium-muted" VerticalAlignment="Center" />
+                    <Grid ColumnDefinitions="*,Auto,Auto" IsVisible="{Binding ShowLibrary}">
+                        <TextBlock Text="{Binding CountLabel}"
+                                   Classes="folium-caption folium-muted"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center" />
                         <Button Grid.Column="1"
+                                Content="{Binding ShelfState.FilterLabel}"
+                                Classes="folium-text"
+                                Command="{Binding ToggleShelfPickerCommand}"
+                                IsVisible="{Binding ShowShelfPickerButton}"
+                                AutomationProperties.Name="{Binding ShelfState.FilterLabel}"
+                                AutomationProperties.HelpText="Filter by shelf" />
+                        <Button Grid.Column="2"
                                 Content="{Binding SortLabel}"
                                 Classes="folium-text"
                                 Command="{Binding ToggleSortMenuCommand}"
+                                IsVisible="{Binding ShowSavedBookControls}"
                                 AutomationProperties.Name="Sort by">
                             <Button.ContentTemplate>
                                 <DataTemplate x:DataType="x:String">
@@ -171,6 +183,50 @@
                 </StackPanel>
                 <ScrollViewer x:Name="LibraryContentScroll" Grid.Row="1">
                     <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                        <Border Classes="folium-group" IsVisible="{Binding ShowShelfPicker}">
+                            <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                                <TextBlock Text="Filter by shelf" Classes="folium-section" />
+                                <Button Content="All shelves"
+                                        Command="{Binding ShelfState.SelectFilterCommand}"
+                                        CommandParameter="all"
+                                        AutomationProperties.Name="All shelves" />
+                                <ItemsControl ItemsSource="{Binding ShelfState.Shelves}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="books:Shelf">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding $parent[views:MainView].DataContext.ShelfState.SelectFilterCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    AutomationProperties.Name="{Binding Name}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="Manage shelves" Classes="folium-label" />
+                                <TextBox Text="{Binding ShelfState.ShelfNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PlaceholderText="Shelf name"
+                                         AutomationProperties.Name="Shelf name" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                                    <Button Content="New shelf" Command="{Binding ShelfState.CreateShelfCommand}" />
+                                    <Button Grid.Column="1" Content="Rename shelf" Command="{Binding ShelfState.RenameShelfCommand}" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding ShelfState.Shelves}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="books:Shelf">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding $parent[views:MainView].DataContext.ShelfState.SelectManagedShelfCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    AutomationProperties.Name="{Binding Name}"
+                                                    AutomationProperties.HelpText="Select shelf to rename or delete" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Delete shelf" Command="{Binding ShelfState.AskDeleteShelfCommand}" Classes="folium-danger" />
+                                <TextBlock Text="{Binding ShelfState.ShelfNameError}"
+                                           Classes="folium-error"
+                                           TextWrapping="Wrap"
+                                           IsVisible="{Binding ShelfState.ShelfNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                                           AutomationProperties.LiveSetting="Assertive" />
+                            </StackPanel>
+                        </Border>
                         <StackPanel Spacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding ShowSavedBookControls}">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}" IsVisible="{Binding ShowSavedSearch}">
                                 <TextBox x:Name="LibrarySearchInput"
@@ -392,6 +448,36 @@
                     <TextBlock Text="Author" Classes="folium-label" />
                     <TextBox Text="{Binding AuthorInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              AutomationProperties.Name="Author" />
+                    <Border Classes="folium-group">
+                        <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                            <TextBlock Text="Shelves (optional)" Classes="folium-section" />
+                            <TextBlock Text="A book can be on more than one shelf." Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+                            <ItemsControl ItemsSource="{Binding ShelfState.MembershipChoices}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ShelfChoice">
+                                        <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                  Command="{Binding $parent[views:MainView].DataContext.ShelfState.ToggleMembershipCommand}"
+                                                  CommandParameter="{Binding Id}"
+                                                  AutomationProperties.Name="{Binding Name}">
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                                <TextBox Text="{Binding ShelfState.ShelfNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         MaxLength="40"
+                                         PlaceholderText="New shelf name"
+                                         AutomationProperties.Name="New shelf name" />
+                                <Button Grid.Column="1" Content="New shelf" Command="{Binding ShelfState.CreateShelfCommand}" />
+                            </Grid>
+                            <TextBlock Text="{Binding ShelfState.ShelfNameError}"
+                                       Classes="folium-error"
+                                       TextWrapping="Wrap"
+                                       IsVisible="{Binding ShelfState.ShelfNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                                       AutomationProperties.LiveSetting="Assertive" />
+                        </StackPanel>
+                    </Border>
                     <Border Classes="folium-group" IsVisible="{Binding MetadataEditor, Converter={x:Static conv:ObjectConverters.IsNotNull}}">
                     <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
                         <TextBlock Text="Review metadata from Open Library" Classes="folium-section" TextWrapping="Wrap" />
@@ -560,6 +646,18 @@
                             </Button.ContentTemplate>
                         </Button>
                         </Grid>
+                        <Border Classes="folium-group">
+                            <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                                <TextBlock Text="Shelves" Classes="folium-caption folium-muted" />
+                                <TextBlock Text="{Binding ShelfState.BookShelvesLabel}"
+                                           TextWrapping="Wrap"
+                                           IsVisible="{Binding ShelfState.HasBookShelves}" />
+                                <TextBlock Text="No shelves" IsVisible="{Binding ShelfState.HasNoBookShelves}" />
+                                <Button Content="Edit shelves"
+                                        Command="{Binding OpenShelfChecklistCommand}"
+                                        AutomationProperties.Name="Edit shelves" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
                 <TextBlock Grid.Row="1"
@@ -625,19 +723,19 @@
             </Grid>
             <StackPanel IsVisible="{Binding ShowBackup}" Spacing="{StaticResource FoliumSpacingMd}">
                 <TextBlock Text="Export backup" Classes="folium-section" />
-                <TextBlock Text="Write your saved books to a file you choose. The file holds reading status, metadata and saved covers." TextWrapping="Wrap" />
+                <TextBlock Text="Write your saved books and shelves to a file you choose. The file holds reading status, metadata, and saved covers." TextWrapping="Wrap" />
                 <Button Content="Export backup"
                         Click="ExportBackupClick"
                         Classes="folium-primary"
                         AutomationProperties.Name="Export backup"
                         HorizontalAlignment="Stretch" />
                 <TextBlock Text="Restore backup" Classes="folium-section" />
-                <TextBlock Text="Replace the books on this device with the books in a backup file. You see the titles before anything changes." TextWrapping="Wrap" />
+                <TextBlock Text="Replace the books and shelves on this device with the ones in a backup file. You see the book titles before anything changes." TextWrapping="Wrap" />
                 <Button Content="Choose backup file"
                         Click="RestoreBackupClick"
                         AutomationProperties.Name="Choose backup file"
                         HorizontalAlignment="Stretch" />
-                <TextBlock Text="Folium does not upload backups. The file contains your reading history, so keep it in a private place. Folium reads version 1 backups up to 32 MiB." Classes="folium-caption folium-muted" TextWrapping="Wrap" />
+                <TextBlock Text="Folium does not upload backups. The file contains your reading history, so keep it in a private place. Folium reads version 1 and 2 backups up to 32 MiB." Classes="folium-caption folium-muted" TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel IsVisible="{Binding ShowLibraryMenu}" Spacing="{StaticResource FoliumSpacingSm}" HorizontalAlignment="Right" VerticalAlignment="Top">
                 <Button Content="Backup and restore" Command="{Binding ShowBackupCommand}" HorizontalAlignment="Stretch" />
@@ -709,6 +807,69 @@
                 </StackPanel>
             </Button>
         </Grid>
+        <Border Grid.RowSpan="3" Background="{DynamicResource FoliumScrimBrush}" IsVisible="{Binding ShelfState.ShowChecklist}">
+            <Button Background="Transparent" Command="{Binding ShelfState.CloseChecklistCommand}" AutomationProperties.Name="Close shelf checklist" />
+        </Border>
+        <Border Grid.RowSpan="3"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource FoliumRaisedBrush}"
+                CornerRadius="{StaticResource FoliumGroupCornerRadius}"
+                Padding="{StaticResource FoliumSpacingLgThickness}"
+                IsVisible="{Binding ShelfState.ShowChecklist}">
+            <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                <TextBlock Text="Shelves" Classes="folium-section" />
+                <ItemsControl ItemsSource="{Binding ShelfState.MembershipChoices}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ShelfChoice">
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                      Command="{Binding $parent[views:MainView].DataContext.ShelfState.ToggleMembershipCommand}"
+                                      CommandParameter="{Binding Id}"
+                                      AutomationProperties.Name="{Binding Name}">
+                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                            </CheckBox>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                    <TextBox Text="{Binding ShelfState.ShelfNameInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="40"
+                             PlaceholderText="New shelf name"
+                             AutomationProperties.Name="New shelf name" />
+                    <Button Grid.Column="1" Content="New shelf" Command="{Binding ShelfState.CreateShelfCommand}" />
+                </Grid>
+                <TextBlock Text="{Binding ShelfState.ShelfNameError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding ShelfState.ShelfNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                    <Button Content="Save shelves" Command="{Binding ShelfState.SaveMembershipCommand}" Classes="folium-primary" />
+                    <Button Grid.Column="1" Content="Cancel" Command="{Binding ShelfState.CloseChecklistCommand}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+        <Border Grid.RowSpan="3" Background="{DynamicResource FoliumScrimBrush}" IsVisible="{Binding ShelfState.ShowDeleteConfirmation}">
+            <Button Background="Transparent" Command="{Binding ShelfState.CancelDeleteShelfCommand}" AutomationProperties.Name="Cancel shelf deletion" />
+        </Border>
+        <Border Grid.RowSpan="3"
+                VerticalAlignment="Center"
+                Background="{DynamicResource FoliumRaisedBrush}"
+                CornerRadius="{StaticResource FoliumGroupCornerRadius}"
+                Padding="{StaticResource FoliumSpacingLgThickness}"
+                IsVisible="{Binding ShelfState.ShowDeleteConfirmation}">
+            <StackPanel Spacing="{StaticResource FoliumSpacingMd}">
+                <TextBlock Text="{Binding ShelfState.DeleteMessage}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding ShelfState.ShelfNameError}"
+                           Classes="folium-error"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding ShelfState.ShelfNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"
+                           AutomationProperties.LiveSetting="Assertive" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
+                    <Button Content="Delete shelf" Command="{Binding ShelfState.ConfirmDeleteShelfCommand}" Classes="folium-danger" />
+                    <Button Grid.Column="1" Content="Keep shelf" Command="{Binding ShelfState.CancelDeleteShelfCommand}" />
+                </Grid>
+            </StackPanel>
+        </Border>
         <views:DeleteBookDialog Grid.RowSpan="3" Margin="-16" IsVisible="{Binding ShowConfirm}" />
     </Grid>
 </UserControl>

@@ -53,6 +53,45 @@ public sealed class MainViewTests : IDisposable
         AssertScreenShowsSaveError("ShowLoadError");
     }
 
+    [Fact]
+    public void ShelfDeleteDialogAnnouncesAWriteFailure()
+    {
+        XElement view = XElement.Load(ViewPath());
+        XElement message = view.Descendants()
+            .Single(element => string.Equals(Binding(element, "Text"), "ShelfState.DeleteMessage", StringComparison.Ordinal));
+        XElement dialog = message.Parent!.Parent!;
+        XElement error = dialog.Descendants().Single(element =>
+            string.Equals(Binding(element, "Text"), "ShelfState.ShelfNameError", StringComparison.Ordinal));
+
+        Assert.Equal("Assertive", error.Attribute("AutomationProperties.LiveSetting")?.Value);
+    }
+
+    [Fact]
+    public void ShelfControlsExposeTheCurrentShelfNameAndTheirActions()
+    {
+        XElement view = XElement.Load(ViewPath());
+        XElement filterButton = view.Descendants().Single(element =>
+            string.Equals(Binding(element, "Command"), "ToggleShelfPickerCommand", StringComparison.Ordinal));
+        XElement selectManagedShelfButton = view.Descendants().Single(element =>
+            string.Equals(element.Attribute("AutomationProperties.HelpText")?.Value,
+                "Select shelf to rename or delete", StringComparison.Ordinal));
+
+        Assert.Equal("ShelfState.FilterLabel", Binding(filterButton, "AutomationProperties.Name"));
+        Assert.Equal("Filter by shelf", filterButton.Attribute("AutomationProperties.HelpText")?.Value);
+        Assert.Equal("Name", Binding(selectManagedShelfButton, "AutomationProperties.Name"));
+        Assert.Equal("Select shelf to rename or delete", selectManagedShelfButton.Attribute("AutomationProperties.HelpText")?.Value);
+    }
+
+    [Fact]
+    public void LibraryCountTextWrapsWhenFiltersNeedMoreSpace()
+    {
+        XElement view = XElement.Load(ViewPath());
+        XElement count = view.Descendants().Single(element =>
+            string.Equals(Binding(element, "Text"), "CountLabel", StringComparison.Ordinal));
+
+        Assert.Equal("Wrap", count.Attribute("TextWrapping")?.Value);
+    }
+
     private static void AssertScreenShowsSaveError(string screen)
     {
         XElement view = XElement.Load(ViewPath());
@@ -122,20 +161,20 @@ public sealed class MainViewTests : IDisposable
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
             {
-                throw new MissingBookException(books[0].Id);
+                throw new MissingBookException(snapshot.Books[0].Id);
             }
 
-            store.Replace(books);
+            store.Replace(snapshot);
         }
     }
 
@@ -143,12 +182,12 @@ public sealed class MainViewTests : IDisposable
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
@@ -156,7 +195,7 @@ public sealed class MainViewTests : IDisposable
                 throw new LibraryStoreException("Folium could not write the library file.");
             }
 
-            store.Replace(books);
+            store.Replace(snapshot);
         }
     }
 }

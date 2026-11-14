@@ -5,7 +5,7 @@ using Folium.Books;
 
 namespace Folium.Storage;
 
-/// <summary>Stores book metadata in JSON and saved covers in private files.</summary>
+/// <summary>Stores books and shelves in JSON and saved covers in private files.</summary>
 public sealed class FileBookStore : IBookStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -41,13 +41,13 @@ public sealed class FileBookStore : IBookStore
         _flushDirectory = flushDirectory;
     }
 
-    /// <summary>Returns the saved books. Returns an empty list when the file is absent.</summary>
-    /// <exception cref="LibraryStoreException">The file cannot be read. The file stays unchanged.</exception>
-    public IReadOnlyList<Book> Read()
+    /// <summary>Returns all saved books and shelves. Returns an empty snapshot when the file is absent.</summary>
+    /// <exception cref="LibraryStoreException">The file is damaged or uses an unsupported version.</exception>
+    public LibrarySnapshot Read()
     {
         try
         {
-            return File.Exists(LibraryPath) ? ToBooks(ReadDocument()) : [];
+            return File.Exists(LibraryPath) ? ToSnapshot(ReadDocument()) : new([], []);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
@@ -55,18 +55,16 @@ public sealed class FileBookStore : IBookStore
         }
     }
 
-    /// <summary>Replaces the saved books. A failed write leaves the previous file unchanged.</summary>
-    /// <param name="books">The books that replace the saved list.</param>
-    /// <exception cref="LibraryStoreException">The file cannot be written. The previous file stays unchanged.</exception>
-    public void Replace(IReadOnlyList<Book> books)
+    /// <summary>Replaces all saved books and shelves in one write.</summary>
+    /// <param name="snapshot">The complete personal library.</param>
+    /// <exception cref="ArgumentNullException">The snapshot is null.</exception>
+    /// <exception cref="LibraryStoreException">The snapshot is invalid or the file cannot be written.</exception>
+    public void Replace(LibrarySnapshot snapshot)
     {
-        ArgumentNullException.ThrowIfNull(books);
-        List<StoredBook?> stored = new(books.Count);
-        HashSet<Guid> ids = [];
-        foreach (Book book in books)
-        {
-            stored.Add(ToStored(book, ids));
-        }
+        ArgumentNullException.ThrowIfNull(snapshot);
+        List<StoredShelf?> shelves = ToStoredShelves(snapshot.Shelves);
+        HashSet<Guid> shelfIds = [.. shelves.Select(shelf => shelf!.Id)];
+        List<StoredBook?> books = ToStoredBooks(snapshot.Books, shelfIds);
 
         try
         {
@@ -74,7 +72,7 @@ public sealed class FileBookStore : IBookStore
             _ = Directory.CreateDirectory(directory);
             KeepLegacyCopy();
             HashSet<string> retained = new(StringComparer.Ordinal);
-            foreach (StoredBook? book in stored)
+            foreach (StoredBook? book in books)
             {
                 if (book!.Metadata is { Cover.IsEmpty: false } metadata)
                 {
@@ -84,7 +82,7 @@ public sealed class FileBookStore : IBookStore
                 }
             }
 
-            LibraryDocument document = new() { Version = 2, Books = stored };
+            LibraryDocument document = new() { Version = 3, Books = books, Shelves = shelves };
             AtomicFile.Write(LibraryPath, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(document, JsonOptions)));
             if (_flushDirectory(directory))
             {
@@ -99,30 +97,35 @@ public sealed class FileBookStore : IBookStore
 
     private void KeepLegacyCopy()
     {
-        if (File.Exists(LibraryPath) && !File.Exists(LibraryPath + ".v1.bak") && TryReadValidLegacy(out byte[] legacy))
+        if (File.Exists(LibraryPath) && TryReadValidLegacy(out int version, out byte[] legacy))
         {
-            AtomicFile.Write(LibraryPath + ".v1.bak", legacy);
+            string backup = LibraryPath + string.Create(CultureInfo.InvariantCulture, $".v{version}.bak");
+            if (!File.Exists(backup))
+            {
+                AtomicFile.Write(backup, legacy);
+            }
         }
     }
 
-    private bool TryReadValidLegacy(out byte[] legacy)
+    private bool TryReadValidLegacy(out int version, out byte[] legacy)
     {
+        version = 0;
         legacy = [];
         try
         {
             LibraryDocument previous = ReadDocument();
-            if (previous.Version != 1)
+            if (previous.Version is not (1 or 2))
             {
                 return false;
             }
 
-            _ = ToBooks(previous);
+            _ = ToSnapshot(previous);
+            version = previous.Version;
             legacy = File.ReadAllBytes(LibraryPath);
             return true;
         }
         catch (LibraryStoreException exception) when (exception.InnerException is not (IOException or UnauthorizedAccessException))
         {
-            // Only a valid version 1 library can be a rollback copy. A later replace can still overwrite this file.
             return false;
         }
     }
@@ -142,10 +145,10 @@ public sealed class FileBookStore : IBookStore
 
     private LibraryDocument RequireVersion(LibraryDocument document)
     {
-        return document.Version is 1 or 2
+        return document.Version is 1 or 2 or 3
             ? document
             : throw new LibraryStoreException(
-                string.Create(CultureInfo.InvariantCulture, $"The library file at {LibraryPath} uses version {document.Version}. Folium reads versions 1 and 2."));
+                string.Create(CultureInfo.InvariantCulture, $"The library file at {LibraryPath} uses version {document.Version}. Folium reads versions 1, 2, and 3."));
     }
 
     private LibraryDocument? Deserialize()
@@ -160,10 +163,12 @@ public sealed class FileBookStore : IBookStore
         }
     }
 
-    private List<Book> ToBooks(LibraryDocument document)
+    private LibrarySnapshot ToSnapshot(LibraryDocument document)
     {
+        List<Shelf> shelves = ToShelves(document);
+        HashSet<Guid> shelfIds = [.. shelves.Select(shelf => shelf.Id)];
         List<Book> books = new(document.Books!.Count);
-        HashSet<Guid> ids = [];
+        HashSet<Guid> bookIds = [];
         foreach (StoredBook? stored in document.Books)
         {
             if (stored is null)
@@ -171,13 +176,61 @@ public sealed class FileBookStore : IBookStore
                 throw new LibraryStoreException($"The library file at {LibraryPath} contains an empty book.");
             }
 
-            books.Add(ToBook(stored, ids));
+            books.Add(ToBook(stored, bookIds, shelfIds));
         }
 
-        return books;
+        return new(books, shelves);
     }
 
-    private Book ToBook(StoredBook stored, HashSet<Guid> ids)
+    private List<Shelf> ToShelves(LibraryDocument document)
+    {
+        if (document.Version < 3)
+        {
+            return [];
+        }
+
+        if (document.Shelves is null)
+        {
+            throw Unreadable();
+        }
+
+        List<Shelf> shelves = new(document.Shelves.Count);
+        HashSet<Guid> ids = [];
+        HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
+        foreach (StoredShelf? stored in document.Shelves)
+        {
+            shelves.Add(ReadShelf(stored, ids, names));
+        }
+
+        return [.. shelves.OrderBy(shelf => ShelfName.Parse(shelf.Name).FoldedValue, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(shelf => shelf.Name, StringComparer.Ordinal)
+            .ThenBy(shelf => shelf.Id)];
+    }
+
+    private Shelf ReadShelf(StoredShelf? stored, HashSet<Guid> ids, HashSet<string> names)
+    {
+        if (stored is null || stored.Id == Guid.Empty || !ids.Add(stored.Id))
+        {
+            throw new LibraryStoreException($"The library file at {LibraryPath} contains an invalid shelf id.");
+        }
+
+        ShelfName name;
+        try
+        {
+            name = ShelfName.Parse(stored.Name);
+        }
+        catch (ShelfNameException exception)
+        {
+            throw new LibraryStoreException($"The library file at {LibraryPath} contains an invalid shelf name.", exception);
+        }
+
+        return !string.Equals(name.Value, stored.Name, StringComparison.Ordinal)
+            || !names.Add(name.FoldedValue)
+            ? throw new LibraryStoreException($"The library file at {LibraryPath} contains a duplicate or untrimmed shelf name.")
+            : new(stored.Id, name.Value);
+    }
+
+    private Book ToBook(StoredBook stored, HashSet<Guid> ids, HashSet<Guid> shelfIds)
     {
         bool invalidId = stored.Id == Guid.Empty || !ids.Add(stored.Id);
         bool invalidInput = BookText.Problems(stored.Title, stored.Author).Count > 0;
@@ -185,7 +238,13 @@ public sealed class FileBookStore : IBookStore
         {
             (true, _) => throw new LibraryStoreException($"The library file at {LibraryPath} contains a book id that Folium cannot use."),
             (_, true) => throw new LibraryStoreException($"The library file at {LibraryPath} contains a book without a title or an author."),
-            _ => new Book(stored.Id, stored.Title!, stored.Author!, RequireStatus(stored.ReadingStatus), ReadMetadata(stored)),
+            _ => new Book(
+                stored.Id,
+                stored.Title!,
+                stored.Author!,
+                RequireStatus(stored.ReadingStatus),
+                ReadMetadata(stored),
+                stored.ShelfIds?.Where(shelfIds.Contains)),
         };
     }
 
@@ -211,12 +270,65 @@ public sealed class FileBookStore : IBookStore
         };
     }
 
-    private StoredBook ToStored(Book book, HashSet<Guid> ids)
+    private List<StoredShelf?> ToStoredShelves(IReadOnlyList<Shelf> shelves)
+    {
+        List<StoredShelf?> stored = new(shelves.Count);
+        HashSet<Guid> ids = [];
+        HashSet<string> names = new(StringComparer.OrdinalIgnoreCase);
+        foreach (Shelf shelf in shelves)
+        {
+            stored.Add(ToStoredShelf(shelf, ids, names));
+        }
+
+        return [.. stored.OrderBy(item => ShelfName.Parse(item!.Name).FoldedValue, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item!.Name, StringComparer.Ordinal)
+            .ThenBy(item => item!.Id)];
+    }
+
+    private StoredShelf ToStoredShelf(Shelf shelf, HashSet<Guid> ids, HashSet<string> names)
+    {
+        if (shelf is null)
+        {
+            throw new LibraryStoreException($"Folium could not write the library file at {LibraryPath}.");
+        }
+
+        ShelfName name;
+        try
+        {
+            name = ShelfName.Parse(shelf.Name);
+        }
+        catch (ShelfNameException exception)
+        {
+            throw new LibraryStoreException($"Folium could not write the library file at {LibraryPath}.", exception);
+        }
+
+        return shelf.Id == Guid.Empty || !ids.Add(shelf.Id)
+            || !string.Equals(name.Value, shelf.Name, StringComparison.Ordinal)
+            || !names.Add(name.FoldedValue)
+            ? throw new LibraryStoreException($"Folium could not write the library file at {LibraryPath}.")
+            : new StoredShelf { Id = shelf.Id, Name = name.Value };
+    }
+
+    private List<StoredBook?> ToStoredBooks(IReadOnlyList<Book> books, HashSet<Guid> shelfIds)
+    {
+        List<StoredBook?> stored = new(books.Count);
+        HashSet<Guid> ids = [];
+        foreach (Book book in books)
+        {
+            stored.Add(ToStored(book, ids, shelfIds));
+        }
+
+        return stored;
+    }
+
+    private StoredBook ToStored(Book book, HashSet<Guid> ids, HashSet<Guid> shelfIds)
     {
         return book switch
         {
             null => throw new ArgumentException("The library cannot store an empty book.", nameof(book)),
-            _ when book.Id == Guid.Empty || !ids.Add(book.Id) || BookText.Problems(book.Title, book.Author).Count > 0
+            _ when book.Id == Guid.Empty || !ids.Add(book.Id)
+                || BookText.Problems(book.Title, book.Author).Count > 0
+                || book.ShelfIds.Any(id => !shelfIds.Contains(id))
                 => throw new LibraryStoreException($"Folium could not write the library file at {LibraryPath}."),
             _ => new StoredBook
             {
@@ -225,6 +337,7 @@ public sealed class FileBookStore : IBookStore
                 Author = book.Author,
                 ReadingStatus = Token(book.Status),
                 Metadata = book.Metadata,
+                ShelfIds = [.. book.ShelfIds.Order()],
             },
         };
     }
@@ -250,6 +363,8 @@ public sealed class FileBookStore : IBookStore
         public int Version { get; set; }
 
         public List<StoredBook?>? Books { get; set; }
+
+        public List<StoredShelf?>? Shelves { get; set; }
     }
 
     private sealed class StoredBook
@@ -265,5 +380,14 @@ public sealed class FileBookStore : IBookStore
         public BookMetadata? Metadata { get; set; }
 
         public string? CoverFile { get; set; }
+
+        public List<Guid>? ShelfIds { get; set; }
+    }
+
+    private sealed class StoredShelf
+    {
+        public Guid Id { get; set; }
+
+        public string? Name { get; set; }
     }
 }

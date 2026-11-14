@@ -32,8 +32,8 @@ public sealed class LibraryRestoreTests : IDisposable
         Assert.Equal("Replace your library?", viewModel.Heading);
         Assert.Equal(1, viewModel.RestoreCount);
         Assert.Equal("Dune", Assert.Single(viewModel.RestoreTitles));
-        Assert.Equal("The 2 books on this device change to the 1 book in this backup. Edits made after this backup are lost.", viewModel.RestoreMessage);
-        Assert.Equal("Backup file · 1 book", viewModel.RestoreSummary);
+        Assert.Equal("This backup replaces the 1 book and 0 shelves on this device. Edits made after this backup will be lost.", viewModel.RestoreMessage);
+        Assert.Equal("Backup file · 1 book · 0 shelves", viewModel.RestoreSummary);
         Assert.Equal(2, LibraryViewModel.Open(new FileBookStore(path)).Books.Count);
 
         viewModel.ConfirmRestoreCommand.Execute(parameter: null);
@@ -54,13 +54,32 @@ public sealed class LibraryRestoreTests : IDisposable
 
         Assert.Equal("", viewModel.RestoreSummary);
         viewModel.PrepareRestore(backup);
-        Assert.Equal("The 1 book on this device changes to the 0 books in this backup. Edits made after this backup are lost.", viewModel.RestoreMessage);
-        Assert.Equal("Backup file · 0 books", viewModel.RestoreSummary);
+        Assert.Equal("This backup replaces the 0 books and 0 shelves on this device. Edits made after this backup will be lost.", viewModel.RestoreMessage);
+        Assert.Equal("Backup file · 0 books · 0 shelves", viewModel.RestoreSummary);
         Assert.True(viewModel.GoBack());
 
         Assert.True(viewModel.ShowLibrary);
         Assert.Equal("Dune", Assert.Single(viewModel.Books).Title);
         Assert.Equal("Dune", Assert.Single(LibraryViewModel.Open(new FileBookStore(path)).Books).Title);
+    }
+
+    [Fact]
+    public void RestoreConfirmationShowsAndRestoresShelves()
+    {
+        (LibraryViewModel viewModel, string path) = OpenAtPath();
+        Guid shelfId = Guid.NewGuid();
+        Book book = new(Guid.NewGuid(), "Dune", "Frank Herbert", shelfIds: [shelfId]);
+        string backup = LibraryBackup.ExportSnapshot(new([book], [new Shelf(shelfId, "Favourites")]));
+
+        viewModel.PrepareRestore(backup);
+
+        Assert.Equal("Backup file · 1 book · 1 shelf", viewModel.RestoreSummary);
+        Assert.Equal("This backup replaces the 1 book and 1 shelf on this device. Edits made after this backup will be lost.", viewModel.RestoreMessage);
+        viewModel.ConfirmRestoreCommand.Execute(parameter: null);
+
+        LibrarySnapshot restored = new FileBookStore(path).Read();
+        Assert.Equal("Favourites", Assert.Single(restored.Shelves).Name);
+        Assert.Contains(shelfId, (IReadOnlySet<Guid>)Assert.Single(restored.Books).ShelfIds);
     }
 
     [Fact]
@@ -149,12 +168,12 @@ public sealed class LibraryRestoreTests : IDisposable
 
     private sealed class FailReplaceStore(IBookStore store) : IBookStore
     {
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             throw new LibraryStoreException("Folium could not write the library file.");
         }

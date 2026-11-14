@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 using System.Windows.Input;
 using Folium.Books;
 using Folium.Search;
@@ -43,12 +42,13 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private string SearchQueryValue { get; set; } = "";
     private string _sort = "title-asc";
     private string _titleInput = "";
-    private IReadOnlyList<Book>? _pendingRestore;
+    private LibrarySnapshot? _pendingRestore;
     private string _authorInput = "";
     private readonly string? _viewPath;
     private bool AddSheetOpen { get; set; }
     private bool _showLibraryMenu;
     private bool _showSortMenu;
+    private bool _showShelfPicker;
     private bool _showSavedSearch;
     private Guid? _snackbarBookId;
     private string SnackbarTitle { get; set; } = "";
@@ -57,6 +57,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     {
         _library = library;
         _store = store;
+        if (library is not null)
+        {
+            AttachShelfState(library);
+        }
         Search = new SearchViewModel(search ?? SearchProvider);
         Updates = updates;
         if (library is not null)
@@ -88,6 +92,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         KeepLibraryCommand = new Command(_ => CancelRestore(), _ => ShowRestore);
         FilterCommand = new Command(ApplyFilter, _ => ShowLibrary);
         SortCommand = new Command(ApplySort, _ => ShowLibrary);
+        ToggleShelfPickerCommand = new Command(_ => ToggleShelfPicker(), _ => ShowLibrary);
+        OpenShelfChecklistCommand = new Command(_ => ShelfState?.OpenChecklist(), _ => ShowDetails);
         ClearSearchCommand = new Command(_ => SearchQuery = "", _ => SearchQuery.Length > 0);
         AssignChromeCommands();
         if (store is FileBookStore files)
@@ -200,6 +206,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>Sorts the visible books by title or author. The parameter is title-asc, title-desc, author-asc, or author-desc.</summary>
     public ICommand SortCommand { get; }
 
+    /// <summary>Opens or closes the shelf picker.</summary>
+    public ICommand ToggleShelfPickerCommand { get; }
+
+    /// <summary>Opens the selected book's shelf checklist.</summary>
+    public ICommand OpenShelfChecklistCommand { get; }
+
     /// <summary>Clears the library search text.</summary>
     public ICommand ClearSearchCommand { get; }
 
@@ -288,6 +300,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>True when the sort menu is open.</summary>
     public bool ShowSortMenu => ShowSavedBookControls && _showSortMenu;
 
+    /// <summary>True when the shelf picker is open.</summary>
+    public bool ShowShelfPicker => ShowLibrary && _showShelfPicker;
+
+    /// <summary>True when the shelf picker button can open.</summary>
+    public bool ShowShelfPickerButton => ShowLibrary;
+
+    /// <summary>The shelf list, management controls, and membership checklist.</summary>
+    public ShelvesViewModel? ShelfState { get; private set; }
+
     /// <summary>True when saved-book search is open.</summary>
     public bool ShowSavedSearch => ShowSavedBookControls && _showSavedSearch;
 
@@ -319,9 +340,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             int count = ShownBooks.Count;
             string noun = count == 1 ? "book" : "books";
-            return NormalizeSearchText(SearchQuery.Trim()).Length == 0
-                ? $"{count.ToString(CultureInfo.InvariantCulture)} {noun}"
-                : $"{count.ToString(CultureInfo.InvariantCulture)} {noun} {(count == 1 ? "matches" : "match")}";
+            List<string> filters = FilterNames(
+                BookText.FoldForSearch(SearchQuery.Trim()).Length > 0,
+                _filter is not null,
+                ShelfState?.FilterId is not null);
+
+            string prefix = $"{count.ToString(CultureInfo.InvariantCulture)} {noun}";
+            return filters.Count == 0
+                ? prefix
+                : $"{prefix} {(count == 1 ? "matches" : "match")} {JoinFilters(filters)}";
         }
     }
 
@@ -388,19 +415,23 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public string? NoMatchMessage => ShowNoMatches switch
     {
         false => null,
-        true when NormalizeSearchText(SearchQuery.Trim()).Length == 0 => "No books with this status.",
-        true when _filter is null => "No books match your search.",
-        _ => "No books match your search and status.",
+        true => NoMatchText(),
     };
 
     /// <summary>The active filter in the words shown on the list. Null when the list shows every book.</summary>
-    public string? FilterLabel => _filter is null ? null : StatusText(_filter.Value);
+    public string? FilterLabel => (_filter, ShelfState?.FilterId) switch
+    {
+        (null, null) => null,
+        (ReadingStatus status, null) => StatusText(status),
+        (null, not null) => ShelfState.FilterLabel,
+        (ReadingStatus status, not null) => $"{StatusText(status)}, {ShelfState.FilterLabel}",
+    };
 
     /// <summary>True when the library screen shows one reading status.</summary>
-    public bool ShowFilterLabel => ShowLibrary && _filter is not null;
+    public bool ShowFilterLabel => ShowLibrary && (_filter is not null || ShelfState?.FilterId is not null);
 
     /// <summary>The label of the status button at large text sizes, for example "Status: All".</summary>
-    public string StatusButtonLabel => $"Status: {FilterLabel ?? "All"}";
+    public string StatusButtonLabel => $"Status: {(_filter is null ? "All" : StatusText(_filter.Value))}";
 
     /// <summary>The empty-library message. Null when the library has a book or another screen is open.</summary>
     public string? EmptyMessage => IsEmpty ? "No books yet" : null;
@@ -421,10 +452,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     public bool ShowRestore => _screen == Screen.ConfirmRestore;
 
     /// <summary>The number of books in the prepared backup. Zero when no backup is waiting.</summary>
-    public int RestoreCount => _pendingRestore?.Count ?? 0;
+    public int RestoreCount => _pendingRestore?.Books.Count ?? 0;
 
     /// <summary>The titles in the prepared backup. Empty when no backup is waiting.</summary>
-    public IReadOnlyList<string> RestoreTitles => _pendingRestore is null ? [] : [.. _pendingRestore.Select(book => book.Title)];
+    public IReadOnlyList<string> RestoreTitles => _pendingRestore is null ? [] : [.. _pendingRestore.Books.Select(book => book.Title)];
 
     /// <summary>The backup titles on separate lines. Empty when no backup is waiting.</summary>
     public string RestorePreview => _pendingRestore is null ? "" : string.Join(Environment.NewLine, RestoreTitles);
@@ -432,15 +463,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <summary>The replace warning. Empty when no backup is waiting.</summary>
     public string RestoreFileName { get; private set; } = "Backup file";
 
-    /// <summary>The backup file and book count.</summary>
+    /// <summary>The backup file, book count, and shelf count.</summary>
     public string RestoreSummary => _pendingRestore is null
         ? ""
-        : $"{RestoreFileName} · {RestoreCount.ToString(CultureInfo.InvariantCulture)} {(RestoreCount == 1 ? "book" : "books")}";
+        : $"{RestoreFileName} · {CountNoun(RestoreCount)} · {ShelfCountNoun(_pendingRestore.Shelves.Count)}";
 
-    /// <summary>The replace warning. Empty when no backup is waiting.</summary>
+    /// <summary>The replace warning for the books and shelves. Empty when no backup is waiting.</summary>
     public string RestoreMessage => _pendingRestore is null
         ? ""
-        : $"The {CountNoun(Books.Count)} on this device {(Books.Count == 1 ? "changes" : "change")} to the {CountNoun(RestoreCount)} in this backup. Edits made after this backup are lost.";
+        : $"This backup replaces the {CountNoun(RestoreCount)} and {ShelfCountNoun(_pendingRestore.Shelves.Count)} on this device. Edits made after this backup will be lost.";
 
     /// <summary>True when the library file did not open.</summary>
     public bool ShowLoadError => _library is null && !ShowRestore;
@@ -495,7 +526,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     /// <exception cref="LibraryBackupException">The open library cannot be exported.</exception>
     public string? CreateBackup()
     {
-        return _library is null ? null : LibraryBackup.Export(_library.Books);
+        return _library is null ? null : LibraryBackup.ExportSnapshot(new(_library.Books, _library.Shelves));
     }
 
     /// <summary>Prepares a backup for replace confirmation. An invalid backup leaves the saved books unchanged.</summary>
@@ -505,7 +536,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     {
         try
         {
-            _pendingRestore = LibraryBackup.Read(json);
+            _pendingRestore = LibraryBackup.ReadSnapshot(json);
             ClearErrors();
             SetScreen(Screen.ConfirmRestore);
         }
@@ -671,6 +702,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         MetadataEditor = null;
         _editing = false;
         _selected = null;
+        ShelfState?.BeginMembership(book: null);
         SetText(ref _titleInput, "", nameof(TitleInput));
         SetText(ref _authorInput, "", nameof(AuthorInput));
         ClearErrors();
@@ -685,6 +717,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         _editing = true;
+        ShelfState?.BeginMembership(_selected);
         MetadataEditor = _selected.Metadata is null ? null : new BookMetadataEditor(_selected.Metadata, keepCover: true);
         SetText(ref _titleInput, _selected.Title, nameof(TitleInput));
         SetText(ref _authorInput, _selected.Author, nameof(AuthorInput));
@@ -706,6 +739,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         _editing = false;
+        ShelfState?.BeginMembership(_selected);
         ClearErrors();
         SetScreen(Screen.Details);
     }
@@ -753,8 +787,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
 
         Book saved = _editing
-            ? library.Edit(_selected!.Id, _titleInput, _authorInput, MetadataEditor?.ToMetadata())
-            : library.Add(_titleInput, _authorInput, MetadataEditor?.ToMetadata());
+            ? library.Edit(_selected!.Id, _titleInput, _authorInput, MetadataEditor?.ToMetadata(), ShelfState?.SelectedShelfIds)
+            : library.Add(_titleInput, _authorInput, MetadataEditor?.ToMetadata(), ShelfState?.SelectedShelfIds);
+        ShelfState?.BeginMembership(saved);
         UseBooks(library.Books);
         ClearErrors();
         if (_editing)
@@ -847,6 +882,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private void ShowDetailsScreen()
     {
         _editing = false;
+        ShelfState?.BeginMembership(_selected);
         ClearErrors();
         SetScreen(Screen.Details);
     }
@@ -931,6 +967,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Book saved = library.SetStatus(_selected!.Id, status);
         UseBooks(library.Books);
         _selected = saved;
+        ShelfState?.BeginMembership(saved);
         ClearErrors();
         RaiseSelectedBook();
     }
@@ -957,12 +994,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     private void ApplySort(object? parameter)
     {
-        if (parameter is not string sort || !SortModes.Contains(sort))
-        {
-            return;
-        }
-
-        if (string.Equals(_sort, sort, StringComparison.Ordinal))
+        if (!TrySort(parameter, out string sort) || string.Equals(_sort, sort, StringComparison.Ordinal))
         {
             return;
         }
@@ -975,6 +1007,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(IsAuthorAscending));
         Raise(nameof(IsAuthorDescending));
         Raise(nameof(ShownBooks));
+    }
+
+    private static bool TrySort(object? parameter, out string sort)
+    {
+        sort = parameter as string ?? string.Empty;
+        return SortModes.Contains(sort);
     }
 
     private void UseBooks(IReadOnlyList<Book> books)
@@ -1020,26 +1058,95 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(CountLabel));
     }
 
-    private List<BookRow> Rows(IReadOnlyList<Book> books)
+    private string NoMatchText()
     {
-        string query = NormalizeSearchText(SearchQuery.Trim());
-        IEnumerable<Book> matching = books.Where(Shows);
-        if (query.Length > 0)
+        bool hasQuery = BookText.FoldForSearch(SearchQuery.Trim()).Length > 0;
+        bool hasStatus = _filter is not null;
+        bool hasShelf = ShelfState?.FilterId is not null;
+        return hasQuery
+            ? $"No books match {JoinFilters(FilterNames(hasQuery, hasStatus, hasShelf))}."
+            : NoQueryMatchText(hasStatus, hasShelf);
+    }
+
+    private static string NoQueryMatchText(bool hasStatus, bool hasShelf)
+    {
+        return (hasStatus, hasShelf) switch
         {
-            matching = matching.Where(book => ContainsSearchText(book.Title, query) || ContainsSearchText(book.Author, query));
+            (true, false) => "No books with this status.",
+            (false, true) => "No books on this shelf.",
+            (true, true) => "No books match status and shelf.",
+            _ => "No books match the current filters.",
+        };
+    }
+
+    private static List<string> FilterNames(bool hasQuery, bool hasStatus, bool hasShelf)
+    {
+        List<string> filters = [];
+        if (hasQuery)
+        {
+            filters.Add("your search");
         }
 
-        bool byTitle = _sort.StartsWith("title", StringComparison.Ordinal);
-        bool descending = _sort.EndsWith("desc", StringComparison.Ordinal);
-        IOrderedEnumerable<Book> sorted = descending
-            ? matching.OrderByDescending(book => FoldedSortKey(book, byTitle), StringComparer.OrdinalIgnoreCase)
-                .ThenBy(book => SortText(book, byTitle), StringComparer.Ordinal)
-                .ThenBy(book => book.Id)
-            : matching.OrderBy(book => FoldedSortKey(book, byTitle), StringComparer.OrdinalIgnoreCase)
-                .ThenBy(book => SortText(book, byTitle), StringComparer.Ordinal)
-                .ThenBy(book => book.Id);
+        if (hasStatus)
+        {
+            filters.Add("status");
+        }
 
-        return [.. sorted.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status))
+        if (hasShelf)
+        {
+            filters.Add("shelf");
+        }
+
+        return filters;
+    }
+
+    private static string JoinFilters(List<string> filters)
+    {
+        return filters.Count switch
+        {
+            1 => filters[0],
+            2 => $"{filters[0]} and {filters[1]}",
+            _ => $"{filters[0]}, {filters[1]}, and {filters[2]}",
+        };
+    }
+
+    private void AttachShelfState(PersonalLibrary library)
+    {
+        ShelvesViewModel state = new(library);
+        ShelfState = state;
+        state.PropertyChanged += (_, args) =>
+        {
+            if (string.Equals(args.PropertyName, nameof(ShelvesViewModel.FilterId), StringComparison.Ordinal))
+            {
+                ShownBooks = Rows(Books);
+                Raise(nameof(ShownBooks));
+                RaiseLibraryShape();
+            }
+
+            Raise(nameof(FilterLabel));
+            Raise(nameof(ShowFilterLabel));
+            Raise(nameof(CountLabel));
+            Raise(nameof(NoMatchMessage));
+        };
+        state.LibraryChanged += (_, _) =>
+        {
+            if (ReferenceEquals(_library, library))
+            {
+                UseBooks(library.Books);
+                if (_selected is not null)
+                {
+                    _selected = library.Books.FirstOrDefault(book => book.Id == _selected.Id);
+                    RaiseSelectedBook();
+                }
+            }
+        };
+        Raise(nameof(ShelfState));
+    }
+
+    private List<BookRow> Rows(IReadOnlyList<Book> books)
+    {
+        IReadOnlyList<Book> matching = LibraryQuery.Apply(books, _filter, shelfId: ShelfState?.FilterId, query: SearchQuery, sort: _sort);
+        return [.. matching.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status))
         {
             ReadingStatus = book.Status,
             Tone = CoverPlaceholder.Tone(book.Id),
@@ -1047,67 +1154,6 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             HasCover = book.Metadata?.Cover.IsEmpty == false,
             Cover = book.Metadata?.Cover ?? ReadOnlyMemory<byte>.Empty,
         })];
-    }
-
-    private static string FoldedSortKey(Book book, bool byTitle)
-    {
-        return NormalizeSearchText(SortText(book, byTitle));
-    }
-
-    private static string SortText(Book book, bool byTitle)
-    {
-        return byTitle ? book.Title : book.Author;
-    }
-
-    private static bool ContainsSearchText(string value, string query)
-    {
-        return NormalizeSearchText(value).Contains(query, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string NormalizeSearchText(string value)
-    {
-        StringBuilder normalized = new();
-        foreach (Rune rune in WithoutUnpairedSurrogates(value).Normalize(NormalizationForm.FormD).EnumerateRunes())
-        {
-            UnicodeCategory category = Rune.GetUnicodeCategory(rune);
-            if (category is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark))
-            {
-                _ = normalized.Append(rune.ToString());
-            }
-        }
-
-        return normalized.ToString();
-    }
-
-    private static string WithoutUnpairedSurrogates(string value)
-    {
-        StringBuilder builder = new(value.Length);
-        for (int index = 0; index < value.Length; index++)
-        {
-            char unit = value[index];
-            if (char.IsHighSurrogate(unit))
-            {
-                if (index + 1 < value.Length && char.IsLowSurrogate(value[index + 1]))
-                {
-                    _ = builder.Append(unit).Append(value[index + 1]);
-                    index++;
-                }
-
-                continue;
-            }
-
-            if (!char.IsLowSurrogate(unit))
-            {
-                builder.Append(unit);
-            }
-        }
-
-        return builder.ToString();
-    }
-
-    private bool Shows(Book book)
-    {
-        return _filter is null || book.Status == _filter.Value;
     }
 
     private static bool TryFilter(object? parameter, out ReadingStatus? status)
@@ -1201,6 +1247,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             FilterCommand, SortCommand, ClearSearchCommand, ShowSearchCommand, ImportCommand,
             ShowAddSheetCommand, AddByHandCommand, DismissAddSheetCommand, ShowLibraryMenuCommand,
             ShowBackupCommand, ToggleSortMenuCommand, ToggleSavedSearchCommand, ToggleGridCommand,
+            ToggleShelfPickerCommand, OpenShelfChecklistCommand,
             DismissSnackbarCommand, OpenSnackbarCommand, SelectLibraryCommand,
         })
         {
@@ -1264,6 +1311,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     {
         _showLibraryMenu = !_showLibraryMenu;
         _showSortMenu = false;
+        _showShelfPicker = false;
         RaiseChrome();
     }
 
@@ -1276,6 +1324,15 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private void ToggleSortMenu()
     {
         _showSortMenu = !_showSortMenu;
+        _showLibraryMenu = false;
+        _showShelfPicker = false;
+        RaiseChrome();
+    }
+
+    private void ToggleShelfPicker()
+    {
+        _showShelfPicker = !_showShelfPicker;
+        _showSortMenu = false;
         _showLibraryMenu = false;
         RaiseChrome();
     }
@@ -1322,6 +1379,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         AddSheetOpen = false;
         _showLibraryMenu = false;
         _showSortMenu = false;
+        _showShelfPicker = false;
     }
 
     private void RaiseChrome()
@@ -1329,6 +1387,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         Raise(nameof(ShowAddSheet));
         Raise(nameof(ShowLibraryMenu));
         Raise(nameof(ShowSortMenu));
+        Raise(nameof(ShowShelfPicker));
+        Raise(nameof(ShowShelfPickerButton));
         Raise(nameof(ShowSavedSearch));
         Raise(nameof(ShowSnackbar));
         Raise(nameof(SnackbarMessage));
@@ -1337,6 +1397,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         ((Command)DismissAddSheetCommand).RaiseCanExecuteChanged();
         ((Command)DismissSnackbarCommand).RaiseCanExecuteChanged();
         ((Command)OpenSnackbarCommand).RaiseCanExecuteChanged();
+        ((Command)ToggleShelfPickerCommand).RaiseCanExecuteChanged();
     }
 
     /// <summary>Records the backup file name shown before replace.</summary>
@@ -1389,6 +1450,11 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         return $"{count.ToString(CultureInfo.InvariantCulture)} {(count == 1 ? "book" : "books")}";
     }
 
+    private static string ShelfCountNoun(int count)
+    {
+        return $"{count.ToString(CultureInfo.InvariantCulture)} {(count == 1 ? "shelf" : "shelves")}";
+    }
+
     private void ConfirmRestore()
     {
         if (_pendingRestore is null)
@@ -1404,9 +1470,10 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             }
             else
             {
-                _library.ReplaceAll(_pendingRestore);
+                _library.ReplaceSnapshot(_pendingRestore);
             }
 
+            AttachShelfState(_library);
             _pendingRestore = null;
             UseBooks(_library.Books);
             ShowLibraryScreen();

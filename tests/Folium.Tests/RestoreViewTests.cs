@@ -70,12 +70,12 @@ public sealed class RestoreViewTests
 
     private sealed class UnreadableStore : IBookStore
     {
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             throw new LibraryStoreException();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             throw new LibraryStoreException();
         }
@@ -89,12 +89,12 @@ public sealed class RestoreViewTests
 
     private sealed class EmptyStore : IBookStore
     {
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return [];
+            return new([], []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             throw new InvalidOperationException("The library view test must not save books.");
         }

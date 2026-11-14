@@ -44,7 +44,7 @@ public sealed class OpenLeafDialogTests
     }
 
     [Fact]
-    public async Task RestoreConfirmationShowsTheFileNameAndBookCount()
+    public async Task RestoreConfirmationShowsTheFileNameAndBookAndShelfCounts()
     {
         await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
         await session.Dispatch(() =>
@@ -53,14 +53,17 @@ public sealed class OpenLeafDialogTests
             MainView view = new() { DataContext = library };
             Window window = new() { Content = view, Width = 412, Height = 915 };
             window.Show();
-            string json = LibraryBackup.Export([new Book(Guid.NewGuid(), "Dune", "Frank Herbert"), new Book(Guid.NewGuid(), "Emma", "Jane Austen")]);
+            Guid shelfId = Guid.NewGuid();
+            string json = LibraryBackup.ExportSnapshot(new(
+                [new Book(Guid.NewGuid(), "Dune", "Frank Herbert"), new Book(Guid.NewGuid(), "Emma", "Jane Austen")],
+                [new Shelf(shelfId, "Favourites")]));
             library.PrepareRestore(json);
             library.SetRestoreFileName("Folium backup.json");
             window.UpdateLayout();
 
             Assert.True(library.ShowRestore);
             Assert.Contains(view.GetVisualDescendants().OfType<TextBlock>(), text =>
-                Equals(text.Text, "Folium backup.json · 2 books") && text.IsEffectivelyVisible);
+                Equals(text.Text, "Folium backup.json · 2 books · 1 shelf") && text.IsEffectivelyVisible);
             window.Close();
         }, TestContext.Current.CancellationToken);
     }
@@ -106,14 +109,14 @@ public sealed class OpenLeafDialogTests
     {
         private IReadOnlyList<Book> _books = books;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return _books;
+            return new(_books, []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
-            _books = [.. books];
+            _books = [.. snapshot.Books];
         }
     }
 }

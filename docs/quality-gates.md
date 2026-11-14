@@ -40,7 +40,7 @@ The `mutation` CI job installs pinned Stryker.NET 5.0.0 and runs from
 VSTest does not activate mutants in this xUnit project.
 `MainView` loads its XAML with `AvaloniaXamlLoader`.
 The mutation compile does not run the Avalonia source generator.
-Its config mutates only `Books` and `Storage` source files.
+Its config mutates `Books`, `Storage`, `Updates`, and `LibraryQuery.cs` source files.
 The mutation score must be at least 70%. An 85% score is the preferred target.
 
 A surviving mutant is a prompt to inspect test effectiveness; write a useful test or
