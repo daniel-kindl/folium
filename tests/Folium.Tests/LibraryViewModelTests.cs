@@ -857,6 +857,65 @@ public sealed class LibraryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void BackCancelsTheShelfChecklistBeforeLeavingBookDetails()
+    {
+        LibraryViewModel viewModel = Open();
+        Add(viewModel, "Dune", "Frank Herbert");
+        ShelvesViewModel shelves = viewModel.ShelfState!;
+        shelves.ShelfNameInput = "Favourites";
+        shelves.CreateShelfCommand.Execute(parameter: null);
+        Shelf shelf = Assert.Single(shelves.Shelves);
+        viewModel.OpenCommand.Execute(viewModel.Books[0].Id);
+        viewModel.OpenShelfChecklistCommand.Execute(parameter: null);
+        shelves.ToggleMembershipCommand.Execute(shelf.Id);
+
+        Assert.True(shelves.ShowChecklist);
+        Assert.Contains(shelf.Id, shelves.SelectedShelfIds);
+
+        Assert.True(viewModel.GoBack());
+
+        Assert.True(viewModel.ShowDetails);
+        Assert.False(shelves.ShowChecklist);
+        Assert.Empty(shelves.SelectedShelfIds);
+        Assert.Empty(Assert.Single(viewModel.Books).ShelfIds);
+        Assert.True(viewModel.GoBack());
+        Assert.True(viewModel.ShowLibrary);
+    }
+
+    [Fact]
+    public void BackCancelsShelfDeletionConfirmation()
+    {
+        LibraryViewModel viewModel = Open();
+        ShelvesViewModel shelves = viewModel.ShelfState!;
+        shelves.ShelfNameInput = "Favourites";
+        shelves.CreateShelfCommand.Execute(parameter: null);
+        Shelf shelf = Assert.Single(shelves.Shelves);
+        shelves.AskDeleteShelfCommand.Execute(shelf.Id);
+
+        Assert.True(shelves.ShowDeleteConfirmation);
+
+        Assert.True(viewModel.GoBack());
+
+        Assert.True(viewModel.ShowLibrary);
+        Assert.False(shelves.ShowDeleteConfirmation);
+        Assert.Equal(shelf, Assert.Single(shelves.Shelves));
+    }
+
+    [Fact]
+    public void BackClosesTheShelfPicker()
+    {
+        LibraryViewModel viewModel = Open();
+        viewModel.ToggleShelfPickerCommand.Execute(parameter: null);
+
+        Assert.True(viewModel.ShowShelfPicker);
+
+        Assert.True(viewModel.GoBack());
+
+        Assert.True(viewModel.ShowLibrary);
+        Assert.False(viewModel.ShowShelfPicker);
+    }
+
+    [Fact]
     public void BackFromBackupReturnsToTheLibrary()
     {
         LibraryViewModel viewModel = Open();
@@ -947,20 +1006,20 @@ public sealed class LibraryViewModelTests : IDisposable
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
             {
-                throw new MissingBookException(books[0].Id);
+                throw new MissingBookException(snapshot.Books[0].Id);
             }
 
-            store.Replace(books);
+            store.Replace(snapshot);
         }
     }
 
@@ -968,12 +1027,12 @@ public sealed class LibraryViewModelTests : IDisposable
     {
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
@@ -981,7 +1040,7 @@ public sealed class LibraryViewModelTests : IDisposable
                 throw new LibraryStoreException("Folium could not write the library file.");
             }
 
-            store.Replace(books);
+            store.Replace(snapshot);
         }
     }
 }

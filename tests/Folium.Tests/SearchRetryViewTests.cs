@@ -54,12 +54,12 @@ public sealed class SearchRetryViewTests
 
     private sealed class EmptyStore : IBookStore
     {
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return [];
+            return new([], []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             throw new InvalidOperationException("Search must not write the library.");
         }

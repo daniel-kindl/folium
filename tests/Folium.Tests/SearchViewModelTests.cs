@@ -279,12 +279,12 @@ public sealed class SearchViewModelTests
     {
         public int Writes { get; private set; }
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return [];
+            return new([], []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             Writes++;
         }

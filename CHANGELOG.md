@@ -4,6 +4,8 @@ Notable changes are recorded here. Versions follow [Semantic Versioning](https:/
 
 ## Unreleased
 
+- Add shelves, books on multiple shelves, shelf filtering, live storage version 3, and version 2 backups.
+
 ## 0.2.0
 
 - Stop the version tests from pinning FoliumVersion to 0.1.0, so a later release can pass the test suite.

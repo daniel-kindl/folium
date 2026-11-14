@@ -22,6 +22,7 @@ Download the [latest GitHub release](https://github.com/daniel-kindl/folium/rele
 |---------|--------|
 | Personal library | Add, browse, edit, and remove books on the device. |
 | Reading status | Mark a book as to read, reading, or finished. |
+| Shelves | Create named shelves, assign each book to several shelves, and filter the library by shelf. |
 | Offline use | The library stays on the device. Saved details and covers work offline after restart. |
 | Library search | Search saved titles and authors on the device. |
 | Library sort | The default order is title A-Z. You can also sort by title or author in either direction. |
@@ -53,7 +54,11 @@ A debug build uses a different signing key. The first release install over a deb
 
 A book has a title, an author, and a reading status. Folium stores the personal library in a private JSON file. On Android, that file is `library.json` in the app files directory. See [CONTEXT.md](CONTEXT.md) for the domain terms. Search and preview do not save books. Choose **Review and save** to import an edition into the personal library.
 
-In the Library screen, search checks saved titles and authors. It trims the query, uses Unicode Form D normalization, removes combining marks, and compares without case. An empty query leaves the status filter in effect. A query that contains only combining marks is also empty. The default order is title A-Z. Sort uses that same folded text, then the original text, then the local book ID in ascending order. You can also sort by title or author in either direction. Letters that do not decompose stay distinct. Examples are ß, ø, Æ, Ł, and the ﬁ ligature. Search and sorting run on the device and do not change saved records. The search and sort controls stay hidden when the library has no books.
+A shelf is a named group of books. A shelf can be empty, and a book can be on more than one shelf. Create and rename shelves from the shelf filter. Assign shelves when you add or edit a book, or from its details. Deleting a shelf keeps its books and removes that shelf from them.
+
+In the Library screen, search checks saved titles and authors. It trims the query, uses Unicode Form D normalization, removes combining marks, and compares without case. An empty query leaves the status and shelf filters in effect. A query that contains only combining marks is also empty. Search, status, and shelf filters combine. The shelf filter stays active for the current session.
+
+The default order is title A-Z. Sort uses the same folded text, then the original text, then the local book ID in ascending order. You can also sort by title or author in either direction. Letters that do not decompose stay distinct. Examples are ß, ø, Æ, Ł, and the ﬁ ligature. Search and sorting run on the device and do not change saved records. The search and sort controls stay hidden when the library has no books.
 
 ### Search Open Library
 
@@ -116,13 +121,16 @@ covers are not uploaded, published, or synchronized.
 
 ### Storage and compatibility
 
-The private `library.json` uses live storage version 2. It holds book metadata
-and SHA-256 references to optional files in `library.json.covers`.
+The private `library.json` uses live storage version 3. It holds books, shelves,
+and shelf memberships. Book metadata includes SHA-256 references to optional
+cover files in `library.json.covers`.
 An unchanged cover file is not rewritten when you edit a title or reading status.
 Identical cover bytes share one file. Intact files that cannot be decoded show **No saved cover**.
 
-Version 1 libraries remain readable. The first successful save migrates them.
-Before migration, Folium keeps an exact copy at `library.json.v1.bak`.
+Version 1 and 2 libraries remain readable. The first successful save migrates them.
+Before migration, Folium keeps an exact copy at `library.json.v1.bak` or
+`library.json.v2.bak`, based on the source version. Folium keeps the first valid
+copy of each version.
 It writes and flushes covers before atomically replacing the metadata document.
 An interrupted save leaves the previous document available. After that replacement,
 Folium flushes the library directory and then removes unused cover files.
@@ -136,42 +144,46 @@ Choose a valid personal backup, review the titles, then confirm **Replace librar
 Canceling the confirmation keeps the current files unchanged.
 Restoring a backup replaces the library, including any edits made after that backup.
 A confirmed replace also overwrites malformed JSON, an unsupported live version,
-or a version 1 library that Folium cannot read. Folium keeps `library.json.v1.bak`
-only when the current file is a valid version 1 library.
+or a legacy library that Folium cannot read. Folium creates a versioned `.bak`
+file only when the current file is a valid version 1 or version 2 library.
 
-Older app versions cannot read live storage version 2.
-Before downgrading, export a personal backup with the current app.
-An older app may not support that portable backup format either.
-For an exact pre-migration rollback, stop the app and retain the whole private directory.
-Replace `library.json` with `library.json.v1.bak` before installing the older app.
-This restores the pre-migration state and discards later edits from the active library.
-The rollback file remains until you deliberately remove it after verifying a newer backup.
-It can retain covers that you later delete from the active library.
+Older app versions cannot read live storage version 3. Before downgrading,
+export a personal backup with the current app. An older app may not support that
+portable backup format either. For an exact pre-migration rollback, stop the app
+and retain the whole private directory. Replace `library.json` with the matching
+`library.json.v1.bak` or `library.json.v2.bak` before installing the older app.
+This restores the pre-migration state and discards later edits from the active
+library. The rollback file remains until you deliberately remove it after
+verifying a newer backup. It can retain covers that you later delete from the
+active library.
 
-Migration needs free space for both the old embedded covers and the extracted files.
+Migration from version 1 needs free space for the old embedded covers and the
+extracted files.
 Flushing files and atomically replacing metadata protects against interrupted writes.
 Sudden power loss and filesystem failures can exceed these guarantees.
 See [storage measurements and recovery limits](docs/performance/cover-storage.md).
 
 ### Personal library backup
 
-On the Library screen, **Export backup** writes the saved books to a file you choose.
+On the Library screen, **Export backup** writes the saved books and shelves to a file you choose.
 The picker suggests `Folium backup.json`.
 The live library stays in the private `library.json` file.
 
-The backup kind is `personal-library-backup` and the version is 1.
-The file holds each book's reading status, metadata, source identifiers, and saved cover.
+The backup kind is `personal-library-backup` and the version is 2.
+The file holds shelves, shelf memberships, and each book's reading status,
+metadata, source identifiers, and saved cover.
 Folium does not upload the backup.
 
-This app reads version 1 backups of 32 MiB or less.
+This app reads version 1 and 2 backups of 32 MiB or less. A version 1 backup
+has no shelves; Folium restores its books without shelf memberships.
 A larger library cannot be exported or restored in this version.
-Folium rejects a file that is not a version 1 backup.
-A raw `library.json` file is one of those files.
+Folium rejects a file unless it is a version 1 or 2 backup.
+Folium does not accept a raw `library.json` file as a backup.
 
-**Restore backup** shows the book count and the titles.
-**Replace library** then replaces the books on this device.
-**Keep current library** leaves the saved books in place.
-A bad file, a denied permission, a cancellation, or a failed write leaves the saved books unchanged.
+**Restore backup** shows the book and shelf counts and the titles.
+**Replace library** then replaces the books and shelves on this device.
+**Keep current library** leaves the saved books and shelves in place.
+A bad file, a denied permission, a cancellation, or a failed write leaves the saved books and shelves unchanged.
 A failed export can leave the selected file incomplete.
 The library on the device stays unchanged.
 

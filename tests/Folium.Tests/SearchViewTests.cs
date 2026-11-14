@@ -20,7 +20,7 @@ public sealed class SearchViewTests
         {
             Book book = new(Guid.NewGuid(), "Device test", "Fixture author");
             ImportStore store = new();
-            store.Replace([book]);
+            store.Replace(new([book], []));
             LibraryViewModel library = LibraryViewModel.Open(store);
             MainView view = new() { DataContext = library };
             Window window = new() { Content = view, Width = 400, Height = 850 };
@@ -45,7 +45,7 @@ public sealed class SearchViewTests
         {
             ImportStore store = new();
             BookMetadata metadata = new("/works/OL1W", "/books/OL2M", "", "", "", "", "", "", 42, new byte[] { 1, 2, 3 });
-            store.Replace([new Book(Guid.NewGuid(), "Dune", "Frank Herbert", Metadata: metadata)]);
+            store.Replace(new([new Book(Guid.NewGuid(), "Dune", "Frank Herbert", metadata: metadata)], []));
             LibraryViewModel library = LibraryViewModel.Open(store);
             MainView view = new() { DataContext = library };
             Window window = new() { Content = view, Width = 400, Height = 850 };
@@ -244,25 +244,25 @@ public sealed class SearchViewTests
     {
         private IReadOnlyList<Book> _books = [];
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return _books;
+            return new(_books, []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
-            _books = books;
+            _books = snapshot.Books;
         }
     }
 
     private sealed class EmptyStore : IBookStore
     {
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return [];
+            return new([], []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             throw new InvalidOperationException("Search must not write the library.");
         }

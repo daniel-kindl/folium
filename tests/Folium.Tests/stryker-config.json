@@ -5,7 +5,8 @@
     "mutate": [
       "Books/**/*.cs",
       "Storage/**/*.cs",
-      "Updates/**/*.cs"
+      "Updates/**/*.cs",
+      "LibraryQuery.cs"
     ],
     "thresholds": {
       "high": 85,

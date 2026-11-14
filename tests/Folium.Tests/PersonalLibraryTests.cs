@@ -126,7 +126,7 @@ public sealed class PersonalLibraryTests : IDisposable
         FileBookStore store = new(LibraryPath);
         Book book = new(id, "Dune", "Frank Herbert");
 
-        _ = Assert.Throws<LibraryStoreException>(() => store.Replace([book, book]));
+        _ = Assert.Throws<LibraryStoreException>(() => store.Replace(new([book, book], [])));
 
         Assert.False(File.Exists(LibraryPath));
     }
@@ -398,12 +398,12 @@ public sealed class PersonalLibraryTests : IDisposable
         private readonly IBookStore _store = store;
         private int _writes;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
             return _store.Read();
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
             _writes++;
             if (_writes > 1)
@@ -411,7 +411,7 @@ public sealed class PersonalLibraryTests : IDisposable
                 throw new LibraryStoreException("Folium could not write the library file.");
             }
 
-            _store.Replace(books);
+            _store.Replace(snapshot);
         }
     }
 }

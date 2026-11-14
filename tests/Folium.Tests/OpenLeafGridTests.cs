@@ -57,14 +57,14 @@ public sealed class OpenLeafGridTests
     {
         private IReadOnlyList<Book> _books = books;
 
-        public IReadOnlyList<Book> Read()
+        public LibrarySnapshot Read()
         {
-            return _books;
+            return new(_books, []);
         }
 
-        public void Replace(IReadOnlyList<Book> books)
+        public void Replace(LibrarySnapshot snapshot)
         {
-            _books = [.. books];
+            _books = [.. snapshot.Books];
         }
     }
 }
