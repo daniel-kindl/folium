@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -82,9 +83,10 @@ public sealed class FileBookStore : IBookStore
                 }
             }
 
+            bool canCollectCovers = RetainRollbackCovers(retained);
             LibraryDocument document = new() { Version = 3, Books = books, Shelves = shelves };
             AtomicFile.Write(LibraryPath, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(document, JsonOptions)));
-            if (_flushDirectory(directory))
+            if (_flushDirectory(directory) && canCollectCovers)
             {
                 _covers.Collect(retained);
             }
@@ -105,6 +107,77 @@ public sealed class FileBookStore : IBookStore
                 AtomicFile.Write(backup, legacy);
             }
         }
+    }
+
+    private bool RetainRollbackCovers(HashSet<string> retained)
+    {
+        for (int version = 1; version <= 2; version++)
+        {
+            string rollbackPath = LibraryPath + string.Create(CultureInfo.InvariantCulture, $".v{version}.bak");
+            if (!TryRetainRollbackCovers(rollbackPath, version, retained))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool TryRetainRollbackCovers(string rollbackPath, int version, HashSet<string> retained)
+    {
+        return TryReadRollbackDocument(rollbackPath, version, out LibraryDocument? rollback)
+            && (rollback is null || RetainRollbackDocumentCovers(rollback, retained));
+    }
+
+    private static bool TryReadRollbackDocument(string rollbackPath, int version, out LibraryDocument? rollback)
+    {
+        rollback = null;
+        try
+        {
+            using FileStream stream = File.OpenRead(rollbackPath);
+            rollback = JsonSerializer.Deserialize<LibraryDocument>(stream, JsonOptions);
+        }
+        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return true;
+        }
+        catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
+        {
+            Trace.TraceError(exception.ToString());
+            return false;
+        }
+
+        return IsValidRollbackDocument(rollback, version);
+    }
+
+    private static bool IsValidRollbackDocument(LibraryDocument? rollback, int version)
+    {
+        if (rollback?.Version == version && rollback.Books is not null)
+        {
+            return true;
+        }
+
+        Trace.TraceError("Folium could not read a rollback library before cover cleanup.");
+        return false;
+    }
+
+    private static bool RetainRollbackDocumentCovers(LibraryDocument rollback, HashSet<string> retained)
+    {
+        foreach (StoredBook? book in rollback.Books!)
+        {
+            if (book is null)
+            {
+                Trace.TraceError("Folium could not read a rollback library before cover cleanup.");
+                return false;
+            }
+
+            if (book.CoverFile is string coverFile)
+            {
+                _ = retained.Add(coverFile);
+            }
+        }
+
+        return true;
     }
 
     private bool TryReadValidLegacy(out int version, out byte[] legacy)

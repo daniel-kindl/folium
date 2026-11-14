@@ -82,6 +82,66 @@ public sealed class CoverStorageTests : IDisposable
         Assert.Equal(book.Metadata.Cover.ToArray(), restored.Metadata.Cover.ToArray());
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void MigrationRollbackRetainsCoversAfterBookDeleteOrReplacement(bool migrateFirst, bool replaceCover)
+    {
+        WriteLegacyV2(Fixture);
+        FileBookStore store = new(LibraryPath);
+        Book original = Assert.Single(store.Read().Books);
+        byte[] originalCover = original.Metadata!.Cover.ToArray();
+        if (migrateFirst)
+        {
+            store.Replace(new([original], []));
+        }
+
+        string orphan = Path.Combine(Covers, new string('a', 64));
+        File.WriteAllBytes(orphan, [9]);
+        if (replaceCover)
+        {
+            Book replacement = original with { Metadata = original.Metadata with { Cover = new byte[] { 4, 5, 6 } } };
+            store.Replace(new([replacement], []));
+        }
+        else
+        {
+            store.Replace(new([], []));
+        }
+
+        Assert.False(File.Exists(orphan));
+        File.Copy(LibraryPath + ".v2.bak", LibraryPath, overwrite: true);
+
+        Book rolledBack = Assert.Single(new FileBookStore(LibraryPath).Read().Books);
+        Assert.Equal(FixtureId, rolledBack.Id);
+        Assert.Equal(originalCover, rolledBack.Metadata!.Cover.ToArray());
+    }
+
+    [Theory]
+    [InlineData((int)RollbackDocumentCase.MalformedJson)]
+    [InlineData((int)RollbackDocumentCase.NullDocument)]
+    [InlineData((int)RollbackDocumentCase.WrongVersion)]
+    [InlineData((int)RollbackDocumentCase.MissingBooks)]
+    [InlineData((int)RollbackDocumentCase.NullBook)]
+    public void InvalidMigrationBackupSkipsCoverCollection(int documentCase)
+    {
+        WriteLegacyV2(Fixture);
+        FileBookStore store = new(LibraryPath);
+        Book original = Assert.Single(store.Read().Books);
+        store.Replace(new([original], []));
+        string originalCoverPath = Path.Combine(
+            Covers,
+            Convert.ToHexStringLower(SHA256.HashData(Fixture.Metadata!.Cover.Span)));
+        File.WriteAllText(LibraryPath + ".v2.bak", InvalidRollbackDocument((RollbackDocumentCase)documentCase));
+        Book replacement = original with { Metadata = original.Metadata! with { Cover = new byte[] { 4, 5, 6 } } };
+
+        store.Replace(new([replacement], []));
+
+        Assert.True(File.Exists(originalCoverPath));
+        Assert.Equal(new byte[] { 4, 5, 6 }, Assert.Single(store.Read().Books).Metadata!.Cover.ToArray());
+    }
+
     [Fact]
     public void InterruptedMigrationCanBeRetriedWithoutLosingLegacyData()
     {
@@ -419,5 +479,52 @@ public sealed class CoverStorageTests : IDisposable
             version = 1,
             books = new[] { new { book.Id, book.Title, book.Author, readingStatus, book.Metadata } },
         }, JsonOptions));
+    }
+
+    private void WriteLegacyV2(Book book)
+    {
+        _ = Directory.CreateDirectory(_directory);
+        byte[] cover = book.Metadata!.Cover.ToArray();
+        string coverFile = Convert.ToHexStringLower(SHA256.HashData(cover));
+        _ = Directory.CreateDirectory(Covers);
+        File.WriteAllBytes(Path.Combine(Covers, coverFile), cover);
+        File.WriteAllText(LibraryPath, JsonSerializer.Serialize(new
+        {
+            version = 2,
+            books = new[]
+            {
+                new
+                {
+                    book.Id,
+                    book.Title,
+                    book.Author,
+                    readingStatus = "reading",
+                    metadata = book.Metadata with { Cover = default },
+                    coverFile,
+                },
+            },
+        }, JsonOptions));
+    }
+
+    private static string InvalidRollbackDocument(RollbackDocumentCase documentCase)
+    {
+        return documentCase switch
+        {
+            RollbackDocumentCase.MalformedJson => "{",
+            RollbackDocumentCase.NullDocument => "null",
+            RollbackDocumentCase.WrongVersion => JsonSerializer.Serialize(new { version = 1, books = Array.Empty<object>() }, JsonOptions),
+            RollbackDocumentCase.MissingBooks => JsonSerializer.Serialize(new { version = 2, books = (object[]?)null }, JsonOptions),
+            RollbackDocumentCase.NullBook => JsonSerializer.Serialize(new { version = 2, books = new object?[] { null } }, JsonOptions),
+            _ => throw new ArgumentOutOfRangeException(nameof(documentCase)),
+        };
+    }
+
+    private enum RollbackDocumentCase
+    {
+        MalformedJson = 0,
+        NullDocument = 1,
+        WrongVersion = 2,
+        MissingBooks = 3,
+        NullBook = 4,
     }
 }

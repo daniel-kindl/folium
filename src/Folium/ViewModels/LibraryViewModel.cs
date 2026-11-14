@@ -596,6 +596,11 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             return true;
         }
 
+        if (CloseShelfTransientLayer())
+        {
+            return true;
+        }
+
         if (ShowAddSheet || ShowLibraryMenu || ShowSortMenu)
         {
             CloseLayers();
@@ -611,6 +616,29 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         _showSavedSearch = false;
         SearchQuery = "";
         RaiseChrome();
+        return true;
+    }
+
+    private bool CloseShelfTransientLayer()
+    {
+        if (ShelfState?.ShowChecklist == true)
+        {
+            ShelfState.CloseChecklistCommand.Execute(parameter: null);
+            return true;
+        }
+
+        if (ShelfState?.ShowDeleteConfirmation == true)
+        {
+            ShelfState.CancelDeleteShelfCommand.Execute(parameter: null);
+            return true;
+        }
+
+        if (!ShowShelfPicker)
+        {
+            return false;
+        }
+
+        ToggleShelfPicker();
         return true;
     }
 
