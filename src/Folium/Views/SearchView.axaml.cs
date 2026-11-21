@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
@@ -151,6 +152,15 @@ public sealed partial class SearchView : UserControl, IDisposable
     {
         if (_model is not null)
         {
+            await _model.SearchAsync().ConfigureAwait(true);
+        }
+    }
+
+    private async void QueryKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (args.Key == Key.Enter && _model is not null)
+        {
+            args.Handled = true;
             await _model.SearchAsync().ConfigureAwait(true);
         }
     }

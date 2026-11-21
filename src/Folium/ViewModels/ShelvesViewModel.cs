@@ -51,8 +51,23 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
         ? Shelves.First(shelf => shelf.Id == id).Name
         : "All shelves";
 
+    /// <summary>True when the library shows books from all shelves.</summary>
+    public bool IsAllShelvesSelected => FilterId is null;
+
+    /// <summary>The shelf filter options. The option for the current filter is selected.</summary>
+    public IReadOnlyList<ShelfChoice> FilterChoices => [.. Shelves.Select(shelf => new ShelfChoice(
+        shelf.Id,
+        shelf.Name,
+        FilterId == shelf.Id))];
+
     /// <summary>The shelf selected for rename or delete.</summary>
     public Guid? ManagedShelfId { get; private set; }
+
+    /// <summary>The rename and delete options. The option for the managed shelf is selected.</summary>
+    public IReadOnlyList<ShelfChoice> ManagedChoices => [.. Shelves.Select(shelf => new ShelfChoice(
+        shelf.Id,
+        shelf.Name,
+        ManagedShelfId == shelf.Id))];
 
     private void SetManagedShelfId(Guid? value)
     {
@@ -61,6 +76,7 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
             ManagedShelfId = value;
             ShelfNameInput = Shelves.FirstOrDefault(shelf => shelf.Id == value)?.Name ?? string.Empty;
             Raise(nameof(ManagedShelfId));
+            Raise(nameof(ManagedChoices));
             ((Command)RenameShelfCommand).RaiseCanExecuteChanged();
             ((Command)AskDeleteShelfCommand).RaiseCanExecuteChanged();
         }
@@ -259,8 +275,7 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
             if (FilterId == id)
             {
                 FilterId = null;
-                Raise(nameof(FilterId));
-                Raise(nameof(FilterLabel));
+                RaiseFilter();
             }
 
             if (ManagedShelfId == id)
@@ -268,6 +283,7 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
                 ManagedShelfId = null;
                 _shelfNameInput = string.Empty;
                 Raise(nameof(ManagedShelfId));
+                Raise(nameof(ManagedChoices));
                 Raise(nameof(ShelfNameInput));
             }
 
@@ -307,8 +323,7 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
         }
 
         FilterId = id;
-        Raise(nameof(FilterId));
-        Raise(nameof(FilterLabel));
+        RaiseFilter();
     }
 
     private Guid? ResolveFilterId(object? parameter)
@@ -393,7 +408,8 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
     private void RaiseShelfState()
     {
         Raise(nameof(Shelves));
-        Raise(nameof(FilterLabel));
+        Raise(nameof(ManagedChoices));
+        RaiseFilter();
         RaiseMembership();
     }
 
@@ -404,6 +420,14 @@ public sealed class ShelvesViewModel : INotifyPropertyChanged
             ShelfNameError = null;
             Raise(nameof(ShelfNameError));
         }
+    }
+
+    private void RaiseFilter()
+    {
+        Raise(nameof(FilterId));
+        Raise(nameof(FilterLabel));
+        Raise(nameof(IsAllShelvesSelected));
+        Raise(nameof(FilterChoices));
     }
 
     private void RaiseMembership()

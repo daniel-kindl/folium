@@ -54,6 +54,9 @@
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="{StaticResource FoliumSpacingLgThickness}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="Button.folium-primary">
         <Setter Property="Background" Value="{DynamicResource FoliumPrimaryBrush}" />
@@ -73,14 +76,41 @@
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
-    <Style Selector="Button:focus">
+    <Style Selector="Button:focus-visible">
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumFocusBrush}" />
         <Setter Property="BorderThickness" Value="{StaticResource FoliumFocusThickness}" />
-        <Setter Property="Margin" Value="{StaticResource FoliumFocusGapThickness}" />
     </Style>
     <Style Selector="Button:disabled">
         <Setter Property="Opacity" Value="1" />
         <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource FoliumDisabledTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDividerBrush}" />
+    </Style>
+    <!-- The Fluent theme paints its own hover, pressed and disabled fills on the presenter. These rules keep Folium colors. -->
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{Binding Background, RelativeSource={RelativeSource AncestorType=Button}}" />
+        <Setter Property="BorderBrush" Value="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=Button}}" />
+        <Setter Property="TextElement.Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource FoliumSelectedContainerBrush}" />
+        <Setter Property="BorderBrush" Value="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=Button}}" />
+        <Setter Property="TextElement.Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{Binding Background, RelativeSource={RelativeSource AncestorType=Button}}" />
+        <Setter Property="BorderBrush" Value="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=Button}}" />
+        <Setter Property="TextElement.Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+    </Style>
+    <Style Selector="Button.folium-primary:pressed">
+        <Setter Property="Opacity" Value="0.86" />
+    </Style>
+    <Style Selector="Button.folium-primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource FoliumPrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.folium-primary:disabled">
+        <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDividerBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource FoliumDisabledTextBrush}" />
     </Style>
     <Style Selector="Button TextBlock">
@@ -95,7 +125,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="CornerRadius" Value="{StaticResource FoliumControlCornerRadius}" />
+        <Setter Property="CornerRadius" Value="24" />
         <Setter Property="MinHeight" Value="{StaticResource FoliumTouchTargetMin}" />
     </Style>
     <Style Selector="Button.folium-segment.folium-primary">
@@ -113,8 +143,8 @@
         <Setter Property="MinHeight" Value="{StaticResource FoliumAddButtonHeight}" />
         <Setter Property="Height" Value="{StaticResource FoliumAddButtonHeight}" />
         <Setter Property="MinWidth" Value="{StaticResource FoliumAddButtonHeight}" />
-        <Setter Property="CornerRadius" Value="{StaticResource FoliumGroupCornerRadius}" />
-        <Setter Property="Padding" Value="{StaticResource FoliumSpacingLgThickness}" />
+        <Setter Property="CornerRadius" Value="{StaticResource FoliumFabCornerRadius}" />
+        <Setter Property="Padding" Value="20,0" />
     </Style>
     <Style Selector="TextBox">
         <Setter Property="FontFamily" Value="{StaticResource FoliumNotoSans}" />
@@ -126,7 +156,12 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="{StaticResource FoliumControlCornerRadius}" />
         <Setter Property="MinHeight" Value="{StaticResource FoliumTouchTargetMin}" />
-        <Setter Property="Padding" Value="{StaticResource FoliumSpacingSmThickness}" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBox[AcceptsReturn=True]">
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
     </Style>
     <Style Selector="TextBox:focus">
         <Setter Property="Foreground" Value="{DynamicResource FoliumTextBrush}" />
@@ -134,7 +169,6 @@
         <Setter Property="CaretBrush" Value="{DynamicResource FoliumTextBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumFocusBrush}" />
         <Setter Property="BorderThickness" Value="{StaticResource FoliumFocusThickness}" />
-        <Setter Property="Margin" Value="{StaticResource FoliumFocusGapThickness}" />
     </Style>
     <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
         <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
@@ -153,15 +187,25 @@
         <Setter Property="Foreground" Value="{DynamicResource FoliumDisabledTextBrush}" />
         <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
     </Style>
+    <Style Selector="FlyoutPresenter, MenuFlyoutPresenter">
+        <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDialogBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FoliumGroupCornerRadius}" />
+        <Setter Property="Padding" Value="{StaticResource FoliumSpacingSmThickness}" />
+    </Style>
     <Style Selector="CheckBox">
+        <Setter Property="FontSize" Value="{DynamicResource FoliumBodyFontSize}" />
+        <Setter Property="VerticalContentAlignment" Value="Top" />
+        <Setter Property="Padding" Value="12,4,0,0" />
         <Setter Property="MinHeight" Value="{StaticResource FoliumTouchTargetMin}" />
         <Setter Property="Foreground" Value="{DynamicResource FoliumTextBrush}" />
     </Style>
     <Style Selector="CheckBox /template/ Border#NormalRectangle">
-        <Setter Property="Width" Value="24" />
-        <Setter Property="Height" Value="24" />
-        <Setter Property="MinWidth" Value="24" />
-        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="MinWidth" Value="20" />
+        <Setter Property="MinHeight" Value="20" />
         <Setter Property="BorderBrush" Value="{DynamicResource FoliumTextBrush}" />
         <Setter Property="BorderThickness" Value="2" />
         <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
@@ -224,6 +268,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="MinWidth" Value="{StaticResource FoliumTouchTargetMin}" />
+        <Setter Property="CornerRadius" Value="24" />
         <Setter Property="Padding" Value="{StaticResource FoliumSpacingMdThickness}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
@@ -233,6 +278,7 @@
         <Setter Property="BorderThickness" Value="0,0,0,1" />
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="Padding" Value="0,12" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
     </Style>
     <Style Selector="Button.folium-tile">
         <Setter Property="Background" Value="Transparent" />
@@ -300,5 +346,110 @@
         <Setter Property="MinHeight" Value="{StaticResource FoliumTouchTargetMin}" />
         <Setter Property="FontFamily" Value="{StaticResource FoliumNotoSans}" />
         <Setter Property="FontSize" Value="{DynamicResource FoliumBodyFontSize}" />
+    </Style>
+    <Style Selector="ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Hidden" />
+    </Style>
+    <Style Selector="Border.folium-card">
+        <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FoliumGroupCornerRadius}" />
+        <Setter Property="Padding" Value="{StaticResource FoliumSpacingLgThickness}" />
+    </Style>
+    <Style Selector="Border.folium-menu">
+        <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDialogBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FoliumGroupCornerRadius}" />
+        <Setter Property="Padding" Value="{StaticResource FoliumSpacingSmThickness}" />
+        <Setter Property="MinWidth" Value="220" />
+    </Style>
+    <Style Selector="Border.folium-sheet">
+        <Setter Property="Background" Value="{DynamicResource FoliumRaisedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDialogBorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource FoliumSheetCornerRadius}" />
+        <Setter Property="Padding" Value="{StaticResource FoliumSheetPadding}" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+    <Style Selector="Border.folium-sheet-handle">
+        <Setter Property="Background" Value="{DynamicResource FoliumBorderBrush}" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="4" />
+        <Setter Property="CornerRadius" Value="2" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.folium-menu-item">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="MinHeight" Value="52" />
+    </Style>
+    <Style Selector="Button.folium-menu-item:disabled">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.folium-menu-item.folium-danger">
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border.folium-icon-badge">
+        <Setter Property="Background" Value="{DynamicResource FoliumSelectedContainerBrush}" />
+        <Setter Property="CornerRadius" Value="40" />
+        <Setter Property="Width" Value="80" />
+        <Setter Property="Height" Value="80" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.folium-divider">
+        <Setter Property="Background" Value="{DynamicResource FoliumDividerBrush}" />
+        <Setter Property="Height" Value="1" />
+    </Style>
+    <Style Selector="Border.folium-nav-bar">
+        <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDividerBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+    </Style>
+    <Style Selector="Border.folium-scrim">
+        <Setter Property="Background" Value="{DynamicResource FoliumScrimBrush}" />
+        <Setter Property="Opacity" Value="0.48" />
+    </Style>
+    <Style Selector="TextBlock.folium-eyebrow">
+        <Setter Property="FontSize" Value="{DynamicResource FoliumCaptionFontSize}" />
+        <Setter Property="LineHeight" Value="{DynamicResource FoliumCaptionLineHeight}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource FoliumMutedBrush}" />
+    </Style>
+    <Style Selector="Button.folium-chip">
+        <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+        <Setter Property="FontSize" Value="{DynamicResource FoliumLabelSmallFontSize}" />
+    </Style>
+    <Style Selector="Button.folium-chip.folium-primary">
+        <Setter Property="Background" Value="{DynamicResource FoliumPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource FoliumOnPrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.folium-status-button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0,0,12,0" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Border.folium-shelf-tag">
+        <Setter Property="Background" Value="{DynamicResource FoliumSelectedContainerBrush}" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+    <Style Selector="Button.folium-result">
+        <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource FoliumDividerBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource FoliumGroupCornerRadius}" />
+        <Setter Property="Padding" Value="{StaticResource FoliumSpacingLgThickness}" />
     </Style>
 </Styles>

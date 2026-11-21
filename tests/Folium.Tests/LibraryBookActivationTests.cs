@@ -25,7 +25,7 @@ public sealed class LibraryBookActivationTests
             window.UpdateLayout();
 
             ItemsControl list = view.FindControl<ItemsControl>("LibraryBooksList")!;
-            Button row = list.GetVisualDescendants().OfType<Button>().Single();
+            Button row = list.GetVisualDescendants().OfType<Button>().Single(button => button.Classes.Contains("folium-row"));
             Assert.True(row.IsEffectivelyVisible);
             Assert.Equal(book.Id, row.CommandParameter);
             row.Command!.Execute(row.CommandParameter);

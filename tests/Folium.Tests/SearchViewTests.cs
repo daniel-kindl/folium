@@ -220,7 +220,9 @@ public sealed class SearchViewTests
         Assert.True(library.Search.ShowEditions);
         Click(search, "Back");
         Assert.True(library.Search.ShowWorks);
-        Click(search, "Back");
+        Assert.DoesNotContain(search.GetVisualDescendants().OfType<Button>(), button =>
+            Equals(button.Content, "Back") && button.IsEffectivelyVisible);
+        library.SelectLibraryCommand.Execute(parameter: null);
         Assert.True(library.ShowLibrary);
         Assert.Empty(library.Books);
     }

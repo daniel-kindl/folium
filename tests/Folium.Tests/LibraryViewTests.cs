@@ -55,7 +55,7 @@ public sealed class LibraryViewTests
         await using HeadlessUnitTestSession session = HeadlessUnitTestSession.StartNew(typeof(App));
         await session.Dispatch(() =>
         {
-            LibraryViewModel library = LibraryViewModel.Open(new EmptyStore());
+            LibraryViewModel library = LibraryViewModel.Open(new OneBookStore());
             library.FilterCommand.Execute("reading");
             MainView view = new() { DataContext = library };
             Window window = new() { Content = view, Width = 400, Height = 850 };
@@ -133,11 +133,13 @@ public sealed class LibraryViewTests
             TextBlock title = view.GetVisualDescendants().OfType<TextBlock>().Single(text =>
                 text.Classes.Contains("folium-title") && Equals(text.Text, "Find online"));
             TextBox query = view.GetVisualDescendants().OfType<TextBox>().Single(box => box.IsEffectivelyVisible);
-            Button back = view.GetVisualDescendants().OfType<Button>().Single(button =>
+            Button search = view.GetVisualDescendants().OfType<Button>().Single(button =>
+                Equals(button.Content, "Search Open Library") && button.IsEffectivelyVisible);
+            Assert.DoesNotContain(view.GetVisualDescendants().OfType<Button>(), button =>
                 Equals(button.Content, "Back") && button.IsEffectivelyVisible);
             Assert.Equal(16, BoundsIn(view, title).Left, tolerance: 0.001);
             Assert.Equal(16, BoundsIn(view, query).Left, tolerance: 0.001);
-            Assert.Equal(16, BoundsIn(view, back).Left, tolerance: 0.001);
+            Assert.Equal(16, BoundsIn(view, search).Left, tolerance: 0.001);
             Assert.Equal(view.Bounds.Width - 16, BoundsIn(view, query).Right, tolerance: 0.001);
             window.Close();
         }, TestContext.Current.CancellationToken);
@@ -171,7 +173,8 @@ public sealed class LibraryViewTests
         Assert.True(emptyBounds.Bottom <= addBounds.Top || addBounds.Bottom <= emptyBounds.Top,
             string.Create(CultureInfo.InvariantCulture, $"Empty bounds {emptyBounds}; add bounds {addBounds}; size {width}x{height}; scale {scale}."));
 
-        AssertFilterLayout(view, search, scale);
+        Assert.False(view.FindControl<Grid>("FilterGrid")!.IsEffectivelyVisible);
+        Assert.False(view.FindControl<Button>("StatusFilter")!.IsEffectivelyVisible);
 
         Assert.All(view.GetVisualDescendants().OfType<Button>()
                 .Where(button => button is not RepeatButton && button.IsEffectivelyVisible),
@@ -180,6 +183,19 @@ public sealed class LibraryViewTests
         window.UpdateLayout();
         window.Width = width;
         window.UpdateLayout();
+        window.Close();
+
+        AssertFilterLayoutWithABook(width, height, scale);
+    }
+
+    private static void AssertFilterLayoutWithABook(int width, int height, double scale)
+    {
+        LibraryViewModel library = LibraryViewModel.Open(new OneBookStore());
+        MainView view = new() { DataContext = library };
+        Window window = new() { Content = view, Width = width, Height = height };
+        window.Show();
+        window.UpdateLayout();
+        AssertFilterLayout(view, scale);
         window.Close();
     }
 
@@ -196,7 +212,7 @@ public sealed class LibraryViewTests
         Assert.Equal(48, drawn.Height, tolerance: 0.001);
     }
 
-    private static void AssertFilterLayout(MainView view, Button search, double scale)
+    private static void AssertFilterLayout(MainView view, double scale)
     {
         if (scale >= 2)
         {
@@ -208,9 +224,9 @@ public sealed class LibraryViewTests
         Button[] filters = [.. view.FindControl<Grid>("FilterGrid")!.Children.OfType<Button>()];
         Assert.Equal(4, filters.Length);
         Grid filterGrid = view.FindControl<Grid>("FilterGrid")!;
-        Assert.Equal(search.Bounds.Width, filterGrid.Bounds.Width, tolerance: 0.001);
-        Assert.Equal(BoundsIn(view, search).Left, filters.Min(filter => BoundsIn(view, filter).Left), tolerance: 0.001);
-        Assert.Equal(BoundsIn(view, search).Right, filters.Max(filter => BoundsIn(view, filter).Right), tolerance: 0.001);
+        Assert.Equal(view.Bounds.Width - 32, filterGrid.Bounds.Width, tolerance: 0.001);
+        Assert.Equal(16, filters.Min(filter => BoundsIn(view, filter).Left), tolerance: 0.001);
+        Assert.Equal(view.Bounds.Width - 16, filters.Max(filter => BoundsIn(view, filter).Right), tolerance: 0.001);
         foreach (Button filter in filters)
         {
             string filterLabel = Convert.ToString(filter.Content, CultureInfo.InvariantCulture) ?? string.Empty;
@@ -242,6 +258,19 @@ public sealed class LibraryViewTests
     {
         Point origin = control.TranslatePoint(default, view)!.Value;
         return new Rect(origin, control.Bounds.Size);
+    }
+
+    private sealed class OneBookStore : IBookStore
+    {
+        public LibrarySnapshot Read()
+        {
+            return new([new Book(Guid.NewGuid(), "Middlemarch", "George Eliot")], []);
+        }
+
+        public void Replace(LibrarySnapshot snapshot)
+        {
+            throw new InvalidOperationException("The library view test must not save books.");
+        }
     }
 
     private sealed class EmptyStore : IBookStore

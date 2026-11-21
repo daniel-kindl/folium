@@ -63,6 +63,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
         Search = new SearchViewModel(search ?? SearchProvider);
         Updates = updates;
+        updates?.PropertyChanged += UpdatesChanged;
         if (library is not null)
         {
             Books = library.Books;
@@ -984,6 +985,38 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Changes the reading status of one saved book from the list. A book that no longer exists is ignored.</summary>
+    /// <param name="id">The identifier of the saved book.</param>
+    /// <param name="status">The new reading status.</param>
+    public void ChangeStatus(Guid id, ReadingStatus status)
+    {
+        if (_library is not PersonalLibrary library)
+        {
+            return;
+        }
+
+        try
+        {
+            Book saved = library.SetStatus(id, status);
+            UseBooks(library.Books);
+            if (_selected?.Id == id)
+            {
+                _selected = saved;
+                RaiseSelectedBook();
+            }
+
+            ClearErrors();
+        }
+        catch (MissingBookException)
+        {
+            UseBooks(library.Books);
+        }
+        catch (LibraryStoreException exception)
+        {
+            ShowStatusSaveError(exception);
+        }
+    }
+
     private bool TrySelectedStatus(object? parameter, out ReadingStatus status)
     {
         status = default;
@@ -1174,14 +1207,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private List<BookRow> Rows(IReadOnlyList<Book> books)
     {
         IReadOnlyList<Book> matching = LibraryQuery.Apply(books, _filter, shelfId: ShelfState?.FilterId, query: SearchQuery, sort: _sort);
-        return [.. matching.Select(book => new BookRow(book.Id, book.Title, book.Author, StatusText(book.Status))
-        {
-            ReadingStatus = book.Status,
-            Tone = CoverPlaceholder.Tone(book.Id),
-            Initial = CoverPlaceholder.Initial(book.Title),
-            HasCover = book.Metadata?.Cover.IsEmpty == false,
-            Cover = book.Metadata?.Cover ?? ReadOnlyMemory<byte>.Empty,
-        })];
+        return [.. matching.Select(book => BookRow.Create(book, StatusText(book.Status), ShelfState?.Shelves))];
     }
 
     private static bool TryFilter(object? parameter, out ReadingStatus? status)
@@ -1225,7 +1251,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         }
     }
 
-    private static string StatusText(ReadingStatus status)
+    internal static string StatusText(ReadingStatus status)
     {
         return status switch
         {
@@ -1333,6 +1359,17 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     {
         AddSheetOpen = false;
         RaiseChrome();
+    }
+
+    private void UpdatesChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (string.Equals(args.PropertyName, nameof(UpdateViewModel.ShowSettings), StringComparison.Ordinal)
+            && Updates?.ShowSettings == true
+            && _showLibraryMenu)
+        {
+            _showLibraryMenu = false;
+            RaiseChrome();
+        }
     }
 
     private void ToggleLibraryMenu()

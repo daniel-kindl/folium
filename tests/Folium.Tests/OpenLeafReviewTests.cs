@@ -102,7 +102,7 @@ public sealed class OpenLeafReviewTests
             TextBlock status = list.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "Reading"));
             AssertColor("#285E86", status.Foreground);
             Avalonia.Controls.Shapes.Path icon = status.GetVisualParent()!.GetVisualDescendants()
-                .OfType<Avalonia.Controls.Shapes.Path>().Single(path => path.IsEffectivelyVisible);
+                .OfType<Avalonia.Controls.Shapes.Path>().First(path => path.IsEffectivelyVisible);
             AssertColor("#285E86", icon.Stroke);
 
             window.RequestedThemeVariant = ThemeVariant.Dark;
