@@ -423,8 +423,8 @@
     </Style>
     <Style Selector="Button.folium-chip">
         <Setter Property="Background" Value="{DynamicResource FoliumSurfaceBrush}" />
-        <Setter Property="CornerRadius" Value="20" />
-        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="MinHeight" Value="{StaticResource FoliumTouchTargetMin}" />
         <Setter Property="Padding" Value="16,0" />
         <Setter Property="Margin" Value="0,0,8,8" />
         <Setter Property="FontSize" Value="{DynamicResource FoliumLabelSmallFontSize}" />

@@ -350,6 +350,7 @@
                         <ItemsControl x:Name="LibraryBooksList" ItemsSource="{Binding ShownBooks}" IsVisible="{Binding ShowBookList}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BookRow">
+                                    <Grid>
                                     <Button Classes="folium-row"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Stretch"
@@ -379,13 +380,19 @@
                                             <StackPanel Grid.Column="1" Spacing="{StaticResource FoliumSpacingXs}" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Title}" Classes="folium-label" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Text="{Binding Author}" Classes="folium-caption folium-muted" TextWrapping="Wrap" MaxLines="1" TextTrimming="CharacterEllipsis" />
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource FoliumSpacingSm}">
-                                                    <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FoliumStatusButton}" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding Shelves}" Classes="folium-caption folium-muted" MaxLines="1" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding HasShelves}" />
-                                                </Grid>
+                                                <Border Height="{StaticResource FoliumTouchTargetMin}" />
                                             </StackPanel>
                                         </Grid>
                                     </Button>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="{StaticResource FoliumSpacingSm}"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Bottom"
+                                                    Margin="64,0,0,12">
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FoliumStatusButton}" />
+                                            <TextBlock Text="{Binding Shelves}" Classes="folium-caption folium-muted" MaxLines="1" MaxWidth="180" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" IsVisible="{Binding HasShelves}" IsHitTestVisible="False" />
+                                        </StackPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -397,6 +404,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:BookRow">
+                                    <Grid VerticalAlignment="Top">
                                     <Button Classes="folium-tile"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Stretch"
@@ -430,9 +438,11 @@
                                             </Viewbox>
                                             <TextBlock Text="{Binding Title}" Classes="folium-label-small" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Margin="0,4,0,0" />
                                             <TextBlock Text="{Binding Author}" Classes="folium-caption folium-muted" MaxLines="1" TextTrimming="CharacterEllipsis" />
-                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FoliumStatusButton}" />
+                                            <Border Height="{StaticResource FoliumTouchTargetMin}" />
                                         </StackPanel>
                                     </Button>
+                                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource FoliumStatusButton}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="4,0,0,4" />
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

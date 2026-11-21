@@ -7,8 +7,7 @@
              x:DataType="vm:SearchViewModel">
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
-            <!-- The app bar shows the screen title. This heading names the edition step only. -->
-            
+            <!-- The app bar shows the screen title. This label names the edition step only. -->
             <TextBlock Text="Editions" Classes="folium-label" IsVisible="{Binding ShowEditions}" />
             <StackPanel IsVisible="{Binding ShowWorks}" Spacing="{StaticResource FoliumSpacingSm}">
                 <TextBox Text="{Binding Query, Mode=TwoWay}" KeyDown="QueryKeyDown" PlaceholderText="For example, Middlemarch" AutomationProperties.Name="Title">
@@ -74,17 +73,20 @@
                 <StackPanel IsVisible="{Binding ShowPreview}" Spacing="{StaticResource FoliumSpacingSm}">
                     <Image Name="CoverImage" Width="{StaticResource FoliumCoverEditionPreviewWidth}" Height="{StaticResource FoliumCoverEditionPreviewHeight}" Stretch="Uniform" AutomationProperties.Name="Edition cover" />
                     <TextBlock Text="{Binding Preview.Title}" Classes="folium-section" TextWrapping="Wrap" />
-                    <Border Classes="folium-card"><StackPanel Spacing="{StaticResource FoliumSpacingSm}">
-                    <TextBlock IsVisible="{Binding Preview.Authors, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Authors, StringFormat='Authors: {0}'}" Classes="folium-muted" TextWrapping="Wrap" />
-                    <TextBlock IsVisible="{Binding Preview.Publisher, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Publisher, StringFormat='Publisher: {0}'}" TextWrapping="Wrap" />
-                    <TextBlock IsVisible="{Binding Preview.PublicationDate, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.PublicationDate, StringFormat='Published: {0}'}" TextWrapping="Wrap" />
-                    <TextBlock IsVisible="{Binding Preview.Isbn, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Isbn, StringFormat='ISBN: {0}'}" TextWrapping="Wrap" />
-                    <TextBlock IsVisible="{Binding Preview.Edition, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Edition, StringFormat='Edition: {0}'}" TextWrapping="Wrap" />
-                    <TextBlock IsVisible="{Binding Preview.Language, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Language, StringFormat='Language: {0}'}" TextWrapping="Wrap" />
-                    <Border Classes="folium-divider" Margin="0,4" /><TextBlock Text="{Binding Preview.Description}" TextWrapping="Wrap" IsVisible="{Binding Preview.Description, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
-                    </StackPanel></Border>
+                    <Border Classes="folium-card">
+                        <StackPanel Spacing="{StaticResource FoliumSpacingSm}">
+                        <TextBlock IsVisible="{Binding Preview.Authors, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Authors, StringFormat='Authors: {0}'}" Classes="folium-muted" TextWrapping="Wrap" />
+                        <TextBlock IsVisible="{Binding Preview.Publisher, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Publisher, StringFormat='Publisher: {0}'}" TextWrapping="Wrap" />
+                        <TextBlock IsVisible="{Binding Preview.PublicationDate, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.PublicationDate, StringFormat='Published: {0}'}" TextWrapping="Wrap" />
+                        <TextBlock IsVisible="{Binding Preview.Isbn, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Isbn, StringFormat='ISBN: {0}'}" TextWrapping="Wrap" />
+                        <TextBlock IsVisible="{Binding Preview.Edition, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Edition, StringFormat='Edition: {0}'}" TextWrapping="Wrap" />
+                        <TextBlock IsVisible="{Binding Preview.Language, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" Text="{Binding Preview.Language, StringFormat='Language: {0}'}" TextWrapping="Wrap" />
+                        <Border Classes="folium-divider" Margin="0,4" />
+                        <TextBlock Text="{Binding Preview.Description}" TextWrapping="Wrap" IsVisible="{Binding Preview.Description, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                    </Border>
                     <TextBlock Text="Empty fields are not supplied by Open Library." Classes="folium-caption folium-muted" TextWrapping="Wrap" />
-                                        <Button Content="View edition on Open Library" Click="SourceClicked" HorizontalAlignment="Stretch" />
+                    <Button Content="View edition on Open Library" Click="SourceClicked" HorizontalAlignment="Stretch" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
