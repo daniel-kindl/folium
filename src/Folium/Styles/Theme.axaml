@@ -181,8 +181,11 @@
     <CornerRadius x:Key="FoliumControlCornerRadius">8</CornerRadius>
     <CornerRadius x:Key="FoliumGroupCornerRadius">12</CornerRadius>
     <CornerRadius x:Key="FoliumCoverCornerRadius">4</CornerRadius>
+    <CornerRadius x:Key="FoliumFabCornerRadius">16</CornerRadius>
+    <CornerRadius x:Key="FoliumSheetCornerRadius">24,24,0,0</CornerRadius>
+    <Thickness x:Key="FoliumSheetPadding">24,12,24,24</Thickness>
+    <Thickness x:Key="FoliumScreenEndThickness">0,0,0,32</Thickness>
     <Thickness x:Key="FoliumFocusThickness">2</Thickness>
     <Thickness x:Key="FoliumFocusGapThickness">2</Thickness>
-    <Thickness x:Key="FoliumScreenEndThickness">0,0,0,48</Thickness>
     <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
 </ResourceDictionary>

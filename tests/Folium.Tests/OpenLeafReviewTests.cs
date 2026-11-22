@@ -101,8 +101,9 @@ public sealed class OpenLeafReviewTests
             ItemsControl list = view.FindControl<ItemsControl>("LibraryBooksList")!;
             TextBlock status = list.GetVisualDescendants().OfType<TextBlock>().Single(text => Equals(text.Text, "Reading"));
             AssertColor("#285E86", status.Foreground);
-            Avalonia.Controls.Shapes.Path icon = status.GetVisualParent()!.GetVisualDescendants()
-                .OfType<Avalonia.Controls.Shapes.Path>().Single(path => path.IsEffectivelyVisible);
+            Avalonia.Controls.Shapes.Path icon = status.GetVisualParent()!.GetVisualDescendants().OfType<Panel>()
+                .Single(panel => panel.Children.OfType<Avalonia.Controls.Shapes.Path>().Any())
+                .Children.OfType<Avalonia.Controls.Shapes.Path>().Single(path => path.IsEffectivelyVisible);
             AssertColor("#285E86", icon.Stroke);
 
             window.RequestedThemeVariant = ThemeVariant.Dark;

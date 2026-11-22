@@ -17,6 +17,7 @@ public partial class MainView : UserControl
     private readonly Button[] _filterButtons;
     private readonly Control _emptyIcon;
     private readonly Grid _filterGrid;
+    private readonly LibraryFocus _focus;
 
     /// <summary>Loads the view markup. The mutation compile does not run the Avalonia source generator.</summary>
     public MainView()
@@ -32,6 +33,8 @@ public partial class MainView : UserControl
             this.FindControl<Button>("FinishedFilter")!,
         ];
         SizeChanged += MainViewSizeChanged;
+        _focus = new LibraryFocus(this);
+        DataContextChanged += (_, _) => _focus.Observe(DataContext);
     }
 
     /// <summary>The number of cover grid columns: three, or two at large text sizes.</summary>
@@ -39,6 +42,20 @@ public partial class MainView : UserControl
     {
         get => GetValue(GridColumnsProperty);
         set => SetValue(GridColumnsProperty, value);
+    }
+
+    private void StatusClick(object? sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is Button { DataContext: BookRow row } button && DataContext is LibraryViewModel library)
+        {
+            StatusMenu.Show(button, row, library);
+        }
+    }
+
+    private void DeleteMenuClick(object? sender, RoutedEventArgs e)
+    {
+        this.FindControl<Button>("DetailsMenuButton")?.Flyout?.Hide();
     }
 
     private async void ExportBackupClick(object? sender, RoutedEventArgs e)
@@ -82,10 +99,6 @@ public partial class MainView : UserControl
         }
 
         _filterGrid.IsVisible = !compact;
-        if (this.FindControl<Button>("AddBookButton") is Button add)
-        {
-            add.Classes.Set("folium-compact", compact);
-        }
     }
 
     private int PreferredColumns(double width)

@@ -67,6 +67,9 @@ public sealed class SearchViewModel(IBookSearch provider) : INotifyPropertyChang
     /// <summary>True when a preceding result page exists.</summary>
     public bool HasPrevious => !ShowPreview && _page > 1 && !IsBusy;
 
+    /// <summary>True when the page buttons are shown. The buttons stay while a page loads, so the layout does not jump.</summary>
+    public bool ShowPager => !ShowPreview && (_page > 1 || (ShowWorks ? _worksHaveAnotherPage : _editionsHaveAnotherPage));
+
     /// <summary>True when the current raw provider page was full.</summary>
     public bool HasNext => !ShowPreview && !IsBusy && (ShowWorks ? _worksHaveAnotherPage : _editionsHaveAnotherPage);
 

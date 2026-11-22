@@ -1,3 +1,4 @@
+using Folium.Books;
 using Folium.Updates;
 using Folium.ViewModels;
 
@@ -27,6 +28,23 @@ public sealed class UpdateViewModelTests
         viewModel.CloseSettingsCommand.Execute(parameter: null);
         Assert.False(viewModel.CloseSettingsCommand.CanExecute(parameter: null));
         Assert.Equal(2, commandUpdates);
+    }
+
+    [Fact]
+    public void OpeningSettingsClosesTheLibraryMenu()
+    {
+        using SettingsPath settings = new();
+        using UpdateViewModel updates = new(new UpdateCheckService(new Source(Latest), settings.File), new Installer(), "0.1.0");
+        LibraryViewModel library = LibraryViewModel.Open(new EmptyStore(), updates: updates);
+        library.ShowLibraryMenuCommand.Execute(parameter: null);
+        Assert.True(library.ShowLibraryMenu);
+
+        updates.ToggleSettingsCommand.Execute(parameter: null);
+
+        Assert.True(updates.ShowSettings);
+        Assert.False(library.ShowLibraryMenu);
+        updates.CloseSettingsCommand.Execute(parameter: null);
+        Assert.False(library.ShowLibraryMenu);
     }
 
     [Fact]
@@ -358,6 +376,19 @@ public sealed class UpdateViewModelTests
         public void Dispose()
         {
             Directory.Delete(_directory, recursive: true);
+        }
+    }
+
+    private sealed class EmptyStore : IBookStore
+    {
+        public LibrarySnapshot Read()
+        {
+            return new([], []);
+        }
+
+        public void Replace(LibrarySnapshot snapshot)
+        {
+            throw new InvalidOperationException("The test must not save books.");
         }
     }
 }

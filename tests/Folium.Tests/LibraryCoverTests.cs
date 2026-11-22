@@ -51,7 +51,7 @@ public sealed class LibraryCoverTests
             Assert.Contains(gridCover.GetVisualDescendants().OfType<TextBlock>(), text => Equals(text.Text, "The Middlemarch"));
             Assert.Contains(gridCover.GetVisualDescendants().OfType<TextBlock>(), text => Equals(text.Text, "George Eliot"));
             Assert.True(view.FindControl<Avalonia.Controls.Shapes.Path>("ViewListIcon")!.IsEffectivelyVisible);
-            Button row = grid.GetVisualDescendants().OfType<Button>().Single();
+            Button row = grid.GetVisualDescendants().OfType<Button>().Single(button => button.Classes.Contains("folium-tile"));
             Assert.Equal("The Middlemarch, George Eliot, To read", AutomationProperties.GetName(row));
             window.Close();
         }, TestContext.Current.CancellationToken);
@@ -93,10 +93,10 @@ public sealed class LibraryCoverTests
             Assert.DoesNotContain(view.GetVisualDescendants().OfType<TextBlock>(), text => text.IsEffectivelyVisible && text.Text?.EndsWith("aved cover", StringComparison.Ordinal) == true);
             Assert.DoesNotContain(view.GetVisualDescendants().OfType<TextBlock>(), text =>
                 string.Equals(text.Text, "Edition", StringComparison.Ordinal) && text.IsEffectivelyVisible);
-            Button reading = view.GetVisualDescendants().OfType<Button>().Single(button =>
-                string.Equals(AutomationProperties.GetName(button), "Reading", StringComparison.Ordinal));
-            Button toRead = view.GetVisualDescendants().OfType<Button>().Single(button =>
-                string.Equals(AutomationProperties.GetName(button), "To read", StringComparison.Ordinal));
+            Button reading = view.GetVisualDescendants().OfType<Button>().Single(button => button.IsEffectivelyVisible
+                && string.Equals(AutomationProperties.GetName(button), "Reading", StringComparison.Ordinal));
+            Button toRead = view.GetVisualDescendants().OfType<Button>().Single(button => button.IsEffectivelyVisible
+                && string.Equals(AutomationProperties.GetName(button), "To read", StringComparison.Ordinal));
             Assert.Contains("folium-primary", reading.Classes, StringComparer.Ordinal);
             Assert.DoesNotContain("folium-primary", toRead.Classes, StringComparer.Ordinal);
 

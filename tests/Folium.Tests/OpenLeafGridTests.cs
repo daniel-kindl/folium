@@ -42,7 +42,7 @@ public sealed class OpenLeafGridTests
                 window.UpdateLayout();
                 UniformGrid panel = view.FindControl<ItemsControl>("LibraryBooksGrid")!.GetVisualDescendants().OfType<UniformGrid>().Single();
                 int columns = panel.Columns;
-                Button[] tiles = [.. view.FindControl<ItemsControl>("LibraryBooksGrid")!.GetVisualDescendants().OfType<Button>()];
+                Button[] tiles = [.. view.FindControl<ItemsControl>("LibraryBooksGrid")!.GetVisualDescendants().OfType<Button>().Where(button => button.Classes.Contains("folium-tile"))];
                 double firstRow = tiles[0].TranslatePoint(default, panel)!.Value.Y;
                 Assert.Equal(columns, tiles.Count(tile => Math.Abs(tile.TranslatePoint(default, panel)!.Value.Y - firstRow) < 0.5));
                 Assert.All(tiles, tile => Assert.Contains(tile.GetVisualDescendants().OfType<TextBlock>(), text =>
