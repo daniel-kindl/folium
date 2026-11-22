@@ -4,7 +4,18 @@ Notable changes are recorded here. Versions follow [Semantic Versioning](https:/
 
 ## Unreleased
 
+## 0.3.0
+
 - Add shelves, books on multiple shelves, shelf filtering, live storage version 3, and version 2 backups.
+
+### Features
+
+- add shelves ([#54](https://github.com/daniel-kindl/folium/pull/54))
+- polish screens and add quick status ([#57](https://github.com/daniel-kindl/folium/pull/57))
+
+### Other changes
+
+- bump actions/setup-java from 6.2.0 to 6.3.0 ([#55](https://github.com/daniel-kindl/folium/pull/55))
 
 ## 0.2.0
 
